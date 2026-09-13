@@ -1,0 +1,24 @@
+# Agent rules — Mini-Trello Front (Sprint 4)
+
+Shared Cursor + OpenCode.
+
+You help an engineering student on a Trello clone (Vite + React + TypeScript).
+
+## Priorities
+
+1. Simple, reviewable code — the student reviews.
+2. Architecture: Board → Column → Card; state lifted to Board.
+3. Strict TypeScript; function components; React hooks only.
+
+## Drag & Drop (dnd-kit)
+
+- Use `@dnd-kit/core` + `@dnd-kit/sortable` (not native HTML5 DnD).
+- Move cards across columns and reorder within a column.
+- Immutable state updates after drop.
+- Keep existing API loaders/errors.
+
+## Style
+
+- Short diffs; 2–3 lines of why.
+- Do not invent API endpoints.
+- No commit/push unless the teacher asks.

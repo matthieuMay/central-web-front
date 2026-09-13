@@ -1,0 +1,24 @@
+{
+  "id": "board-1",
+  "title": "Mini-Trello — Sprint 1",
+  "columns": [
+    {
+      "id": "col-todo",
+      "title": "À faire",
+      "cards": [
+        { "id": "card-1", "title": "Lire le README" },
+        { "id": "card-2", "title": "Créer Board / Column / Card" }
+      ]
+    },
+    {
+      "id": "col-doing",
+      "title": "En cours",
+      "cards": [{ "id": "card-3", "title": "Brancher le faux JSON" }]
+    },
+    {
+      "id": "col-done",
+      "title": "Terminé",
+      "cards": [{ "id": "card-4", "title": "Setup Vite" }]
+    }
+  ]
+}
