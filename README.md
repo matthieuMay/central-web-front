@@ -7,4 +7,4 @@ npm ci
 npm run dev
 ```
 
-The `/board` route is a placeholder for the Sprint 1 board. This shell has no business data or network request.
+The `/board` route renders a read-only board from `data/board.json`. The JSON models the future API response; its array order determines the order of columns and cards. No network request or business state is required in Sprint 1.
