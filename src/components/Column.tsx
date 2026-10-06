@@ -6,7 +6,7 @@ type ColumnProps = { column: ColumnData }
 
 export function Column({ column }: ColumnProps) {
   return (
-    <Box as="section" aria-label={column.title} bg="gray.100" borderRadius="lg" p={4} minW={0}>
+    <Box as="section" aria-label={column.title} bg="gray.100" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
       <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="gray.600">No cards yet</Text>}

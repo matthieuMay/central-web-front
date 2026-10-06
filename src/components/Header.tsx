@@ -5,8 +5,6 @@ export function Header() {
   return (
     <Box as="header" borderBottomWidth="1px" bg="white">
       <Flex
-        maxW="7xl"
-        mx="auto"
         px={{ base: 4, md: 8 }}
         py={4}
         align="center"
