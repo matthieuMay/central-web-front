@@ -1,8 +1,15 @@
-function TitleInput() {
+import { useEffect, useState } from 'react'
+
+type TitleInputProps = {
+  value: string
+  onChange: (value: string) => void
+}
+
+function TitleInput({ value, onChange }: TitleInputProps) {
   return (
     <>
       <label htmlFor="page-title">Titre</label>
-      <input id="page-title" type="text" />
+      <input id="page-title" type="text" value={value} onChange={(event) => onChange(event.target.value)} />
     </>
   )
 }
@@ -24,10 +31,16 @@ function TodoList() {
 }
 
 function App() {
+  const [title, setTitle] = useState('')
+
+  useEffect(() => {
+    document.title = title.trim() || 'Todo'
+  }, [title])
+
   return (
     <main>
       <h1>Todo</h1>
-      <TitleInput />
+      <TitleInput value={title} onChange={setTitle} />
       <TodoForm />
       <TodoList />
     </main>
