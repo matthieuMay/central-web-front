@@ -5,9 +5,14 @@ import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
 
-type ColumnProps = { column: ColumnData }
+type ColumnProps = {
+  column: ColumnData
+  selectedCardId: string | null
+  onSelectCard: (id: string) => void
+  onEditCard: (id: string) => void
+}
 
-export function Column({ column }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -30,7 +35,7 @@ export function Column({ column }: ColumnProps) {
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="gray.600">No cards yet</Text>}
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} />
+          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
         ))}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>

@@ -26,7 +26,7 @@ form label {
   margin-bottom: 0.25rem;
 }
 
-form input {
+form input, form textarea {
   background: white;
   border: 1px solid #64748b;
   border-radius: 0.25rem;
@@ -44,5 +44,10 @@ form button, article > button {
 
 form :focus-visible, article > button:focus-visible {
   outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.board-card:focus {
+  outline: 3px solid #1d4ed8;
   outline-offset: 2px;
 }

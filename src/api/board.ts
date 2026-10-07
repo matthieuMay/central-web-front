@@ -24,10 +24,18 @@ export function createCard({ columnId, id, title }: { columnId: string; id: stri
   })
 }
 
-export function editCard({ cardId, title }: { cardId: string; title: string }) {
+export function editCard({ cardId, title, description }: { cardId: string; title: string; description?: string | null }) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}) }),
+  })
+}
+
+export function moveCard({ cardId, column }: { cardId: string; column: string }) {
+  return request<BoardData>(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ column }),
   })
 }
