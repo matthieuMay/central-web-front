@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 type TitleInputProps = {
   value: string
@@ -33,17 +33,16 @@ function TodoList() {
 function App() {
   const [title, setTitle] = useState('')
 
-  useEffect(() => {
-    document.title = title.trim() || 'Todo'
-  }, [title])
-
   return (
-    <main>
-      <h1>Todo</h1>
-      <TitleInput value={title} onChange={setTitle} />
-      <TodoForm />
-      <TodoList />
-    </main>
+    <>
+      <title>{title.trim() || 'Todo'}</title>
+      <main>
+        <h1>Todo</h1>
+        <TitleInput value={title} onChange={setTitle} />
+        <TodoForm />
+        <TodoList />
+      </main>
+    </>
   )
 }
 
