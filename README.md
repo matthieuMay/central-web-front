@@ -9,7 +9,18 @@ npm run dev
 
 This is the optional Sprint 1 Query bonus, based on the static `end/j2-sprint1-props` checkpoint. The original `data/board.json` remains a reference; `/board` displays only API data and reports request failures.
 
-Start the **teacher-provided functional API** locally following its README: start Postgres via `docker compose up -d`, install dependencies, run its migration/seed command, then run its development server. Alternatively select its documented file-backed SQLite mode. The API must implement `GET /boards/mini-trello`, `POST /columns/:columnId/cards` and `PATCH /cards/:cardId`, permit the Vite origin via CORS and listen at `http://localhost:3000` (or set the URL below). The older API starter with only GET is insufficient for this bonus.
+Start the **teacher-provided functional API** from its own repository (Node.js 22+). For the default Postgres setup:
+
+```bash
+cp .env.example .env
+npm ci
+docker compose -f docker-compose.yml -f docker-compose.j2.yml up -d db pgweb
+docker compose -f docker-compose.yml -f docker-compose.j2.yml ps  # wait for db: healthy
+npm run db:migrate
+npm run dev
+```
+
+Alternatively set `DB_DRIVER=sqlite` in the API environment, then run `npm run db:migrate` and `npm run dev` without Docker. Consult the API README for reset and pgweb instructions. It serves `http://localhost:3000` and allows `http://localhost:5173` by default. The older API starter with only GET is insufficient for this bonus.
 
 ```bash
 # Local frontend configuration (do not commit .env.local):
