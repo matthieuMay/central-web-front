@@ -19,3 +19,30 @@ body {
   outline: 2px solid #1d4ed8;
   outline-offset: 2px;
 }
+
+form label {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+form input {
+  background: white;
+  border: 1px solid #64748b;
+  border-radius: 0.25rem;
+  max-width: 100%;
+  padding: 0.375rem;
+  width: 100%;
+}
+
+form button, article > button {
+  border: 1px solid #64748b;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0.5rem 0 0;
+  padding: 0.25rem 0.5rem;
+}
+
+form :focus-visible, article > button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}

@@ -1,5 +1,5 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
@@ -9,6 +9,7 @@ type ColumnProps = { column: ColumnData }
 
 export function Column({ column }: ColumnProps) {
   const [title, setTitle] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -16,7 +17,10 @@ export function Column({ column }: ColumnProps) {
     const trimmed = title.trim()
     if (!trimmed || create.isPending) return
     create.mutate({ columnId: column.id, id: uuidv7(), title: trimmed }, {
-      onSuccess: () => setTitle(''),
+      onSuccess: () => {
+        setTitle('')
+        inputRef.current?.focus()
+      },
     })
   }
 
@@ -30,7 +34,7 @@ export function Column({ column }: ColumnProps) {
         ))}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
-          <input id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required disabled={create.isPending} />
+          <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
           <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
           {create.isPending && <p role="status">Adding card…</p>}
           {create.isError && <p role="alert">Could not add card: {create.error.message}</p>}

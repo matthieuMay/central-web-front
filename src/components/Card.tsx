@@ -1,5 +1,5 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 
@@ -8,6 +8,7 @@ type CardProps = { card: CardData }
 export function Card({ card }: CardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -15,7 +16,10 @@ export function Card({ card }: CardProps) {
     const trimmed = title.trim()
     if (!trimmed || edit.isPending) return
     edit.mutate({ cardId: card.id, title: trimmed }, {
-      onSuccess: () => setEditing(false),
+      onSuccess: () => {
+        setEditing(false)
+        requestAnimationFrame(() => editButtonRef.current?.focus())
+      },
     })
   }
 
@@ -26,14 +30,14 @@ export function Card({ card }: CardProps) {
       {editing ? (
         <form onSubmit={submit}>
           <label htmlFor={`edit-card-${card.id}`}>Edit card title</label>
-          <input id={`edit-card-${card.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required disabled={edit.isPending} />
+          <input id={`edit-card-${card.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required autoFocus />
           <button type="submit" disabled={edit.isPending || !title.trim()}>Save</button>
-          <button type="button" disabled={edit.isPending} onClick={() => { setEditing(false); edit.reset() }}>Cancel</button>
+          <button type="button" disabled={edit.isPending} onClick={() => { setEditing(false); edit.reset(); requestAnimationFrame(() => editButtonRef.current?.focus()) }}>Cancel</button>
           {edit.isPending && <p role="status">Saving card…</p>}
           {edit.isError && <p role="alert">Could not save card: {edit.error.message}</p>}
         </form>
       ) : (
-        <button type="button" onClick={() => { setTitle(card.title); edit.reset(); setEditing(true) }}>Edit</button>
+        <button ref={editButtonRef} type="button" onClick={() => { setTitle(card.title); edit.reset(); setEditing(true) }}>Edit</button>
       )}
     </Box>
   )
