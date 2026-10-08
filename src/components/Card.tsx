@@ -38,7 +38,7 @@ export function Card({ card, selected,onSelect }: CardProps) {
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
       {editing ? (
-        <form onSubmit={submit}>
+        <form onSubmit={submit} onClick={(event) => event.stopPropagation()}>
           <label htmlFor={`edit-card-${card.id}`}>Edit card title</label>
           <input id={`edit-card-${card.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required autoFocus />
           <button type="submit" disabled={edit.isPending || !title.trim()}>Save</button>
@@ -48,6 +48,12 @@ export function Card({ card, selected,onSelect }: CardProps) {
         </form>
       ) : (
         <button ref={editButtonRef} type="button" onClick={(event) => { event.stopPropagation(); setTitle(card.title); edit.reset(); setEditing(true) }}>Edit</button>
+      )}
+      {selected && (
+        <>
+          <button type="button" onClick={(event) => { event.stopPropagation(); }}>{'<'}</button>
+          <button type="button" onClick={(event) => {event.stopPropagation()} }>{'>'}</button>
+        </>
       )}
     </Box>
   )
