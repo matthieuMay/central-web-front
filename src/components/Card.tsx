@@ -3,13 +3,18 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 
-type CardProps = { card: CardData }
+type CardProps = { card: CardData, selectedCardId: string | null, setSelectedCardId: (id: string | null) => void }
 
-export function Card({ card }: CardProps) {
+export function Card({ card, selectedCardId, setSelectedCardId }: CardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
+  const selected = selectedCardId === card.id
+
+  function selectCard() {
+    setSelectedCardId(current => current === card.id ? null : card.id)
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
