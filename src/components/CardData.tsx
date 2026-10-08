@@ -1,3 +1,4 @@
+import { Box, Stack, Text } from '@chakra-ui/react'
 import type { CardData } from '../Types'
 
 type CardDataProps = {
@@ -6,10 +7,12 @@ type CardDataProps = {
 
 function Card({ card }: CardDataProps) {
   return (
-    <li>
-      <strong>{card.title}</strong>
-      {card.description && <p>{card.description}</p>}
-    </li>
+    <Box borderWidth="1px" borderRadius="md" p={3}>
+      <Stack gap={1}>
+        <Text fontWeight="bold">{card.title}</Text>
+        {card.description && <Text>{card.description}</Text>}
+      </Stack>
+    </Box>
   )
 }
 
