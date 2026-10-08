@@ -43,12 +43,6 @@ export function Card({ card, selected, onSelect }: CardProps) {
       borderColor={selected ? 'blue.500' : 'gray.200'}
       aria-pressed={selected}
       tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          handleSelect()
-        }
-      }}
     >
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
