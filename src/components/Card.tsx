@@ -30,16 +30,20 @@ export function Card({ card, selected, onSelectCard }: CardProps) {
   return (
     <Box 
       as="article" 
+      id={`card-${card.id}`}
       bg="white" 
       borderWidth="1px" 
       borderRadius="md" 
       p={4} 
+      tabIndex={0}
       overflowWrap="anywhere"
       borderColor={selected ? 'blue.500' : 'gray.200'}
+      _focusVisible={{ outline: '2px solid', outlineColor: 'blue.500' }}
       onClick={(event)=> {
         const target = event.target
         if (target instanceof HTMLElement && target.closest('button,form')) return 
         onSelectCard(card.id)
+        event.currentTarget.focus()
       }}>
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
