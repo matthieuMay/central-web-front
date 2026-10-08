@@ -15,3 +15,5 @@ Single-context layout: root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domai
 ## Prompt storage
 
 Store prompts in `./prompts/` as Markdown files named `<timestamp>-<summary>.md`. Use a UTC timestamp in `YYYYMMDDTHHMMSSZ` format and a snake_case summary of at most three words (for example, `20261008T143000Z-setup_local_skills.md`).
+
+This should be done with every starting prompts. The rest of the session should not be written
