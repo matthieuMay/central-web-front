@@ -3,13 +3,18 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 
-type CardProps = { card: CardData }
+type CardProps = {
+  card: CardData
+  selectedCardId: string | null
+  onSelectCard: (cardId: string) => void
+}
 
-export function Card({ card }: CardProps) {
+export function Card({ card, selectedCardId, onSelectCard }: CardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
+  const selected = selectedCardId === card.id
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,7 +29,17 @@ export function Card({ card }: CardProps) {
   }
 
   return (
-    <Box as="article" bg="white" borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
+    <Box
+      as="article"
+      bg={selected ? 'blue.50' : 'white'}
+      borderWidth="1px"
+      borderColor={selected ? 'blue.300' : 'gray.200'}
+      borderRadius="md"
+      p={4}
+      overflowWrap="anywhere"
+      onClick={() => onSelectCard(card.id)}
+      cursor="pointer"
+    >
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
       {editing ? (
@@ -37,7 +52,7 @@ export function Card({ card }: CardProps) {
           {edit.isError && <p role="alert">Could not save card: {edit.error.message}</p>}
         </form>
       ) : (
-        <button ref={editButtonRef} type="button" onClick={() => { setTitle(card.title); edit.reset(); setEditing(true) }}>Edit</button>
+        <button ref={editButtonRef} type="button" onClick={(event) => { event.stopPropagation(); setTitle(card.title); edit.reset(); setEditing(true) }}>Edit</button>
       )}
     </Box>
   )
