@@ -12,6 +12,7 @@ export function Column({ column }: ColumnProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
 
+  
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = title.trim()
@@ -24,13 +25,22 @@ export function Column({ column }: ColumnProps) {
     })
   }
 
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+
+  //const selected = selectedCardId === card.id
+  function selectCard(cardId: string) {
+    setSelectedCardId(current => current === cardId ? null : cardId)
+  }
+  
   return (
     <Box as="section" aria-label={column.title} bg="gray.100" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
       <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="gray.600">No cards yet</Text>}
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} />
+          <Card key={card.id} card={card} 
+                selected={selectedCardId === card.id}
+                onSelect={() => selectCard(card.id)}/>
         ))}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
