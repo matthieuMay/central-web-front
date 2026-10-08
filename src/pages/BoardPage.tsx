@@ -34,7 +34,7 @@ function Column({column} : ColumnProps) {
     <Box key={column.id} padding="4" background="gray.100">
       <Text fontWeight="bold">{column.title}</Text>
       <Stack>
-        {column.cards ? column.cards.map((card) => (
+        {column.cards.length != 0 ? column.cards.map((card) => (
           <Card key={card.id} card={card} />
         )) : <Text>No cards available</Text>}
       </Stack>
