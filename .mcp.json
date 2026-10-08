@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npm",
+      "args": ["run", "--silent", "mcp:chrome-devtools"]
+    }
+  }
+}
