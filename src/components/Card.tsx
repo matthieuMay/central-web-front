@@ -1,4 +1,4 @@
-import { Card } from '@chakra-ui/react'
+import { Card, Button } from '@chakra-ui/react'
 import type { CardData } from '../type.ts'
 
 export default function BoardCard({ card }: { card: CardData }) {
@@ -6,9 +6,11 @@ export default function BoardCard({ card }: { card: CardData }) {
     <Card.Root>
     <Card.Body>
       <Card.Title>{card.title}</Card.Title>
-    <Card.Description>{card.description}</Card.Description>
+      <Card.Description>{card.description}</Card.Description>
     </Card.Body>
-    <Card.Footer />
+    <Card.Footer justifyContent="flex-end">
+        <Button>Edit</Button>
+      </Card.Footer>
     </Card.Root>
   )
 }
