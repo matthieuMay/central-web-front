@@ -15,6 +15,7 @@ export function Card({ card, selected, onSelect }: CardProps) {
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
 
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = title.trim()
@@ -31,6 +32,14 @@ export function Card({ card, selected, onSelect }: CardProps) {
     onSelect()
   }
 
+  function handleKeyDown(event : React.KeyboardEvent){
+    if (selected && event.key === 'd' ){
+      console.log('Bonjour')
+    }
+    else if (selected && event.key === 'q'){
+      console.log('Bonsoir')
+    }
+  }
   return (
     <Box
       as="article"
@@ -43,6 +52,7 @@ export function Card({ card, selected, onSelect }: CardProps) {
       borderColor={selected ? 'blue.500' : 'gray.200'}
       aria-pressed={selected}
       tabIndex={0}
+      onKeyDown={handleKeyDown}
     >
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
