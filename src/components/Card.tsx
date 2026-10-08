@@ -3,15 +3,19 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 
-type CardProps = { card: CardData, onSelect?: (cardId: string) => void }
+type CardProps = { card: CardData, onSelect?: (cardId: string) => void, cardSelectedId?: string | null }
 
 
-export function Card({ card, onSelect }: CardProps) {
+
+export function Card({ card, onSelect, cardSelectedId: cardSelectedId }: CardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
+  const isSelected = cardSelectedId === card.id
 
+  console.log(`Rendering card ${card.id},cardSelectedId: ${cardSelectedId}, isSelected: ${isSelected}`)
+  
   
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -29,7 +33,7 @@ export function Card({ card, onSelect }: CardProps) {
   }
 
   return (
-    <Box as="article" onMouseDown={handleMouseDown} bg="white" borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
+    <Box as="article" onMouseDown={handleMouseDown} bg={isSelected ? "blue.100" : "white"} borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
       {editing ? (
