@@ -7,12 +7,12 @@ export type CardData = {
 export type BoardData = {
     id: string;
     title: string;
-    columns: ColumnData;
+    columns: ColumnData[];
 };
 
 export type ColumnData = {
     id: string;
     title: string;
-    cards: CardData;
+    cards: CardData[];
 };
 
