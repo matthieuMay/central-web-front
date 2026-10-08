@@ -2,6 +2,8 @@ import { Box, Heading, Text } from '@chakra-ui/react'
 import { useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { boardKey, moveCard } from '../api/board'
 
 type CardProps = {
   card: CardData
@@ -33,8 +35,14 @@ export function Card({ card, selected, onSelect }: CardProps) {
   }
 
   function handleKeyDown(event : React.KeyboardEvent){
+    const queryClient = useQueryClient()
     if (selected && event.key === 'd' ){
       console.log('Bonjour')
+      return useMutation({
+        scope: {id: 'board-writes'},
+        mutationFn : moveCard,
+        onSuccess: () => queryClient.invalidateQueries({queryKey: boardKey, exact: true})
+      })
     }
     else if (selected && event.key === 'q'){
       console.log('Bonsoir')
