@@ -5,6 +5,8 @@ import { useState } from 'react'
 
 type BoardProps = { board: BoardData }
 
+
+
 export function Board({ board }: BoardProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   function selectedCard(id: string) {

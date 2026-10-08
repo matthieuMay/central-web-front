@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard } from './board'
+import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string }
@@ -82,5 +82,14 @@ export function useEditCard() {
     })),
     onError: (_error, _input, context) => rollback(queryClient, context),
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+export function useMoveCard() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: moveCard,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
   })
 }
