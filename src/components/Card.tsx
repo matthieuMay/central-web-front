@@ -1,16 +1,18 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 
-type CardProps = { card: CardData }
+type CardProps = { card: CardData, onSelect?: (cardId: string) => void }
 
-export function Card({ card }: CardProps) {
+
+export function Card({ card, onSelect }: CardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
 
+  
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = title.trim()
@@ -22,9 +24,12 @@ export function Card({ card }: CardProps) {
       },
     })
   }
+  function handleMouseDown() {
+    onSelect?.(card.id)
+  }
 
   return (
-    <Box as="article" bg="white" borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
+    <Box as="article" onMouseDown={handleMouseDown} bg="white" borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
       {editing ? (
