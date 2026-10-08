@@ -1,16 +1,16 @@
-export type Board = {
+export type BoardType = {
     id : string;
-    name : string;
-    columns : Column[];
+    title : string;
+    columns : ColumnType[];
 }
 
-export type Column = {
+export type ColumnType = {
     id : string;
-    name : string;
-    cards : Card[];
+    title : string;
+    cards : CardType[];
 }
 
-export type Card = {
+export type CardType = {
     id : string;
     title : string;
     description? : string;
