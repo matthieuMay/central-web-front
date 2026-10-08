@@ -22,7 +22,9 @@
     {
       "id": "review",
       "title": "Review",
-      "cards": []
+      "cards": [
+        {"id":"card-7", "title":"test"}
+      ]
     },
     {
       "id": "done",

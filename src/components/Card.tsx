@@ -8,13 +8,13 @@ export function CardComponent({ card }: { card: CardType }) {
                 <Checkbox.Root>
                 <Checkbox.HiddenInput />
                 <Checkbox.Control />
-                <Text>{card.title}</Text>
+                <Checkbox.Label fontSize="lg" fontWeight="semibold">{card.title}</Checkbox.Label>
             </Checkbox.Root>
             </HStack>
-            <Text>{card.description || 'No description'}</Text>
+            <Text>{card.description}</Text>
             <HStack gap={2} mt={2}>
-            <Button>←</Button>
-            <Button>→</Button>
+            <Button bg="gray.400">←</Button>
+            <Button bg="gray.400">→</Button>
             </HStack>
         </Box>
     )
