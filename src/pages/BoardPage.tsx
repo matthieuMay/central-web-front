@@ -12,8 +12,13 @@ export function BoardPage() {
       <Heading as="h1">{boardInfo.title}</Heading>
       <SimpleGrid columns={{ base: 1, md: 4, xl: 4 }} gap={4}>
         <For each={columns}>
-          {(column) => <Column column={column} />}
-
+          {(column) => (
+            <Column column={column}>
+              <For each={column.cards as CardData[]}>
+                {(card) => <Card card={card} />}
+              </For>
+            </Column>
+          )}
         </For>
       </SimpleGrid>
     </Stack>
