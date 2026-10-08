@@ -1,6 +1,6 @@
 import { Heading, Link, Stack, Text } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router'
-
+import { motion } from "motion/react"
 export function HomePage() {
   return (
     <Stack gap={4}>
