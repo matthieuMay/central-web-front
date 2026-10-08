@@ -1,17 +1,17 @@
 export type CardData = {
     id: string;
     title: string;
-    description: string;
+    description?: string;
 };
 
 export type ColumnData = {
     id: string;
     title: string;
-    cards: CardData;
+    cards: CardData[];
 };
 
 export type BoardData = {
     id:string;
     title: string;
-    columns: ColumnData;
+    columns: ColumnData[];
 };
