@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Menu, Portal, Stack, Text } from '@chakra-ui/react'
-import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { v7 as uuidv7 } from 'uuid'
 import { useMoveCard, useUpdateCardCollections } from '../api/mutations'
@@ -115,14 +115,13 @@ export function Task({ card, columns, columnId }: TaskProps) {
     persist(card.subtasks.filter((_item, itemIndex) => itemIndex !== index))
   }
 
-  function stop(event: MouseEvent<HTMLElement>) { event.stopPropagation() }
   function keyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') { event.preventDefault(); saveDraft() }
     if (event.key === 'Escape') { event.preventDefault(); setDraft(null); setWriteError('') }
   }
 
   return (
-    <Box mt={3} onClick={stop} onMouseDown={stop}>
+    <Box mt={3} data-card-drag-disabled>
       <Stack as="section" aria-label={`Subtasks for ${card.title}`} gap={1}>
         {card.subtasks.map((item, index) => <SubtaskRow key={item.id} item={item} index={index} onReorder={reorder} onToggle={toggle} onDelete={deleteSubtask} disabled={update.isPending || move.isPending} />)}
         {draft !== null && <Flex align="center" gap={2}>

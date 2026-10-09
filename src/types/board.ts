@@ -4,6 +4,8 @@ export type CommentData = {
   createdAt: string
 }
 
+export type CommentInput = Omit<CommentData, 'createdAt'> & { createdAt?: string }
+
 export type SubtaskData = {
   id: string
   title: string
@@ -15,7 +17,7 @@ export type CardData = {
   title: string
   description?: string
   assignees: string[]
-  comments: CommentData[]
+  comments: CommentInput[]
   subtasks: SubtaskData[]
 }
 
@@ -24,6 +26,8 @@ export type UserData = {
   name?: string
   displayName?: string
   username?: string
+  firstName?: string
+  lastName?: string
   photo?: string
   photoUrl?: string
   avatar?: string

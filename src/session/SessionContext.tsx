@@ -16,7 +16,12 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | null>(null)
 
 export function userDisplayName(user: UserData) {
-  return user.name?.trim() || user.displayName?.trim() || user.username?.trim() || user.id
+  const resolvedName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim()
+    || user.displayName?.trim()
+    || user.name?.trim()
+    || user.username?.trim()
+    || user.id
+  return resolvedName
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {

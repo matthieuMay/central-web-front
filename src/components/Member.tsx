@@ -32,7 +32,7 @@ export function Member({ card }: MemberProps) {
     event.stopPropagation()
   }
 
-  const selected = card.assignees.map((id) => users.data?.find((user) => user.id === id) ?? { id, name: id })
+  const selected = card.assignees.map((id) => users.data?.find((user) => user.id === id) ?? { id, name: `User ${id}` })
   const hiddenCount = Math.max(0, selected.length - 3)
 
   function listKeyDown(event: KeyboardEvent<HTMLDivElement>) {

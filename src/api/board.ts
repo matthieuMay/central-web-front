@@ -1,4 +1,4 @@
-import type { BoardData, CardData, SubtaskData, UserData } from '../types/board'
+import type { BoardData, CardData, CommentInput, SubtaskData, UserData } from '../types/board'
 
 export const boardKey = ['board', 'mini-trello'] as const
 
@@ -26,23 +26,49 @@ export function getBoard() {
 }
 
 export function getUsers() {
-  return request<Array<UserData & { display_name?: string; fullName?: string }>>('/users').then((users) => users.map(normalizeUser))
+  return request<Array<UserData & {
+    userId?: string | number
+    display_name?: string
+    fullName?: string
+    first_name?: string
+    last_name?: string
+    firstname?: string
+    lastname?: string
+  }>>('/users').then((users) => users.map(normalizeUser))
 }
 
-export type CardCollections = Pick<CardData, 'assignees' | 'comments' | 'subtasks'>
+export type CardCollections = {
+  assignees: CardData['assignees']
+  comments: CommentInput[]
+  subtasks: CardData['subtasks']
+}
 
 export function updateCardCollections({ cardId, collections }: { cardId: string; collections: CardCollections }) {
+  const { subtasks, ...apiCollections } = collections
   return request<CardData>(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(collections),
+    body: JSON.stringify({ ...apiCollections, checklistItems: subtasks }),
   }).then(normalizeCard)
 }
 
-function normalizeUser(user: UserData & { display_name?: string; fullName?: string }): UserData {
+function normalizeUser(user: UserData & {
+  userId?: string | number
+  display_name?: string
+  fullName?: string
+  first_name?: string
+  last_name?: string
+  firstname?: string
+  lastname?: string
+}): UserData {
+  const firstName = user.firstName ?? user.first_name ?? user.firstname
+  const lastName = user.lastName ?? user.last_name ?? user.lastname
   return {
     ...user,
-    name: user.name ?? user.displayName ?? user.display_name ?? user.fullName ?? user.username ?? user.id,
+    id: String(user.id ?? user.userId),
+    name: user.name ?? user.displayName ?? user.display_name ?? user.fullName ?? ([firstName, lastName].filter(Boolean).join(' ') || user.username || String(user.id ?? user.userId)),
+    firstName,
+    lastName,
   }
 }
 
@@ -51,7 +77,11 @@ function normalizeCard(card: CardData & { checklistItems?: Array<{ description: 
   const subtasks: SubtaskData[] = Array.isArray(card.subtasks)
     ? card.subtasks
     : (legacy ?? []).map((item, index) => ({ id: `legacy-${index}-${item.description}`, title: item.description, done: item.done }))
-  return { ...card, subtasks }
+  return {
+    ...card,
+    assignees: Array.isArray(card.assignees) ? card.assignees.map(String) : [],
+    subtasks,
+  }
 }
 
 function normalizeBoard(board: BoardData & { columns: Array<{ cards: Array<CardData & { checklistItems?: Array<{ description: string; done: boolean }> }> }> }): BoardData {

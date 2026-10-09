@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent, type MouseEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Box, Button, Stack, Text } from '@chakra-ui/react'
 import { useUpdateCardCollections } from '../api/mutations'
 import type { CardData } from '../types/board'
@@ -11,7 +11,7 @@ export function Commentary({ card }: CommentaryProps) {
   const [active, setActive] = useState(false)
   const [validationError, setValidationError] = useState('')
   const update = useUpdateCardCollections()
-  const { user, isAnonymous, displayName } = useSession()
+  const { user, isAnonymous } = useSession()
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -27,7 +27,7 @@ export function Commentary({ card }: CommentaryProps) {
     setValidationError('')
     update.mutate({
       cardId: card.id,
-      collections: { assignees: card.assignees, comments: [...card.comments, { user: displayName(user), comment: trimmedComment, createdAt: new Date().toISOString() }], subtasks: card.subtasks },
+      collections: { assignees: card.assignees, comments: [...card.comments, { user: user.id, comment: trimmedComment }], subtasks: card.subtasks },
     }, {
       onSuccess: () => {
         setComment('')
@@ -43,17 +43,13 @@ export function Commentary({ card }: CommentaryProps) {
     }
   }
 
-  function stop(event: MouseEvent<HTMLElement>) {
-    event.stopPropagation()
-  }
-
   return (
-    <Box mt={3} onClick={stop} onMouseDown={stop}>
+    <Box mt={3} data-card-drag-disabled>
       <Stack as="section" aria-label={`Comments for ${card.title}`} gap={2}>
         {card.comments.map((entry, index) => (
           <Box key={`${entry.createdAt}-${index}`} borderLeftWidth="2px" borderColor="border.muted" pl={2}>
             <Text fontSize="sm"><strong>{entry.user}</strong>: {entry.comment}</Text>
-            <time dateTime={entry.createdAt}>{new Date(entry.createdAt).toLocaleString()}</time>
+            {entry.createdAt && <time dateTime={entry.createdAt}>{new Date(entry.createdAt).toLocaleString()}</time>}
           </Box>
         ))}
         <form onSubmit={submit}>

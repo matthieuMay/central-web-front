@@ -39,7 +39,14 @@ export function BoardPage() {
     if (moving.current) return
     move.reset()
     setSelectedCardId(id)
-    document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
+    const activeElement = document.activeElement
+    const isInteractive = activeElement instanceof HTMLButtonElement
+      || activeElement instanceof HTMLInputElement
+      || activeElement instanceof HTMLTextAreaElement
+      || activeElement instanceof HTMLSelectElement
+      || activeElement instanceof HTMLAnchorElement
+      || activeElement?.matches('[contenteditable]:not([contenteditable="false"])')
+    if (!isInteractive) document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
   }
 
   const moveSelected = useCallback((direction: -1 | 1, axis: 'horizontal' | 'vertical' = 'horizontal') => {

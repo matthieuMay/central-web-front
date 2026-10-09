@@ -95,6 +95,12 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+button:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--accent-color) 16%, transparent);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
 .subtask-dragging {
   background: color-mix(in srgb, var(--accent-color) 16%, transparent);
 }

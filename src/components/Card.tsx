@@ -26,8 +26,10 @@ type CardProps = {
 export function Card({ card, columnId, cardIndex, selected, confetti, onSelect, onEdit, onDropCard, columns }: CardProps) {
   const reducedMotion = useReducedMotion()
   const ref = useRef<HTMLElement>(null)
+  const pointerOnControl = useRef(false)
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'card',
+    canDrag: () => !pointerOnControl.current,
     item: () => {
       onSelect()
       return { cardId: card.id, sourceColumnId: columnId }
@@ -55,14 +57,27 @@ export function Card({ card, columnId, cardIndex, selected, confetti, onSelect, 
   }, [drag, drop])
 
   function select(event: MouseEvent<HTMLElement>) {
+    if ((event.target as Element).closest('[data-card-drag-disabled]')) {
+      onSelect()
+      return
+    }
     if ((event.target as Element).closest('button, input, textarea, select, a, [contenteditable]:not([contenteditable="false"])')) return
     onSelect()
+  }
+
+  function rememberPointerTarget(event: { target: EventTarget | null }) {
+    pointerOnControl.current = event.target instanceof Element
+      && event.target.closest('button, input, textarea, select, a, [contenteditable]:not([contenteditable="false"]), [data-card-drag-disabled]') !== null
+  }
+
+  function clearPointerTarget() {
+    pointerOnControl.current = false
   }
 
   return (
     <motion.div layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }}>
       <Box
-        ref={attachRef} as="article" id={cardElementId(card.id)} tabIndex={0} onClick={select} onFocus={onSelect}
+        ref={attachRef} as="article" id={cardElementId(card.id)} tabIndex={0} onClick={select} onMouseDownCapture={rememberPointerTarget} onPointerDownCapture={rememberPointerTarget} onClickCapture={clearPointerTarget} onKeyDownCapture={rememberPointerTarget} onKeyUpCapture={clearPointerTarget} onFocus={(event) => { if (event.target === event.currentTarget) onSelect() }}
         className="board-card" aria-current={selected ? 'true' : undefined} aria-selected={selected}
         opacity={isDragging ? 0.45 : 1} position="relative"
         bg={selected ? 'bg.info' : 'bg'} borderColor={selected ? 'border.info' : 'border'}
