@@ -86,13 +86,16 @@ export function useEditCard() {
   })
 }
 
-export function useMoveCard() {
+export function useMoveCard(onFailure: (input: MoveCardInput) => void) {
   const queryClient = useQueryClient()
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
     onMutate: (input: MoveCardInput) => begin(queryClient, (board) => placeCard(board, input)),
-    onError: (_error, _input, context) => rollback(queryClient, context),
+    onError: (_error, input, context) => {
+      onFailure(input)
+      rollback(queryClient, context)
+    },
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })
 }

@@ -1,63 +1,37 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  rotate: number;
-  color: string;
-}
+export default function Confetti({ particleCount = 0 }: { particleCount?: number }) {
+  const reducedMotion = useReducedMotion()
+  const [particles, setParticles] = useState(() => {
+    const colors = ['#ff0055', '#0099ff', '#00cc88', '#ffaa00']
+    return Array.from({ length: particleCount }, (_, id) => ({
+      id,
+      x: (Math.random() - 0.5) * 220,
+      y: -(Math.random() * 100 + 40),
+      rotate: (Math.random() - 0.5) * 540,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      round: Math.random() > 0.5,
+    }))
+  })
 
-export default function Confetti({particleCount = 0}: {particleCount?:number}) {
-  const [particles, setParticles] = useState<Particle[]>([]);
+  useEffect(() => {
+    const timeout = setTimeout(() => setParticles([]), 1000)
+    return () => clearTimeout(timeout)
+  }, [])
 
-  React.useEffect(() => {
-    if (particleCount <= 0) return;
-    const colors = ['#ff0055', '#0099ff', '#00ff66', '#ffaa00'];
-    
-    // Génère 40 confettis avec des trajectoires aléatoires
-    const newParticles = Array.from({ length: 40 }).map((_, i) => ({
-      id: Date.now() + i,
-      x: (Math.random() - 0.5) * 300, // Dispersion horizontale
-      y: -(Math.random() * 200 + 100), // Propulsion vers le haut
-      rotate: Math.random() * 360,
-      color: colors[Math.floor(Math.random() * colors.length)]
-    }));
-
-    setParticles(newParticles);
-
-    // Nettoie les particules après l'animation
-    const timeoutId = setTimeout(() => setParticles([]), 2000);
-    return () => clearTimeout(timeoutId);
-  },[particleCount]);
-
+  if (reducedMotion || particles.length === 0) return null
   return (
-        <AnimatePresence>
-          {particles.map((p) => (
-            <motion.div
-              key={p.id}
-              initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
-              animate={{ 
-                x: p.x, 
-                y: p.y, 
-                rotate: p.rotate,
-                opacity: 0,
-                scale: 0.5
-              }}
-              transition={{ 
-                duration: 1.5, 
-                ease: "easeOut" 
-              }}
-              style={{
-                position: 'absolute',
-                width: '10px',
-                height: '10px',
-                backgroundColor: p.color,
-                borderRadius: Math.random() > 0.5 ? '50%' : '0px' // Forme mixte (cercles / carrés)
-              }}
-            />
-          ))}
-        </AnimatePresence>
-  );
+    <div aria-hidden="true" data-confetti-burst="" style={{ position: 'absolute', left: '50%', top: '50%', pointerEvents: 'none', zIndex: 5 }}>
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          initial={{ transform: 'translate3d(0, 0, 0) rotate(0deg) scale(1)', opacity: 1 }}
+          animate={{ transform: `translate3d(${particle.x}px, ${particle.y}px, 0) rotate(${particle.rotate}deg) scale(0.6)`, opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+          style={{ position: 'absolute', width: 6, height: 9, background: particle.color, borderRadius: particle.round ? '50%' : 1 }}
+        />
+      ))}
+    </div>
+  )
 }

@@ -1,5 +1,5 @@
 import { useIsMutating, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Box, Button, HStack, Text } from '@chakra-ui/react'
+import { Box, Button, HStack, Text, VisuallyHidden } from '@chakra-ui/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard } from '../api/board'
 import { useMoveCard } from '../api/mutations'
@@ -18,10 +18,17 @@ export function BoardPage() {
   const writes = useIsMutating({ predicate: (mutation) => mutation.options.scope?.id === 'board-writes' })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
-  const move = useMoveCard()
+  const [arrival, setArrival] = useState<MoveCardInput | null>(null)
+  const [announcement, setAnnouncement] = useState('')
+  const pendingArrival = useRef<MoveCardInput | null>(null)
   const moving = useRef(false)
   const focusAfterMove = useRef<string | null>(null)
-  const busy = writes > 0 || isFetching || isError || !!editingCardId
+  const move = useMoveCard((input) => {
+    pendingArrival.current = null
+    setArrival(null)
+    focusAfterMove.current = input.cardId
+  })
+  const busy = writes > 0 || isFetching || isError || !!editingCardId || !!arrival
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
   const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
@@ -44,17 +51,31 @@ export function BoardPage() {
   const moveTo = useCallback((input: MoveCardInput) => {
     const current = queryClient.getQueryData<typeof data>(boardKey)
     if (!current || busy || moving.current || queryClient.isMutating({ predicate: (mutation) => mutation.options.scope?.id === 'board-writes' }) || queryClient.isFetching({ queryKey: boardKey, exact: true })) return false
-    if (placeCard(current, input) === current) return false
+    const placed = placeCard(current, input)
+    if (placed === current) return false
     moving.current = true
     move.reset()
     setSelectedCardId(input.cardId)
+    const destination = placed.columns.find((column) => column.id === input.column)!
+    const target = { ...input, position: destination.cards.findIndex((card) => card.id === input.cardId) }
+    pendingArrival.current = target
+    setArrival(target)
     focusAfterMove.current = input.cardId
     move.mutate(input, {
-      onError: () => { focusAfterMove.current = input.cardId },
       onSettled: () => { moving.current = false },
     })
     return true
   }, [queryClient, busy, move])
+
+  const arrived = (id: string) => {
+    if (!arrival || pendingArrival.current !== arrival || arrival.cardId !== id) return false
+    const destination = data?.columns.find((column) => column.id === arrival.column)
+    setAnnouncement(`${selectedCard?.title ?? 'Card'} placed in ${destination?.title ?? arrival.column}, position ${arrival.position! + 1}.`)
+    pendingArrival.current = null
+    setArrival(null)
+    return true
+  }
+  const arrivingCardId = arrival && data?.columns.find((column) => column.id === arrival.column)?.cards[arrival.position!]?.id === arrival.cardId ? arrival.cardId : null
 
   const moveSelected = useCallback((direction: -1 | 1, vertical = false) => {
     if (!data || !selectedCardId || selectedColumnIndex < 0) return false
@@ -89,6 +110,7 @@ export function BoardPage() {
   return (
     <>
       <Box mb={4} minH="3rem">
+        <VisuallyHidden role="status" aria-live="polite">{announcement}</VisuallyHidden>
         {selectedCard && (
           <HStack flexWrap="wrap" gap={3}>
             <Text>Selected: {selectedCard.title}</Text>
@@ -101,7 +123,7 @@ export function BoardPage() {
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
         {isError && <Text role="alert" color="red.700">Could not refresh board: {error.message}. <Button size="xs" onClick={() => void refetch()}>Retry</Button></Text>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} arrivingCardId={arrivingCardId} onArrival={arrived} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )
