@@ -1,0 +1,1 @@
+Correct the drag visual feedback so the card preview carried by the pointer is smaller and semi-transparent, while the source card in its column keeps its normal appearance. Remove the incorrect source-card styling and validate lint/build.

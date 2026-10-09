@@ -1,0 +1,1 @@
+Fix the confetti regression: it must be localized to the card that enters the rightmost column rather than screen-wide, and it must replay every time any card enters the rightmost column. Preserve reduced-motion behavior and verify lint/build plus browser behavior.

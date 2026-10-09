@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Box, Button, HStack, Text } from '@chakra-ui/react'
+import { Box, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard } from '../api/board'
 import { useMoveCard } from '../api/mutations'
@@ -15,6 +15,10 @@ export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
+  const [celebration, setCelebration] = useState<{ cardId: string; token: number } | null>(null)
+  const celebrationToken = celebration?.token ?? 0
+  const [announcement, setAnnouncement] = useState('')
+  const [isMoving, setIsMoving] = useState(false)
   const move = useMoveCard()
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
@@ -30,55 +34,101 @@ export function BoardPage() {
     }
   }, [data])
 
-  function selectCard(id: string) {
-    if (moving.current) return
-    move.reset()
-    setSelectedCardId((current) => current === id ? null : id)
-    document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
-  }
+  const moveCard = useCallback((cardId: string, destination: string, position: number, sourceColumn: string) => {
+    if (!data || moving.current || move.isPending || editingCardId) return
+    const destinationColumn = data.columns.find((column) => column.id === destination)
+    if (!destinationColumn) return
 
-  const moveSelected = useCallback((direction: -1 | 1) => {
-    if (!data || !selectedCardId || selectedColumnIndex < 0 || editingCardId || moving.current || move.isPending) return false
-    const destination = data.columns[selectedColumnIndex + direction]
-    if (!destination) return false
     moving.current = true
+    setIsMoving(true)
+    setSelectedCardId(cardId)
     move.reset()
-    focusAfterMove.current = { id: selectedCardId, destination: destination.id }
-    move.mutate({ cardId: selectedCardId, column: destination.id }, {
-      onError: () => { focusAfterMove.current = null },
-      onSettled: () => { moving.current = false },
+    focusAfterMove.current = { id: cardId, destination }
+    move.mutate({ cardId, column: destination, position }, {
+      onSuccess: () => {
+        const destinationIndex = data.columns.findIndex((column) => column.id === destination)
+        if (sourceColumn !== destination && destinationIndex === data.columns.length - 1) {
+          setCelebration((current) => ({ cardId, token: (current?.token ?? 0) + 1 }))
+        } else {
+          setCelebration(null)
+        }
+        setAnnouncement(`Moved card to ${destinationColumn.title}, position ${position + 1}.`)
+      },
+      onError: (requestError) => {
+        focusAfterMove.current = null
+        setAnnouncement(`Could not move card: ${requestError.message}. Try again.`)
+      },
+      onSettled: () => {
+        moving.current = false
+        setIsMoving(false)
+      },
     })
+  }, [data, editingCardId, move])
+
+  const moveSelected = useCallback((columnOffset: -1 | 1, position?: number) => {
+    if (!data || !selectedCardId || selectedColumnIndex < 0 || editingCardId || moving.current || move.isPending) return false
+    const sourceColumn = data.columns[selectedColumnIndex]
+    const destination = data.columns[selectedColumnIndex + columnOffset]
+    if (!destination) return false
+    moveCard(selectedCardId, destination.id, position ?? destination.cards.length, sourceColumn.id)
     return true
-  }, [data, selectedCardId, selectedColumnIndex, editingCardId, move])
+  }, [data, selectedCardId, selectedColumnIndex, editingCardId, move.isPending, moveCard])
 
   useEffect(() => {
     if (!selectedCardId) return
     function onKeyDown(event: KeyboardEvent) {
       if (editingCardId || isControl(event.target)) return
-      if (event.key === 'Escape') { setSelectedCardId(null); return }
-      const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : null
-      if (direction && moveSelected(direction)) event.preventDefault()
+      if (event.key === 'Escape') {
+        setSelectedCardId(null)
+        setAnnouncement('Selection cleared.')
+        return
+      }
+      if (!data || selectedColumnIndex < 0 || moving.current || move.isPending) return
+      const column = data.columns[selectedColumnIndex]
+      const cardId = selectedCardId
+      if (!cardId) return
+      const cardIndex = column.cards.findIndex((card) => card.id === cardId)
+      if (cardIndex < 0) return
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        const direction = event.key === 'ArrowLeft' ? -1 : 1
+        if (moveSelected(direction)) event.preventDefault()
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        const offset = event.key === 'ArrowUp' ? -1 : 1
+        const position = cardIndex + offset
+        if (position >= 0 && position < column.cards.length) {
+          moveCard(cardId, column.id, position, column.id)
+          event.preventDefault()
+        }
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedCardId, editingCardId, moveSelected])
+  }, [data, selectedCardId, selectedColumnIndex, editingCardId, move.isPending, moveCard, moveSelected])
 
   if (isPending) return <p role="status">Loading board…</p>
   if (isError) return <p role="alert">Could not load board: {error.message}</p>
   return (
     <>
       <Box mb={4} minH="3rem">
-        {selectedCard && (
-          <HStack flexWrap="wrap" gap={3}>
-            <Text>Selected: {selectedCard.title}</Text>
-            <Button size="sm" disabled={selectedColumnIndex === 0 || move.isPending || !!editingCardId} onClick={() => moveSelected(-1)}>Move left</Button>
-            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || move.isPending || !!editingCardId} onClick={() => moveSelected(1)}>Move right</Button>
-            {move.isPending && <Text role="status">Moving card…</Text>}
-          </HStack>
-        )}
-        {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
+        <Text role="status" aria-live="polite" position="absolute" width="1px" height="1px" overflow="hidden" clip="rect(0 0 0 0)">{announcement}</Text>
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} />
+      <Board
+        board={data}
+        selectedCardId={selectedCardId}
+        onSelectCard={(id) => {
+          if (!moving.current) {
+            move.reset()
+            setSelectedCardId((current) => current === id ? null : id)
+            document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
+          }
+        }}
+        onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }}
+        moving={isMoving || move.isPending}
+        celebrationCardId={celebration?.cardId ?? null}
+        celebrationToken={celebrationToken}
+        onMoveCard={moveCard}
+      />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )

@@ -1,0 +1,1 @@
+Improve drag-and-drop so a card can move from one column to another at any chosen insertion position. Preserve same-column reordering, post-removal position semantics, empty-column drops, and the adjacent-card preview animation.

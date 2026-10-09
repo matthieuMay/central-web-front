@@ -90,7 +90,6 @@ export function useMoveCard() {
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
-    // The response is not put in the cache: only a successful refetch moves the rendered card.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
+    onSuccess: (board) => queryClient.setQueryData(boardKey, board),
   })
 }

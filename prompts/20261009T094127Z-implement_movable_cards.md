@@ -1,0 +1,3 @@
+Implement the movable-card interaction mapped in `.scratch/movable-card-interaction`.
+
+Requirements: React DnD with HTML5 backend; click-selected cards move with ArrowLeft/Right across columns and ArrowUp/Down within columns; drag/drop supports exact insertion positions and empty columns; send PUT `/cards/:cardId` with destination `column` and post-removal zero-based `position`; use returned BoardData; serialize moves; preserve selection/focus; selected/dragging/drop-target visual feedback; concise accessible announcements; confetti only when entering the rightmost column; remove old move buttons; use react-confetti with reduced-motion handling; run lint/build and manually verify in a browser.

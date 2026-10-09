@@ -1,0 +1,1 @@
+Simplify the drag insertion indicator: keep a generous drop target but render only a small centered blue square, with equal spacing from neighboring cards and clear separation. Remove the attempted neighboring-card movement preview and preserve exact drop positions.

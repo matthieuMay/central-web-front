@@ -1,0 +1,1 @@
+Improve the drag insertion preview: when a blue insertion slot is active, move the card immediately above it slightly upward and the card immediately below it slightly downward. Do not move nonexistent neighbors at the top or bottom positions. Preserve drag/drop behavior and validate lint/build.
