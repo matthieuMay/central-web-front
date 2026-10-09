@@ -4,6 +4,7 @@ import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type MoveCardInput = { cardId: string; column: string; position: number }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }

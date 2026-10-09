@@ -6,6 +6,7 @@ import { useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
+import type { DragCard } from '../components/Card'
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
@@ -15,6 +16,7 @@ export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
+  const [confettiCardId, setConfettiCardId] = useState<string | null>(null)
   const move = useMoveCard()
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
@@ -33,31 +35,63 @@ export function BoardPage() {
   function selectCard(id: string) {
     if (moving.current) return
     move.reset()
-    setSelectedCardId((current) => current === id ? null : id)
+    setSelectedCardId(id)
     document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
   }
 
-  const moveSelected = useCallback((direction: -1 | 1) => {
+  const moveSelected = useCallback((direction: -1 | 1, axis: 'horizontal' | 'vertical' = 'horizontal') => {
     if (!data || !selectedCardId || selectedColumnIndex < 0 || editingCardId || moving.current || move.isPending) return false
-    const destination = data.columns[selectedColumnIndex + direction]
+    const source = data.columns[selectedColumnIndex]
+    const sourcePosition = source.cards.findIndex((card) => card.id === selectedCardId)
+    const destination = axis === 'horizontal' ? data.columns[selectedColumnIndex + direction] : source
     if (!destination) return false
+    const position = axis === 'vertical'
+      ? sourcePosition + direction
+      : Math.min(sourcePosition, destination.cards.length)
+    if (position < 0 || position > (axis === 'vertical' ? source.cards.length - 1 : destination.cards.length)) return false
+    if (axis === 'vertical' && position === sourcePosition) return false
     moving.current = true
     move.reset()
     focusAfterMove.current = { id: selectedCardId, destination: destination.id }
-    move.mutate({ cardId: selectedCardId, column: destination.id }, {
+    move.mutate({ cardId: selectedCardId, column: destination.id, position }, {
       onError: () => { focusAfterMove.current = null },
       onSettled: () => { moving.current = false },
     })
     return true
   }, [data, selectedCardId, selectedColumnIndex, editingCardId, move])
 
+  const dropCard = useCallback((item: DragCard, columnId: string, position: number) => {
+    if (!data || moving.current || move.isPending) return
+    const sourceColumn = data.columns.find((column) => column.cards.some((card) => card.id === item.cardId))
+    const destination = data.columns.find((column) => column.id === columnId)
+    if (!sourceColumn || !destination) return
+    const sourcePosition = sourceColumn.cards.findIndex((card) => card.id === item.cardId)
+    const maxPosition = destination.cards.length - (sourceColumn.id === destination.id ? 1 : 0)
+    const finalPosition = Math.max(0, Math.min(position, maxPosition))
+    if (sourceColumn.id === destination.id && finalPosition === sourcePosition) return
+    moving.current = true
+    setConfettiCardId(null)
+    setSelectedCardId(item.cardId)
+    focusAfterMove.current = { id: item.cardId, destination: destination.id }
+    move.mutate({ cardId: item.cardId, column: destination.id, position: finalPosition }, {
+      onSuccess: () => {
+        if (finalPosition === maxPosition) setConfettiCardId(item.cardId)
+      },
+      onError: () => { focusAfterMove.current = null },
+      onSettled: () => { moving.current = false },
+    })
+  }, [data, move])
+
   useEffect(() => {
     if (!selectedCardId) return
     function onKeyDown(event: KeyboardEvent) {
       if (editingCardId || isControl(event.target)) return
       if (event.key === 'Escape') { setSelectedCardId(null); return }
-      const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : null
-      if (direction && moveSelected(direction)) event.preventDefault()
+      const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : null
+      if (direction) {
+        const axis = event.key === 'ArrowLeft' || event.key === 'ArrowRight' ? 'horizontal' : 'vertical'
+        if (moveSelected(direction, axis)) event.preventDefault()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -78,7 +112,7 @@ export function BoardPage() {
         )}
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} confettiCardId={confettiCardId} onDropCard={dropCard} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )

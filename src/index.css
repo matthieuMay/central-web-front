@@ -82,3 +82,11 @@ form :focus-visible, article > button:focus-visible {
   outline: 3px solid var(--nav-focus-color);
   outline-offset: 2px;
 }
+
+.empty-column-drop-zone {
+  border: 2px dashed var(--nav-focus-color);
+  border-radius: 0.5rem;
+  min-height: 4rem;
+  padding: 1rem;
+  text-align: center;
+}
