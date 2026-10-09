@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { Button, HStack, NativeSelect, Stack, Text, Textarea } from '@chakra-ui/react'
 import type { CommentData, CommentInput, UserData } from '../types/board'
 
 /**
@@ -26,7 +28,80 @@ type CommentsProps = {
   onChange: (comments: CommentInput[]) => void
 }
 
-export function Comments(_props: CommentsProps) {
-  // Rendu temporaire : l'implémentation viendra après revue de la conception.
-  return null
+function fullName(user: UserData) {
+  return `${user.firstname} ${user.lastname}`
+}
+
+export function Comments({ comments, users, onChange }: CommentsProps) {
+  const [author, setAuthor] = useState('')
+  const [text, setText] = useState('')
+
+  function submit() {
+    const trimmed = text.trim()
+    if (!author || !trimmed) return
+    // Nouveau commentaire : pas de `createdAt`, l'API crée la date.
+    // Les commentaires existants sont renvoyés tels quels, dates comprises.
+    onChange([...comments, { user: author, comment: trimmed }])
+    setText('')
+  }
+
+  return (
+    <Stack gap={3}>
+      <Text fontWeight="medium">Comments</Text>
+      {comments.length === 0 ? (
+        <Text color="fg.muted" fontSize="sm">
+          No comments yet
+        </Text>
+      ) : (
+        <Stack gap={3}>
+          {comments.map((comment, index) => {
+            const user = users.find((item) => item.id === comment.user)
+            return (
+              <Stack key={`${comment.user}-${comment.createdAt}-${index}`} gap={0}>
+                <HStack gap={2}>
+                  <Text fontWeight="medium" fontSize="sm">
+                    {user ? fullName(user) : comment.user}
+                  </Text>
+                  {comment.createdAt && (
+                    <Text color="fg.muted" fontSize="xs">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </Text>
+                  )}
+                </HStack>
+                <Text fontSize="sm">{comment.comment}</Text>
+              </Stack>
+            )
+          })}
+        </Stack>
+      )}
+      <NativeSelect.Root size="sm">
+        <NativeSelect.Field
+          value={author}
+          aria-label="Comment author"
+          onChange={(event) => setAuthor(event.target.value)}
+        >
+          <option value="">Choose an author…</option>
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {fullName(user)}
+            </option>
+          ))}
+        </NativeSelect.Field>
+        <NativeSelect.Indicator />
+      </NativeSelect.Root>
+      <Textarea
+        size="sm"
+        rows={2}
+        value={text}
+        placeholder="Write a comment"
+        aria-label="Comment"
+        onChange={(event) => setText(event.target.value)}
+      />
+      <HStack justify="flex-end">
+        <Button size="xs" colorPalette="blue" onClick={submit} disabled={!author || !text.trim()}>
+          Comment
+        </Button>
+      </HStack>
+    </Stack>
+  )
 }

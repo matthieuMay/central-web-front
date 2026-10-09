@@ -77,6 +77,7 @@ export function Board({ board }: BoardProps) {
           card={selectedCard}
           users={users ?? []}
           onPatch={(patch) => updateCard.mutate({ cardId: selectedCard.id, patch })}
+          onClose={() => setSelectedCardId(null)}
         />
       )}
       {confetti && <Confetti key={confetti.id} origin={{ x: confetti.x, y: confetti.y }} />}

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { Button, Checkbox, HStack, Input, Stack, Text } from '@chakra-ui/react'
 import type { ChecklistItemData } from '../types/board'
 
 /**
@@ -23,7 +25,62 @@ type ChecklistProps = {
   onChange: (items: ChecklistItemData[]) => void
 }
 
-export function Checklist(_props: ChecklistProps) {
-  // Rendu temporaire : l'implémentation viendra après revue de la conception.
-  return null
+export function Checklist({ items, onChange }: ChecklistProps) {
+  const [description, setDescription] = useState('')
+
+  function add() {
+    const trimmed = description.trim()
+    if (!trimmed) return
+    onChange([...items, { description: trimmed, done: false }])
+    setDescription('')
+  }
+
+  function toggle(index: number, done: boolean) {
+    onChange(items.map((item, itemIndex) => (itemIndex === index ? { ...item, done } : item)))
+  }
+
+  return (
+    <Stack gap={3}>
+      <Text fontWeight="medium">Checklist</Text>
+      {items.length === 0 ? (
+        <Text color="fg.muted" fontSize="sm">
+          No tasks yet
+        </Text>
+      ) : (
+        <Stack gap={1}>
+          {items.map((item, index) => (
+            <Checkbox.Root
+              key={index}
+              checked={item.done}
+              onCheckedChange={(details) => toggle(index, details.checked === true)}
+            >
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <Checkbox.Label textDecoration={item.done ? 'line-through' : undefined}>
+                {item.description}
+              </Checkbox.Label>
+            </Checkbox.Root>
+          ))}
+        </Stack>
+      )}
+      <HStack gap={2}>
+        <Input
+          size="sm"
+          value={description}
+          placeholder="Add a task"
+          aria-label="New task"
+          onChange={(event) => setDescription(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              add()
+            }
+          }}
+        />
+        <Button size="sm" onClick={add} disabled={!description.trim()}>
+          Add
+        </Button>
+      </HStack>
+    </Stack>
+  )
 }
