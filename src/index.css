@@ -171,3 +171,92 @@ body {
   border-radius: 999px;
   background: var(--focus-ring);
 }
+
+.card-details__button {
+  margin-top: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.card-details__button:hover:not(:disabled) {
+  background: var(--control-hover-background);
+}
+
+.card-details__button:focus-visible,
+.card-details input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.card-details__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.card-details__choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  cursor: pointer;
+}
+
+.card-details__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-details__form label {
+  flex-basis: 100%;
+}
+
+.card-details input:not([type='checkbox']),
+.card-details select {
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.card-details__comment {
+  width: 100%;
+  min-height: 7rem;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: inherit;
+  resize: vertical;
+}
+
+.card-details__comment:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.card-details__form input {
+  flex: 1;
+}
+
+.card-details__checklist-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.card-details__checklist-row > input:not([type='checkbox']) {
+  flex: 1;
+}

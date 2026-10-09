@@ -1,21 +1,64 @@
 import { Heading, SimpleGrid, Stack, Text } from '@chakra-ui/react'
 import { useRef, useState } from 'react'
 import type { DragEvent, KeyboardEvent } from 'react'
-import { updateCardPosition } from '../api/cards'
-import type { BoardData } from '../types/board'
+import { patchCardCollection, updateCardPosition } from '../api/cards'
+import type { BoardData, CardCollections, UserData } from '../types/board'
 import { Column } from './Column'
 import Confetti from './Confetti'
 
-type BoardProps = { board: BoardData }
+type BoardProps = {
+  board: BoardData
+  users: UserData[]
+  isLoadingUsers: boolean
+  usersError: string | null
+}
 
-export function Board({ board }: BoardProps) {
+export function Board({ board, users, isLoadingUsers, usersError }: BoardProps) {
   const [currentBoard, setCurrentBoard] = useState(board)
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null)
   const [dropIndicator, setDropIndicator] = useState<{ columnId: string; position: number } | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isMoving, setIsMoving] = useState(false)
+  const [updatingCardIds, setUpdatingCardIds] = useState<Set<string>>(() => new Set())
   const [celebrationCount, setCelebrationCount] = useState(0)
   const moveInProgress = useRef(false)
+  const updatingCards = useRef(new Set<string>())
+
+  const updateCardCollection = async <K extends keyof CardCollections,>(
+    cardId: string,
+    collection: K,
+    value: CardCollections[K],
+  ) => {
+    try {
+      const updatedCard = await patchCardCollection(cardId, collection, value)
+      setCurrentBoard((current) => ({
+        ...current,
+        columns: current.columns.map((column) => ({
+          ...column,
+          cards: column.cards.map((card) => card.id === cardId ? updatedCard : card),
+        })),
+      }))
+      setErrorMessage(null)
+      return true
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Could not update card details. Please try again.',
+      )
+      return false
+    }
+  }
+
+  const withCardUpdate = async (cardId: string, update: () => Promise<boolean>) => {
+    if (updatingCards.current.has(cardId)) return false
+    updatingCards.current.add(cardId)
+    setUpdatingCardIds(new Set(updatingCards.current))
+    try {
+      return await update()
+    } finally {
+      updatingCards.current.delete(cardId)
+      setUpdatingCardIds(new Set(updatingCards.current))
+    }
+  }
 
   const moveCard = async (cardId: string, targetColumnId: string, position: number) => {
     if (moveInProgress.current) return
@@ -55,6 +98,11 @@ export function Board({ board }: BoardProps) {
   }
 
   const handleCardKeyDown = (cardId: string, event: KeyboardEvent<HTMLElement>) => {
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('button, input, textarea, select, [contenteditable="true"]')
+    ) return
+
     const columnIndex = currentBoard.columns.findIndex((column) =>
       column.cards.some((card) => card.id === cardId),
     )
@@ -191,8 +239,18 @@ export function Board({ board }: BoardProps) {
             <Column
               key={column.id}
               column={column}
+              users={users}
+              isLoadingUsers={isLoadingUsers}
+              usersError={usersError}
               draggedCardId={draggedCardId}
               dropPosition={dropIndicator?.columnId === column.id ? dropIndicator.position : null}
+              updatingCardIds={updatingCardIds}
+              onUpdateAssignees={(cardId, assignees) =>
+                withCardUpdate(cardId, () => updateCardCollection(cardId, 'assignees', assignees))}
+              onUpdateChecklistItems={(cardId, items) =>
+                withCardUpdate(cardId, () => updateCardCollection(cardId, 'checklistItems', items))}
+              onUpdateComments={(cardId, comments) =>
+                withCardUpdate(cardId, () => updateCardCollection(cardId, 'comments', comments))}
               onCardFocus={() => setErrorMessage(null)}
               onCardKeyDown={handleCardKeyDown}
               onCardDragStart={handleCardDragStart}

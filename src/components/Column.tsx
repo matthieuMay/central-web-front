@@ -1,13 +1,20 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
 import { Fragment } from 'react'
 import type { DragEvent, KeyboardEvent } from 'react'
-import type { ColumnData } from '../types/board'
+import type { ChecklistItem, ColumnData, CommentData, UserData } from '../types/board'
 import { Card } from './Card'
 
 type ColumnProps = {
   column: ColumnData
+  users: UserData[]
+  isLoadingUsers: boolean
+  usersError: string | null
   draggedCardId: string | null
   dropPosition: number | null
+  updatingCardIds: Set<string>
+  onUpdateAssignees: (cardId: string, assignees: string[]) => Promise<boolean>
+  onUpdateChecklistItems: (cardId: string, items: ChecklistItem[]) => Promise<boolean>
+  onUpdateComments: (cardId: string, comments: CommentData[]) => Promise<boolean>
   onCardFocus: (cardId: string) => void
   onCardKeyDown: (cardId: string, event: KeyboardEvent<HTMLElement>) => void
   onCardDragStart: (cardId: string, event: DragEvent<HTMLElement>) => void
@@ -20,8 +27,15 @@ type ColumnProps = {
 
 export function Column({
   column,
+  users,
+  isLoadingUsers,
+  usersError,
   draggedCardId,
   dropPosition,
+  updatingCardIds,
+  onUpdateAssignees,
+  onUpdateChecklistItems,
+  onUpdateComments,
   onCardFocus,
   onCardKeyDown,
   onCardDragStart,
@@ -56,7 +70,14 @@ export function Column({
             <Fragment key={card.id}>
               <Card
                 card={card}
+                users={users}
+                isLoadingUsers={isLoadingUsers}
+                usersError={usersError}
+                isUpdating={updatingCardIds.has(card.id)}
                 dropBefore={dropBefore}
+                onUpdateAssignees={(assignees) => onUpdateAssignees(card.id, assignees)}
+                onUpdateChecklistItems={(items) => onUpdateChecklistItems(card.id, items)}
+                onUpdateComments={(comments) => onUpdateComments(card.id, comments)}
                 onFocus={() => onCardFocus(card.id)}
                 onKeyDown={(event) => onCardKeyDown(card.id, event)}
                 onDragStart={(event) => onCardDragStart(card.id, event)}

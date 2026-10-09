@@ -51,9 +51,8 @@ continues to work independently of the detail controls.
     no longer appear.
 16. As a board user, I want to read a card's comments and their authors and
     timestamps, so that I can understand the discussion history.
-17. As a board user, I want comment posting to wait until the application has
-    an authenticated current-user identity, so that comments are never
-    attributed to an arbitrary user.
+17. As a board user, I want to select the author when posting a comment, so
+    that every new comment has an explicit author.
 18. As a keyboard user, I want to open, use, and close card details with
     keyboard-operable controls, so that I can manage the card without a mouse.
 19. As a board user, I want card detail controls to remain separate from card
@@ -69,9 +68,9 @@ continues to work independently of the detail controls.
 
 - The board is loaded with `GET /boards/mini-trello`. The returned board
   contains the cards and their detail collections.
-- User choices are loaded with `GET /users`, which returns an array of records
-  containing a `username` string. Assignee values and comment author values
-  are usernames.
+- User choices are loaded with `GET /users`, which returns user records with
+  `id`, `firstname`, and `lastname` fields. Assignee values and comment author
+  values are user IDs; the frontend displays each user's full name.
 - Card details are expanded inline within the column, using a dedicated
   Details button on the compact card. The collapsed card displays assigned
   usernames, checklist completion progress, and comment count.
@@ -79,10 +78,10 @@ continues to work independently of the detail controls.
   without replacing unrelated card details.
 - Checklist items support adding, editing their descriptions, toggling
   completion, and removal.
-- Comments are displayed as read-only history. Posting is deferred until the
-  application can provide an authenticated current-user identity. Comments
-  are add-only once posting is available; editing and deleting existing
-  comments are not part of this feature.
+- Comments are displayed in directly editable textareas and saved when a
+  textarea loses focus. Editing changes only the comment text and preserves
+  its author and creation timestamp. New comments require an explicitly
+  selected author and are saved when their textarea loses focus.
 - Each card has the following collections:
 
   ```ts
@@ -102,8 +101,8 @@ continues to work independently of the detail controls.
 
 - `PATCH /cards/:cardId` is used for details. A request includes only the
   collection being changed; that collection's value is its complete updated
-  array. A successful response is the updated board, which is used to refresh
-  the board's card state.
+  array. A successful response is the updated card, which is used to replace
+  that card in the current board state.
 - Preserve the existing `PUT /cards/:cardId` position-update contract for
   moving cards. Detail updates use `PATCH` and do not change the move operation.
 - Expanding and editing details must not break the existing drag-and-drop or
@@ -123,7 +122,7 @@ continues to work independently of the detail controls.
   checklist operations, comments display, API request behavior, error
   feedback, and unchanged card movement.
 - Verify that a detail `PATCH` contains only the changed collection and that
-  the returned board is reflected in the visible board state. Verify that
+  the returned card is reflected in the visible board state. Verify that
   moving a card continues to use the existing `PUT` contract.
 - Include keyboard interaction and accessible labeling in UI-level checks.
 - The project currently has no visible test script or test setup. Add the
@@ -135,8 +134,7 @@ continues to work independently of the detail controls.
 
 - Creating, editing, or deleting users.
 - Authentication and current-user identity implementation.
-- Posting comments before authenticated identity is available.
-- Editing or deleting existing comments.
+- Deleting comments.
 - Replacing the existing card-position `PUT` API operation.
 - Adding card-detail routes or navigating away from the board to edit details.
 - Other card metadata or workflows not represented by assignees, comments,
@@ -146,6 +144,7 @@ continues to work independently of the detail controls.
 
 - The supplied contract defines the collection fields but does not specify
   validation rules, server-side timestamp generation, comment ordering, or
-  error response bodies. Do not invent additional API guarantees while
-  implementing; clarify any required behavior with the API owner if it blocks
-  the work.
+  error response bodies. Editing a comment sends the full comments collection,
+  retaining all unmodified comment data. Do not invent additional API
+  guarantees while implementing; clarify any required behavior with the API
+  owner if it blocks the work.
