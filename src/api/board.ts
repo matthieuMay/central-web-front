@@ -1,6 +1,7 @@
-import type { BoardData } from '../types/board'
+import type { BoardData, UserData } from '../types/board'
 
 export const boardKey = ['board', 'mini-trello'] as const
+export const usersKey = ['users'] as const
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
@@ -16,6 +17,13 @@ export function getBoard() {
   return request<BoardData>('/boards/mini-trello')
 }
 
+export async function getUsers() {
+  const response = await request<UserData[] | { value: UserData[] }>('/users')
+  if (Array.isArray(response)) return response
+  if (Array.isArray(response.value)) return response.value
+  throw new Error('Users response did not contain a user list')
+}
+
 export function createCard({ columnId, id, title }: { columnId: string; id: string; title: string }) {
   return request(`/columns/${encodeURIComponent(columnId)}/cards`, {
     method: 'POST',
@@ -24,11 +32,11 @@ export function createCard({ columnId, id, title }: { columnId: string; id: stri
   })
 }
 
-export function editCard({ cardId, title, description }: { cardId: string; title: string; description?: string | null }) {
+export function editCard({ cardId, title, description, assignees }: { cardId: string; title: string; description?: string | null; assignees: string[] }) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}) }),
+    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}), assignees }),
   })
 }
 

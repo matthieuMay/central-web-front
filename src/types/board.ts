@@ -1,7 +1,14 @@
+export type UserData = {
+  id: string
+  firstname: string
+  lastname: string
+}
+
 export type CardData = {
   id: string
   title: string
   description?: string
+  assignees?: UserData[]
 }
 
 export type ColumnData = {

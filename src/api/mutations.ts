@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData } from '../types/board'
+import type { BoardData, UserData } from '../types/board'
 import { boardKey, createCard, editCard, moveCard } from './board'
 import { moveCardToPosition } from '../domain/boardMovement'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
-export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type EditCardInput = { cardId: string; title: string; description?: string | null; assignees: string[]; assignedUsers: UserData[] }
 export type MoveCardInput = { cardId: string; column: string; position?: number }
 
 type Change = (board: BoardData) => BoardData
@@ -78,7 +78,7 @@ export function useEditCard() {
       columns: board.columns.map((column) => ({
         ...column,
         cards: column.cards.map((card) => card.id === input.cardId
-          ? { ...card, title: input.title, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
+          ? { ...card, title: input.title, assignees: input.assignedUsers, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
           : card),
       })),
     })),

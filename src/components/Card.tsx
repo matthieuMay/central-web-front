@@ -29,6 +29,7 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
         borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere" position="relative">
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+        {card.assignees && card.assignees.length > 0 && <Text mt={2} fontSize="sm" aria-label={`Assigned users: ${card.assignees.map((user) => `${user.firstname} ${user.lastname}`).join(', ')}`}>Users: {card.assignees.map((user) => `${user.firstname} ${user.lastname}`).join(', ')}</Text>}
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
         <Confetti particleCount={confettiBurst} />
       </Box>
