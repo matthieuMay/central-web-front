@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
 import type { BoardData } from '../types/board'
 import type { CardDragPayload, DropPoint } from '../lib/dnd'
-import { useMoveCard, useUpdateCard } from '../lib/queries'
+import { useMoveCard, useUpdateCard, useUsers } from '../lib/queries'
+import { CardDetails } from './CardDetails'
 import { Column } from './Column'
 import type { CardPatch } from './Card'
 import Confetti from './Confetti'
@@ -11,10 +12,15 @@ type BoardProps = { board: BoardData }
 
 export function Board({ board }: BoardProps) {
   const [confetti, setConfetti] = useState<{ id: number; x: number; y: number } | null>(null)
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const moveCard = useMoveCard()
   const updateCard = useUpdateCard()
+  const { data: users } = useUsers()
 
   const lastColumnId = board.columns[board.columns.length - 1]?.id
+  const selectedCard = selectedCardId
+    ? board.columns.flatMap((column) => column.cards).find((card) => card.id === selectedCardId)
+    : undefined
 
   function handleMoveCard(
     payload: CardDragPayload,
@@ -62,9 +68,17 @@ export function Board({ board }: BoardProps) {
             column={column}
             onMoveCard={handleMoveCard}
             onUpdateCard={handleUpdateCard}
+            onOpenDetails={setSelectedCardId}
           />
         ))}
       </SimpleGrid>
+      {selectedCard && (
+        <CardDetails
+          card={selectedCard}
+          users={users ?? []}
+          onPatch={(patch) => updateCard.mutate({ cardId: selectedCard.id, patch })}
+        />
+      )}
       {confetti && <Confetti key={confetti.id} origin={{ x: confetti.x, y: confetti.y }} />}
     </Stack>
   )

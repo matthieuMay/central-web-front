@@ -1,4 +1,4 @@
-import type { BoardData, CardData, CardPatch } from '../types/board'
+import type { BoardData, CardData, CardPatch, UserData } from '../types/board'
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000'
 
@@ -18,6 +18,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function fetchBoard(id: string): Promise<BoardData> {
   return request<BoardData>(`/boards/${encodeURIComponent(id)}`)
+}
+
+export function fetchUsers(): Promise<UserData[]> {
+  return request<UserData[]>('/users')
 }
 
 export function patchCard(cardId: string, patch: CardPatch): Promise<CardData> {

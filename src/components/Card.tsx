@@ -14,7 +14,7 @@ import {
 import type { CardData, CardPatch } from '../types/board'
 import type { CardDragPayload, DropPoint } from '../lib/dnd'
 import { getCardDragData, setCardDragData } from '../lib/dnd'
-import { GripIcon, PencilIcon } from './icons'
+import { GripIcon, PencilIcon, DetailsIcon } from './icons'
 
 export type { CardPatch }
 
@@ -24,9 +24,10 @@ type CardProps = {
   index: number
   onMoveCard: (payload: CardDragPayload, toColumnId: string, toIndex: number, dropPoint: DropPoint) => void
   onUpdateCard: (columnId: string, cardId: string, patch: CardPatch) => void
+  onOpenDetails: (cardId: string) => void
 }
 
-export function Card({ card, columnId, index, onMoveCard, onUpdateCard }: CardProps) {
+export function Card({ card, columnId, index, onMoveCard, onUpdateCard, onOpenDetails }: CardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -141,6 +142,14 @@ export function Card({ card, columnId, index, onMoveCard, onUpdateCard }: CardPr
           onClick={startEditing}
         >
           <PencilIcon />
+        </IconButton>
+        <IconButton
+          size="2xs"
+          variant="ghost"
+          aria-label={`Open ${card.title} details`}
+          onClick={() => onOpenDetails(card.id)}
+        >
+          <DetailsIcon />
         </IconButton>
       </Flex>
       {card.description && (

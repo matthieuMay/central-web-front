@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchBoard, moveCard, patchCard } from './api'
+import { fetchBoard, fetchUsers, moveCard, patchCard } from './api'
 import type { BoardData, CardData, CardPatch } from '../types/board'
 
 export const BOARD_ID = 'mini-trello'
@@ -15,12 +15,31 @@ function replaceCard(board: BoardData, card: CardData): BoardData {
   }
 }
 
+function mergeCard(card: CardData, patch: CardPatch): CardData {
+  return {
+    ...card,
+    ...(patch.title !== undefined ? { title: patch.title } : {}),
+    ...(patch.description !== undefined ? { description: patch.description ?? undefined } : {}),
+    ...(patch.assignees !== undefined ? { assignees: patch.assignees } : {}),
+    ...(patch.comments !== undefined
+      ? {
+          comments: patch.comments.map((comment) => ({
+            user: comment.user,
+            comment: comment.comment,
+            createdAt: comment.createdAt ?? '',
+          })),
+        }
+      : {}),
+    ...(patch.checklistItems !== undefined ? { checklistItems: patch.checklistItems } : {}),
+  }
+}
+
 function applyPatch(board: BoardData, cardId: string, patch: CardPatch): BoardData {
   return {
     ...board,
     columns: board.columns.map((column) => ({
       ...column,
-      cards: column.cards.map((card) => (card.id === cardId ? { ...card, ...patch } : card)),
+      cards: column.cards.map((card) => (card.id === cardId ? mergeCard(card, patch) : card)),
     })),
   }
 }
@@ -46,6 +65,10 @@ function applyMove(board: BoardData, cardId: string, columnId: string, position:
 
 export function useBoard() {
   return useQuery({ queryKey: boardKey, queryFn: () => fetchBoard(BOARD_ID) })
+}
+
+export function useUsers() {
+  return useQuery({ queryKey: ['users'], queryFn: fetchUsers })
 }
 
 export function useUpdateCard() {

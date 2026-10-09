@@ -9,9 +9,10 @@ type ColumnProps = {
   column: ColumnData
   onMoveCard: (payload: CardDragPayload, toColumnId: string, toIndex: number, dropPoint: DropPoint) => void
   onUpdateCard: (columnId: string, cardId: string, patch: CardPatch) => void
+  onOpenDetails: (cardId: string) => void
 }
 
-export function Column({ column, onMoveCard, onUpdateCard }: ColumnProps) {
+export function Column({ column, onMoveCard, onUpdateCard, onOpenDetails }: ColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false)
 
   return (
@@ -62,6 +63,7 @@ export function Column({ column, onMoveCard, onUpdateCard }: ColumnProps) {
             index={index}
             onMoveCard={onMoveCard}
             onUpdateCard={onUpdateCard}
+            onOpenDetails={onOpenDetails}
           />
         ))}
       </Stack>
