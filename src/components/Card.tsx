@@ -5,6 +5,7 @@ import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import type { CardData } from '../types/board'
 import { cardElementId, editElementId } from './cardIds'
+import { CardChecklist } from './CardChecklist'
 import Confetti from './Confetti'
 
 type CardProps = {
@@ -16,9 +17,11 @@ type CardProps = {
   celebrationToken: number | null
   onSelect: () => void
   onEdit: () => void
+  onChecklistChange: (items: CardData['checklistItems']) => void
+  checklistDisabled: boolean
 }
 
-export function Card({ card, columnId, position, selected, disabled, celebrationToken, onSelect, onEdit }: CardProps) {
+export function Card({ card, columnId, position, selected, disabled, celebrationToken, onSelect, onEdit, onChecklistChange, checklistDisabled }: CardProps) {
   const reducedMotion = useReducedMotion()
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
@@ -54,6 +57,7 @@ export function Card({ card, columnId, position, selected, disabled, celebration
         {celebrationToken !== null && <Confetti key={`${card.id}-${celebrationToken}`} particleCount={1} />}
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+        <CardChecklist items={card.checklistItems ?? []} onChange={onChecklistChange} readOnly allowToggle disabled={disabled || checklistDisabled} />
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
       </Box>
     </motion.div>

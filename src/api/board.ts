@@ -24,11 +24,15 @@ export function createCard({ columnId, id, title }: { columnId: string; id: stri
   })
 }
 
-export function editCard({ cardId, title, description }: { cardId: string; title: string; description?: string | null }) {
+export function editCard({ cardId, title, description, checklistItems }: { cardId: string; title?: string; description?: string | null; checklistItems?: { description: string; done: boolean }[] }) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}) }),
+    body: JSON.stringify({
+      ...(title !== undefined ? { title } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(checklistItems !== undefined ? { checklistItems } : {}),
+    }),
   })
 }
 

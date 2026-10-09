@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Box, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard } from '../api/board'
-import { useMoveCard } from '../api/mutations'
+import { useEditCard, useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
@@ -20,6 +20,7 @@ export function BoardPage() {
   const [announcement, setAnnouncement] = useState('')
   const [isMoving, setIsMoving] = useState(false)
   const move = useMoveCard()
+  const edit = useEditCard()
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
@@ -127,6 +128,13 @@ export function BoardPage() {
         celebrationCardId={celebration?.cardId ?? null}
         celebrationToken={celebrationToken}
         onMoveCard={moveCard}
+        onChecklistChange={(cardId, checklistItems) => {
+          if (edit.isPending) return
+          edit.mutate({ cardId, checklistItems }, {
+            onError: (requestError) => setAnnouncement(`Could not save checklist: ${requestError.message}. Try again.`),
+          })
+        }}
+        checklistDisabled={edit.isPending}
       />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>

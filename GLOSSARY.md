@@ -35,5 +35,9 @@ A note attached to a card and attributed to a user.
 _Avoid_: Commentary
 
 **Checklist item**:
-A small piece of work tracked as part of a card's checklist.
+A small piece of work tracked as part of a card's checklist, with a description and a done status.
 _Avoid_: Checklist task
+
+**Card details drawer**:
+The panel opened from a card's edit control where the card's title, description, and checklist can be modified.
+_Avoid_: Details panel, card modal

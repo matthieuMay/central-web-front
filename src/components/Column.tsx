@@ -15,6 +15,8 @@ type ColumnProps = {
   celebrationCardId: string | null
   celebrationToken: number
   onMoveCard: (cardId: string, columnId: string, position: number, sourceColumnId: string) => void
+  onChecklistChange: (cardId: string, items: ColumnData['cards'][number]['checklistItems']) => void
+  checklistDisabled: boolean
 }
 
 type DragItem = { cardId: string; sourceColumnId: string; sourcePosition: number }
@@ -59,7 +61,7 @@ function DropSlot({ columnId, position, moving, empty, onMoveCard }: {
   )
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, moving, celebrationCardId, celebrationToken, onMoveCard }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, moving, celebrationCardId, celebrationToken, onMoveCard, onChecklistChange, checklistDisabled }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -103,6 +105,8 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, movin
               celebrationToken={card.id === celebrationCardId ? celebrationToken : null}
               onSelect={() => onSelectCard(card.id)}
               onEdit={() => onEditCard(card.id)}
+              onChecklistChange={(items) => onChecklistChange(card.id, items)}
+              checklistDisabled={checklistDisabled}
             />
             <DropSlot columnId={column.id} position={index + 1} moving={moving} empty={false} onMoveCard={onMoveCard} />
           </div>

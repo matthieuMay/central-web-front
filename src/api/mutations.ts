@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData } from '../types/board'
+import type { BoardData, ChecklistItem } from '../types/board'
 import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
-export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type EditCardInput = { cardId: string; title?: string; description?: string | null; checklistItems?: ChecklistItem[] }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -85,7 +85,12 @@ export function useEditCard() {
       columns: board.columns.map((column) => ({
         ...column,
         cards: column.cards.map((card) => card.id === input.cardId
-          ? { ...card, title: input.title, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
+          ? {
+            ...card,
+            ...(input.title === undefined ? {} : { title: input.title }),
+            ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }),
+            ...(input.checklistItems === undefined ? {} : { checklistItems: input.checklistItems }),
+          }
           : card),
       })),
     })),

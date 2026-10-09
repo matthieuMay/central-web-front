@@ -4,11 +4,13 @@ import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 import { editElementId } from './cardIds'
+import { CardChecklist } from './CardChecklist'
 
 type Fields = { title: string; description: string }
 
 function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
+  const [checklistError, setChecklistError] = useState<string | null>(null)
   const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
   const { register, handleSubmit, reset, trigger, formState: { errors, isValid } } = useForm<Fields>({
     mode: 'onChange',
@@ -31,6 +33,15 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
     }
   }
 
+  async function saveChecklist(checklistItems: CardData['checklistItems']) {
+    setChecklistError(null)
+    try {
+      await edit.mutateAsync({ cardId: card.id, checklistItems })
+    } catch (error) {
+      setChecklistError(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit(submit)} noValidate>
       <Drawer.Header><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
@@ -44,6 +55,8 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
           <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
           <Textarea id="edit-description" rows={5} {...register('description')} />
         </Field.Root>
+        <CardChecklist items={card.checklistItems ?? []} onChange={(items) => { void saveChecklist(items) }} disabled={edit.isPending} />
+        {checklistError && <Text role="alert" color="red.700" mt={3}>Could not save checklist: {checklistError}. Try again.</Text>}
         {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
       </Drawer.Body>
       <Drawer.Footer>
