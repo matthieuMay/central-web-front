@@ -9,7 +9,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed (${response.status} ${response.statusText})`)
   }
-  return response.json() as Promise<T>
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 export function getBoard() {
@@ -29,5 +30,13 @@ export function editCard({ cardId, title }: { cardId: string; title: string }) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title }),
+  })
+}
+
+export function moveCard({ cardId, columnId }: { cardId: string; columnId: string }) {
+  return request(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ column: columnId }),
   })
 }

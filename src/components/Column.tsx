@@ -5,9 +5,27 @@ import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
 
-type ColumnProps = { column: ColumnData }
+type ColumnProps = {
+  column: ColumnData
+  columnIndex?: number
+  totalColumns?: number
+  selectedCardId?: string | null
+  onSelectCard?: (cardId: string) => void
+  onMoveCardLeft?: (cardId: string) => void
+  onMoveCardRight?: (cardId: string) => void
+  isMoving?: boolean
+}
 
-export function Column({ column }: ColumnProps) {
+export function Column({
+  column,
+  columnIndex = 0,
+  totalColumns = 1,
+  selectedCardId,
+  onSelectCard,
+  onMoveCardLeft,
+  onMoveCardRight,
+  isMoving = false,
+}: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -25,16 +43,40 @@ export function Column({ column }: ColumnProps) {
   }
 
   return (
-    <Box as="section" aria-label={column.title} bg="gray.100" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
+    <Box
+      as="section"
+      aria-label={column.title}
+      bg="gray.100"
+      borderRadius="lg"
+      p={4}
+      minW={0}
+      minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}
+    >
       <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="gray.600">No cards yet</Text>}
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} />
+          <Card
+            key={card.id}
+            card={card}
+            isSelected={selectedCardId === card.id}
+            onSelect={() => onSelectCard?.(card.id)}
+            canMoveLeft={columnIndex > 0}
+            canMoveRight={columnIndex < totalColumns - 1}
+            onMoveLeft={() => onMoveCardLeft?.(card.id)}
+            onMoveRight={() => onMoveCardRight?.(card.id)}
+            isMoving={isMoving}
+          />
         ))}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
-          <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
+          <input
+            ref={inputRef}
+            id={`new-card-${column.id}`}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            required
+          />
           <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
           {create.isPending && <p role="status">Adding card…</p>}
           {create.isError && <p role="alert">Could not add card: {create.error.message}</p>}

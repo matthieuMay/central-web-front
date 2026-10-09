@@ -1,17 +1,16 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard } from './board'
+import type { BoardData, CardData } from '../types/board'
+import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string }
+export type MoveCardInput = { cardId: string; columnId: string }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
 type Ledger = { base: BoardData | undefined; entries: Entry[] }
 type Context = { previous: BoardData | undefined; token: symbol }
 
-// Replaying from the pre-batch snapshot keeps later optimistic writes when an
-// earlier request fails. Successful writes remain until the whole batch refetches.
 const ledgers = new WeakMap<QueryClient, Ledger>()
 
 async function begin(queryClient: QueryClient, change: Change): Promise<Context> {
@@ -33,7 +32,6 @@ function rollback(queryClient: QueryClient, context: Context | undefined) {
   const ledger = ledgers.get(queryClient)
   if (!ledger) return
   ledger.entries = ledger.entries.filter((entry) => entry.token !== context.token)
-  // With no other writes this is exactly the snapshot taken in onMutate.
   const base = ledger.base ?? context.previous
   queryClient.setQueryData<BoardData>(boardKey,
     base && ledger.entries.reduce((board, entry) => entry.change(board), base))
@@ -46,7 +44,6 @@ async function settle(queryClient: QueryClient, context: Context | undefined) {
   if (entry) entry.pending = false
   if (ledger.entries.some((item) => item.pending)) return
   ledgers.delete(queryClient)
-  // All writes have finished: one authoritative read reconciles server ordering.
   await queryClient.invalidateQueries({ queryKey: boardKey, exact: true })
 }
 
@@ -81,6 +78,47 @@ export function useEditCard() {
       })),
     })),
     onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+export function useMoveCard() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: moveCard,
+    onMutate: (input: MoveCardInput) => begin(queryClient, (board) => {
+      let cardToMove: CardData | undefined
+      for (const col of board.columns) {
+        const found = col.cards.find((c) => c.id === input.cardId)
+        if (found) {
+          cardToMove = found
+          break
+        }
+      }
+      if (!cardToMove) return board
+
+      return {
+        ...board,
+        columns: board.columns.map((column) => {
+          const remainingCards = column.cards.filter((card) => card.id !== input.cardId)
+          if (column.id === input.columnId) {
+            return {
+              ...column,
+              cards: [...remainingCards, cardToMove!],
+            }
+          }
+          return {
+            ...column,
+            cards: remainingCards,
+          }
+        }),
+      }
+    }),
+    onError: (error, _input, context) => {
+      console.error('Failed to move card:', error)
+      rollback(queryClient, context)
+    },
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })
 }
