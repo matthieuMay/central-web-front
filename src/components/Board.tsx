@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import { Box, Heading, SimpleGrid, Spinner, Stack, Text } from '@chakra-ui/react'
 import {
   DndContext,
@@ -29,6 +29,11 @@ export function Board({ boardId = 'mini-trello' }: BoardProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
   )
+
+  useEffect(() => {
+    if (!selectedId || !board) return
+    document.querySelector<HTMLElement>(`[data-card-id="${selectedId}"]`)?.focus()
+  }, [board, selectedId])
 
   if (isError) {
     return <Text color="fg.error">Could not load the board: {(error as Error).message}</Text>

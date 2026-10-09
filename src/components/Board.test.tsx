@@ -105,6 +105,9 @@ describe('Board', () => {
         expect.objectContaining({ method: 'PUT' }),
       ),
     )
+    await waitFor(() =>
+      expect(document.activeElement).toBe(document.querySelector('[data-card-id="c1"]')),
+    )
   })
 
   it('ignores an arrow that would leave the board', async () => {

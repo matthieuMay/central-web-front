@@ -22,6 +22,7 @@ export function Card({ card, columnId, isSelected, onSelect }: CardProps) {
       as="article"
       role="button"
       tabIndex={0}
+      data-card-id={card.id}
       aria-pressed={isSelected}
       style={{
         transform: CSS.Transform.toString(transform),
