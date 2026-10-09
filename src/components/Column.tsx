@@ -3,15 +3,19 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useDrop } from 'react-dnd'
 import { v7 as uuidv7 } from 'uuid'
 import { useCreateCard } from '../api/mutations'
-import type { ColumnData } from '../types/board'
+import type { ColumnData, UserData } from '../types/board'
+import type { UpdateCardCollectionsInput } from '../api/mutations'
 import { cardDragType, Card, type CardDragItem } from './Card'
 
 type ColumnProps = {
   column: ColumnData
+  users: UserData[]
   selectedCardId: string | null
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
   onMoveCard: (cardId: string, columnId: string, position: number) => void
+  onUpdateCollections: (input: UpdateCardCollectionsInput) => Promise<unknown>
+  collectionsPending: boolean
 }
 
 // Responsibility: render one Column's ordered cards, drop placeholder, and
@@ -24,7 +28,7 @@ type ColumnProps = {
 // unchecked.
 // Correctness: cards remain in column order, the placeholder marks the target
 // slot, empty columns accept drops, and invalid empty submissions do nothing.
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMoveCard }: ColumnProps) {
+export function Column({ column, users, selectedCardId, onSelectCard, onEditCard, onMoveCard, onUpdateCollections, collectionsPending }: ColumnProps) {
   const [title, setTitle] = useState('')
   const [dragPosition, setDragPosition] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -66,7 +70,8 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMov
         {column.cards.map((card, index) => (
           <div key={card.id}>
             {dragPosition === index && <div className="card-drop-shadow" aria-hidden="true" />}
-            <Card card={card} columnId={column.id} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)}
+            <Card card={card} columnId={column.id} users={users} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)}
+              onUpdateCollections={onUpdateCollections} collectionsPending={collectionsPending}
               onDragOver={(offset) => setDragPosition(offset === null ? null : index + offset)}
               onDrop={(item, offset) => onMoveCard(item.cardId, column.id, index + offset)} />
           </div>

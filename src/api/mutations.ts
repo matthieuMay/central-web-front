@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard, moveCard } from './board'
+import { boardKey, createCard, editCard, moveCard, patchCardCollections, type CardCollectionsPatch } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type UpdateCardCollectionsInput = { cardId: string } & CardCollectionsPatch
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -58,7 +59,7 @@ export function useCreateCard() {
     onMutate: (input: CreateCardInput) => begin(queryClient, (board) => ({
       ...board,
       columns: board.columns.map((column) => column.id === input.columnId
-        ? { ...column, cards: [...column.cards, { id: input.id, title: input.title }] }
+        ? { ...column, cards: [...column.cards, { id: input.id, title: input.title, assignees: [], comments: [], checklistItems: [] }] }
         : column),
     })),
     onError: (_error, _input, context) => rollback(queryClient, context),
@@ -92,5 +93,29 @@ export function useMoveCard() {
     mutationFn: moveCard,
     // The response is not put in the cache: only a successful refetch moves the rendered card.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
+  })
+}
+
+export function useUpdateCardCollections() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: patchCardCollections,
+    onMutate: (input: UpdateCardCollectionsInput) => begin(queryClient, (board) => ({
+      ...board,
+      columns: board.columns.map((column) => ({
+        ...column,
+        cards: column.cards.map((card) => card.id === input.cardId
+          ? {
+              ...card,
+              ...(input.assignees === undefined ? {} : { assignees: input.assignees }),
+              ...(input.comments === undefined ? {} : { comments: input.comments.map((comment) => ({ ...comment, createdAt: comment.createdAt ?? new Date().toISOString() })) }),
+              ...(input.checklistItems === undefined ? {} : { checklistItems: input.checklistItems }),
+            }
+          : card),
+      })),
+    })),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })
 }

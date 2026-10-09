@@ -3,11 +3,12 @@ import { Box, Button, HStack, Text } from '@chakra-ui/react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { boardKey, getBoard } from '../api/board'
-import { useMoveCard } from '../api/mutations'
+import { boardKey, getBoard, getUsers } from '../api/board'
+import { useMoveCard, useUpdateCardCollections } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
+const usersKey = ['users'] as const
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
@@ -23,9 +24,11 @@ function isControl(target: EventTarget | null) {
 // writes are serialized, and the moved card regains focus after refresh.
 export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
+  const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const move = useMoveCard()
+  const collections = useUpdateCardCollections()
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
@@ -113,9 +116,12 @@ export function BoardPage() {
           </HStack>
         )}
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
+        {users.isError && <Text role="alert" color="red.700">Could not load users: {users.error.message}</Text>}
+        {collections.isError && <Text role="alert" color="red.700">Could not update card details: {collections.error.message}. Try again.</Text>}
       </Box>
       <DndProvider backend={HTML5Backend}>
-        <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} onMoveCard={moveDroppedCard} />
+        <Board board={data} users={users.data ?? []} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} onMoveCard={moveDroppedCard}
+          onUpdateCollections={(input) => collections.mutateAsync(input)} collectionsPending={collections.isPending} />
       </DndProvider>
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
