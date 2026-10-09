@@ -23,3 +23,17 @@ The card chosen by the existing selection interaction and eligible for keyboard 
 
 **Move**:
 A change that removes a card from its current ordered list and inserts it at a destination column and zero-based position.
+
+## Card details
+
+**Assignee**:
+A user responsible for work represented by a card.
+_Avoid_: Assigned user
+
+**Comment**:
+A note attached to a card and attributed to a user.
+_Avoid_: Commentary
+
+**Checklist item**:
+A small piece of work tracked as part of a card's checklist.
+_Avoid_: Checklist task
