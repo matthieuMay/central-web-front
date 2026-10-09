@@ -1,44 +1,86 @@
+
+import { useState } from 'react'
+import type { DragEvent } from 'react'
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import { useRef, useState, type FormEvent } from 'react'
-import { v7 as uuidv7 } from 'uuid'
-import { useCreateCard } from '../api/mutations'
-import type { ColumnData } from '../types/board'
 import { Card } from './Card'
+import type { ColumnData } from '../types/board'
 
-type ColumnProps = { column: ColumnData }
+type ColumnProps = {
+  column: ColumnData
+  onMoveCard: (cardId: string, columnId: string) => void
+  selectedCardId: string | null
+  onSelectCard: (cardId: string) => void
+  onMoveSelectedCard: (cardId: string, direction: -1 | 1) => void
+  canMoveLeft: boolean
+  canMoveRight: boolean
+}
 
-export function Column({ column }: ColumnProps) {
-  const [title, setTitle] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-  const create = useCreateCard()
+export function Column({
+  column,
+  onMoveCard,
+  selectedCardId,
+  onSelectCard,
+  onMoveSelectedCard,
+  canMoveLeft,
+  canMoveRight,
+}: ColumnProps) {
+  const [isOver, setIsOver] = useState(false)
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function handleDragOver(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
-    const trimmed = title.trim()
-    if (!trimmed || create.isPending) return
-    create.mutate({ columnId: column.id, id: uuidv7(), title: trimmed }, {
-      onSuccess: () => {
-        setTitle('')
-        inputRef.current?.focus()
-      },
-    })
+    event.dataTransfer.dropEffect = 'move'
+    setIsOver(true)
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+    setIsOver(false)
+
+    const cardId = event.dataTransfer.getData('text/plain')
+    if (cardId) {
+      onMoveCard(cardId, column.id)
+    }
   }
 
   return (
-    <Box as="section" aria-label={column.title} bg="gray.100" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
-      <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
+    <Box
+      bg={isOver ? 'blue.100' : 'gray.100'}
+      borderWidth="2px"
+      borderColor={isOver ? 'blue.400' : 'transparent'}
+      borderRadius="lg"
+      p={4}
+      minWidth={0}
+      minHeight="250px"
+      onDragOver={handleDragOver}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+          setIsOver(false)
+        }
+      }}
+      onDrop={handleDrop}
+      transition="background 0.2s"
+    >
+      <Heading size="md" mb={4}>
+        {column.title}
+      </Heading>
+
       <Stack gap={3}>
-        {column.cards.length === 0 && <Text color="gray.600">No cards yet</Text>}
-        {column.cards.map((card) => (
-          <Card key={card.id} card={card} />
-        ))}
-        <form onSubmit={submit}>
-          <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
-          <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
-          <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
-          {create.isPending && <p role="status">Adding card…</p>}
-          {create.isError && <p role="alert">Could not add card: {create.error.message}</p>}
-        </form>
+        {column.cards.length === 0 ? (
+          <Text color="gray.500">No cards yet</Text>
+        ) : (
+          column.cards.map((card) => (
+            <Card
+              key={card.id}
+              card={card}
+              selected={selectedCardId === card.id}
+              onSelect={() => onSelectCard(card.id)}
+              onMoveLeft={() => onMoveSelectedCard(card.id, -1)}
+              onMoveRight={() => onMoveSelectedCard(card.id, 1)}
+              canMoveLeft={canMoveLeft}
+              canMoveRight={canMoveRight}
+            />
+          ))
+        )}
       </Stack>
     </Box>
   )
