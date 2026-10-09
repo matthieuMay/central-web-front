@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router'
 import './index.css'
 import App from './App.tsx'
+import { ThemeProvider } from './theme/ThemeProvider'
 
 const queryClient = new QueryClient()
 
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ChakraProvider value={defaultSystem}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <ThemeProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ThemeProvider>
       </QueryClientProvider>
     </ChakraProvider>
   </StrictMode>,
