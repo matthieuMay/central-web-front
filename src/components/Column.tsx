@@ -4,13 +4,23 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
 
+/**
+ * Column — a named list of Cards on the Board.
+ *
+ * Responsibility: lay out a Column's Cards in order and forward Card intents.
+ * Props: { column: ColumnData; selectedId: string | null;
+ *   onSelect: (cardId: string) => void; onOpen: (cardId: string) => void }.
+ * Events: forwards onSelect and onOpen upward; owns no data.
+ * Correct when: every Card renders in order and both intents reach the Board.
+ */
 type ColumnProps = {
   column: ColumnData
   selectedId: string | null
   onSelect: (cardId: string) => void
+  onOpen: (cardId: string) => void
 }
 
-export function Column({ column, selectedId, onSelect }: ColumnProps) {
+export function Column({ column, selectedId, onSelect, onOpen }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
 
   return (
@@ -38,6 +48,7 @@ export function Column({ column, selectedId, onSelect }: ColumnProps) {
               columnId={column.id}
               isSelected={selectedId === card.id}
               onSelect={onSelect}
+              onOpen={onOpen}
             />
           ))}
         </Stack>

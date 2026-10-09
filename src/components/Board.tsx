@@ -10,7 +10,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { columnOfCard, keyboardMove, type ArrowKey } from '../board/move'
-import { useBoard, useMoveCard } from '../board/useBoard'
+import { useBoard, useMoveCard, useUsers } from '../board/useBoard'
+import { CardDetail } from './CardDetail'
 import { Column } from './Column'
 import Confetti from './Confetti'
 
@@ -20,8 +21,10 @@ type BoardProps = { boardId?: string }
 
 export function Board({ boardId = 'mini-trello' }: BoardProps) {
   const { data: board, isError, error } = useBoard(boardId)
+  const users = useUsers()
   const moveCard = useMoveCard(boardId)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [openCardId, setOpenCardId] = useState<string | null>(null)
   const [celebrations, setCelebrations] = useState(0)
   const [announcement, setAnnouncement] = useState('')
 
@@ -44,6 +47,9 @@ export function Board({ boardId = 'mini-trello' }: BoardProps) {
 
   const boardData = board
   const finalColumnId = boardData.columns[boardData.columns.length - 1]?.id
+  const openCard = openCardId
+    ? boardData.columns.flatMap((column) => column.cards).find((card) => card.id === openCardId)
+    : undefined
 
   function cardTitle(cardId: string) {
     for (const column of boardData.columns) {
@@ -136,6 +142,7 @@ export function Board({ boardId = 'mini-trello' }: BoardProps) {
                 column={column}
                 selectedId={selectedId}
                 onSelect={handleSelect}
+                onOpen={setOpenCardId}
               />
             ))}
           </SimpleGrid>
@@ -156,6 +163,16 @@ export function Board({ boardId = 'mini-trello' }: BoardProps) {
       >
         {announcement}
       </Box>
+      {openCard && (
+        <CardDetail
+          boardId={boardId}
+          card={openCard}
+          users={users.data ?? []}
+          isUsersLoading={users.isLoading}
+          isUsersError={users.isError}
+          onClose={() => setOpenCardId(null)}
+        />
+      )}
     </Box>
   )
 }

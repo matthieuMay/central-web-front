@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { applyMove, keyboardMove } from './move'
-import type { BoardData } from '../types/board'
+import type { BoardData, CardData } from '../types/board'
+
+function card(id: string, title: string): CardData {
+  return { id, title, assignees: [], comments: [], checklistItems: [] }
+}
 
 function makeBoard(): BoardData {
   return {
@@ -10,14 +14,10 @@ function makeBoard(): BoardData {
       {
         id: 'todo',
         title: 'Todo',
-        cards: [
-          { id: 'a', title: 'A' },
-          { id: 'b', title: 'B' },
-          { id: 'c', title: 'C' },
-        ],
+        cards: [card('a', 'A'), card('b', 'B'), card('c', 'C')],
       },
-      { id: 'doing', title: 'Doing', cards: [{ id: 'd', title: 'D' }] },
-      { id: 'done', title: 'Done', cards: [{ id: 'e', title: 'E' }] },
+      { id: 'doing', title: 'Doing', cards: [card('d', 'D')] },
+      { id: 'done', title: 'Done', cards: [card('e', 'E')] },
     ],
   }
 }
