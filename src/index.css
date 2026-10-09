@@ -82,3 +82,10 @@ form :focus-visible, article > button:focus-visible {
   outline: 3px solid var(--nav-focus-color);
   outline-offset: 2px;
 }
+
+.card-drop-shadow {
+  height: 5rem;
+  border: 2px dashed var(--nav-focus-color);
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--nav-active-bg) 60%, transparent);
+}

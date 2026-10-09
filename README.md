@@ -27,6 +27,15 @@ Alternatively set `DB_DRIVER=sqlite` in the API environment, then run `npm run d
 VITE_API_URL=http://localhost:3000 npm run dev
 ```
 
+To exercise the board with the local fixture without running the API, use:
+
+```powershell
+$env:VITE_USE_MOCK_DATA = 'true'
+npm run dev
+```
+
+Mock mode loads `data/board.json` and keeps card creation, editing, and movement in memory for the current browser session.
+
 Visit `/board`. The Query bonus uses `useQuery` for GET and a labeled Add card form in each column (including empty Review). Try creating in Review, editing its title and reloading to check persistence. Its first commit shows intermediate non-optimistic forms: successful POST and PATCH invalidate the exact `['board', 'mini-trello']` query key. The corrected hooks immediately update the cache in both `onMutate` handlers, roll back failed writes and refetch on settle.
 
 To test a **failure without a server write**, with a running API and `/board` loaded, run the following in the browser console before submitting either form. It blocks the next POST or PATCH *before* the request reaches the server; the optimistic change appears briefly then rolls back with a visible error. Repeat the snippet for the other form. Reload to confirm the server data was not modified.
