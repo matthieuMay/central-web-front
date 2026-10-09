@@ -6,11 +6,21 @@ export type MemberData = {
   color: string
 }
 
+// The file itself lives in IndexedDB under `id`; this is only its description.
+export type AttachmentData = {
+  id: string
+  name: string
+  type: string
+  size: number
+}
+
 export type CommentData = {
   id: string
   authorId: string
+  // May be empty when the Comment only carries attachments
   text: string
   createdAt: string
+  attachments?: AttachmentData[]
 }
 
 export type SubtaskData = {

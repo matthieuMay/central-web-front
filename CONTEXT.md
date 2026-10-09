@@ -33,5 +33,9 @@ A checklist item inside a Card that shows how far the Card has progressed. Has a
 _Avoid_: todo, todo task, checklist item
 
 **Comment** (Commentaire):
-A message a Member posts on a Card. Never edited or deleted once posted. Shown oldest first.
+A message a Member posts on a Card: text, Attachments, or both. Never edited or deleted once posted. Shown oldest first.
 _Avoid_: note, message
+
+**Attachment** (Pièce jointe):
+A file shared in a Comment. Images are previewed; every Attachment can be downloaded. At most 10 MB each.
+_Avoid_: document, upload
