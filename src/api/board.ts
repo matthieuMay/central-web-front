@@ -31,3 +31,13 @@ export function editCard({ cardId, title }: { cardId: string; title: string }) {
     body: JSON.stringify({ title }),
   })
 }
+
+export function moveCard({ cardId, columnId } : { cardId : string; columnId : string }){
+    return request(`/card/${cardId}`, {
+        method : 'PUT',
+        headers : { 'Content-Type' : 'application/json' },
+        body : JSON.stringify({ column : columnId })
+    })
+}
+
+
