@@ -54,3 +54,5 @@ The pencil opens an optional enriched Drawer for title and description; Cancel m
 ## Sprint 4: card movement
 
 See `.scratch/card-movement/spec.md`. With a card selected, ←/→ append it to the neighbouring column and ↑/↓ move it one place within its column (Move left/right/up/down buttons do the same; edges do nothing). Cards can also be dragged (react-dnd, HTML5 backend, mouse only) to any spot of any column, including an empty one; a line shows where it will land. Every move sends `PUT /cards/:cardId` with `{ column, position }`, where `position` is the 0-based index once the card has left its old place. Moves are now optimistic through the shared board-write ledger: a failed move rolls back and shows an error. A card entering Done from another column bursts confetti from its landing spot (skipped with reduced motion).
+
+Run `npm test` (Vitest) for the move-ordering and emoji-stripping unit tests. Emoji present in board data are not displayed.

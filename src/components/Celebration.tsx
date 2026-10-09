@@ -171,10 +171,8 @@ export function Celebration({ origin, title, onDone }: CelebrationProps) {
         }}
       >
         <span style={{
-          fontSize: 'clamp(3rem, 10vw, 7rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
-          background: 'linear-gradient(90deg, #ffd166, #ef476f, #9b5de5, #4cc9f0)',
-          WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-          filter: 'drop-shadow(0 4px 24px rgba(239, 71, 111, 0.45))',
+          fontSize: 'clamp(3rem, 10vw, 7rem)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1,
+          color: '#fff', textShadow: '6px 6px 0 #f07a2b',
         }}>
           Bravo !
         </span>

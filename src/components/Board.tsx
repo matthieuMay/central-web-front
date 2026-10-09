@@ -4,6 +4,7 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import type { BoardData } from '../types/board'
 import { Column } from './Column'
+import { withoutEmoji } from './withoutEmoji'
 
 type BoardProps = {
   board: BoardData
@@ -18,7 +19,7 @@ export function Board({ board, selectedCardId, onSelectCard, onEditCard, onDropC
     <DndProvider backend={HTML5Backend}>
     <LayoutGroup id="board-cards">
     <Stack gap={6}>
-      <Heading as="h1" size="4xl" className="board-title shimmer-text">{board.title}</Heading>
+      <Heading as="h1" size="4xl" className="board-title">{withoutEmoji(board.title)}</Heading>
       <SimpleGrid className="board-columns" columns={{ base: 1, md: 2, xl: 4 }} gap={5} alignItems="stretch">
         {board.columns.map((column) => (
           <Column key={column.id} column={column} selectedCardId={selectedCardId} onSelectCard={onSelectCard} onEditCard={onEditCard} onDropCard={onDropCard} />

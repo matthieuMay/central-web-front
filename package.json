@@ -11,12 +11,14 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "mcp:chrome-devtools": "chrome-devtools-mcp",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.37.0",
     "@emotion/react": "^11.14.0",
-    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
     "@tanstack/react-query": "^5.104.1",
     "immer": "^11.1.21",
     "lucide-react": "^1.54.0",
@@ -38,6 +40,7 @@
     "chrome-devtools-mcp": "^1.10.1",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.3"
   }
 }

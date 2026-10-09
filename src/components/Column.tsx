@@ -6,6 +6,7 @@ import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
 import { CARD, type DraggedCard } from './cardIds'
+import { withoutEmoji } from './withoutEmoji'
 
 type ColumnProps = {
   column: ColumnData
@@ -21,6 +22,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onDro
   const sectionRef = useRef<HTMLElement | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const create = useCreateCard()
+  const columnTitle = withoutEmoji(column.title)
 
   // Insertion index among the rendered cards (the dragged one included):
   // the number of cards whose vertical middle is above the pointer.
@@ -61,12 +63,12 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onDro
   return (
     <Box
       ref={(node: HTMLElement | null) => { sectionRef.current = node; drop(node) }}
-      as="section" aria-label={column.title} className="column glass" data-column={column.id} data-over={isOver || undefined} p={4} pt={5} minW={0}
+      as="section" aria-label={columnTitle} className="column panel" data-column={column.id} data-over={isOver || undefined} p={4} pt={5} minW={0}
       minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}
     >
       <div className="column-header">
         <span className="column-dot" aria-hidden />
-        <Heading as="h2" size="md">{column.title}</Heading>
+        <Heading as="h2" size="md">{columnTitle}</Heading>
         <span className="column-count">{column.cards.length}</span>
       </div>
       <Stack gap={3}>
@@ -79,7 +81,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onDro
         ))}
         {shownIndex === column.cards.length && column.cards.length > 0 && indicator}
         <form onSubmit={submit}>
-          <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
+          <label htmlFor={`new-card-${column.id}`}>New card title in {columnTitle}</label>
           <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
           <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
           {create.isPending && <p role="status">Adding card…</p>}

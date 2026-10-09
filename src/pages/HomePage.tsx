@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router'
 export function HomePage() {
   return (
     <Stack gap={4} maxW="3xl" mx="auto">
-      <Heading as="h1" size="4xl" className="board-title shimmer-text">Bienvenue sur Mini-Trello</Heading>
+      <Heading as="h1" size="4xl" className="board-title">Bienvenue sur Mini-Trello</Heading>
       <Text>Retrouvez vos tâches dans un tableau partagé.</Text>
       <Link asChild color="blue.fg" width="fit-content">
         <RouterLink to="/board">Ouvrir le tableau</RouterLink>

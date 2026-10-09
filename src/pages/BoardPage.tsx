@@ -6,10 +6,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom'
 import { boardKey, getBoard } from '../api/board'
 import { useMoveCard } from '../api/mutations'
+import { dropPosition } from '../api/moves'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { Celebration } from '../components/Celebration'
 import { EditCardDrawer } from '../components/EditCardDrawer'
+import { withoutEmoji } from '../components/withoutEmoji'
 
 const doneColumnId = 'done'
 
@@ -59,7 +61,7 @@ export function BoardPage() {
     const celebratedCard = celebrated && data?.columns.find((column) => column.id === doneColumnId)?.cards.find((card) => card.id === celebrated)
     if (celebratedCard) {
       const element = document.getElementById(cardElementId(celebratedCard.id))
-      if (element) setCelebration((current) => ({ id: (current?.id ?? 0) + 1, origin: landingPoint(element), title: celebratedCard.title }))
+      if (element) setCelebration((current) => ({ id: (current?.id ?? 0) + 1, origin: landingPoint(element), title: withoutEmoji(celebratedCard.title) }))
       celebrateCardId.current = null
     }
   }, [data])
@@ -97,15 +99,9 @@ export function BoardPage() {
     return true
   }, [data, selectedCardId, selectedColumn, selectedColumnIndex, selectedIndex, editingCardId, moveCard])
 
-  // `index` counts the dragged card where it currently is; the API counts without it.
   const dropCard = useCallback((cardId: string, columnId: string, index: number) => {
-    const source = data?.columns.find((column) => column.cards.some((card) => card.id === cardId))
-    if (!source) return
-    const sourceIndex = source.cards.findIndex((card) => card.id === cardId)
-    const sameColumn = source.id === columnId
-    const position = sameColumn && sourceIndex < index ? index - 1 : index
-    if (sameColumn && position === sourceIndex) return
-    moveCard(cardId, columnId, position)
+    const position = data ? dropPosition(data, cardId, columnId, index) : null
+    if (position !== null) moveCard(cardId, columnId, position)
   }, [data, moveCard])
 
   useEffect(() => {
@@ -128,8 +124,8 @@ export function BoardPage() {
     <>
       <Box mb={5} minH="3.25rem">
         {selectedCard && (
-          <div className="board-toolbar glass">
-            <Text>Selected: <strong>{selectedCard.title}</strong></Text>
+          <div className="board-toolbar panel">
+            <Text>Selected: <strong>{withoutEmoji(selectedCard.title)}</strong></Text>
             <HStack gap={1}>
               <IconButton size="sm" variant="ghost" className="move-button" aria-label="Move left" title="Move left (←)" disabled={selectedColumnIndex === 0 || !!editingCardId} onClick={() => moveSelected('left')}><ArrowLeft /></IconButton>
               <IconButton size="sm" variant="ghost" className="move-button" aria-label="Move up" title="Move up (↑)" disabled={selectedIndex === 0 || !!editingCardId} onClick={() => moveSelected('up')}><ArrowUp /></IconButton>

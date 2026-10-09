@@ -34,14 +34,7 @@ export function Layout() {
   }, [theme])
 
   return (
-    <Box minH="100dvh" color="fg" className="scene">
-      <div className="scene-backdrop" aria-hidden>
-        <span className="scene-blob" />
-        <span className="scene-blob" />
-        <span className="scene-blob" />
-        <div className="scene-stars" />
-        <div className="scene-grid" />
-      </div>
+    <Box minH="100dvh" className="scene">
       <Header theme={theme} onToggleTheme={() => setManualTheme(theme === 'dark' ? 'light' : 'dark')} />
       <Box as="main" px={{ base: 4, md: 8 }} py={8}>
         <Outlet />
