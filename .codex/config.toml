@@ -1,3 +1,18 @@
 [mcp_servers.chrome-devtools]
 command = "npm"
 args = ["run", "--silent", "mcp:chrome-devtools"]
+
+[mcp_servers.chrome-devtools.tools.press_key]
+approval_mode = "approve"
+
+[mcp_servers.chrome-devtools.tools.evaluate_script]
+approval_mode = "approve"
+
+[mcp_servers.chrome-devtools.tools.emulate]
+approval_mode = "approve"
+
+[mcp_servers.chrome-devtools.tools.navigate_page]
+approval_mode = "approve"
+
+[mcp_servers.chrome-devtools.tools.new_page]
+approval_mode = "approve"
