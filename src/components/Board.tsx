@@ -1,11 +1,9 @@
 import { SimpleGrid } from '@chakra-ui/react'
 import { LayoutGroup } from 'motion/react'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
 import type { MoveCardInput } from '../api/placement'
 import type { BoardData } from '../types/board'
 import { Column } from './Column'
-import { CardDragPreview, type CardLanding, type DragPosition } from './CardDragPreview'
+import type { CardLanding, DragPosition } from './CardDragPreview'
 
 type BoardProps = {
   board: BoardData
@@ -22,7 +20,6 @@ type BoardProps = {
 
 export function Board({ board, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, onCancelDrag, arrivingCardId, onArrival, landing }: BoardProps) {
   return (
-    <DndProvider backend={HTML5Backend}>
     <LayoutGroup id="board-cards">
       <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={{ base: 4, lg: 5 }} alignItems="stretch">
         {board.columns.map((column) => (
@@ -30,7 +27,5 @@ export function Board({ board, selectedCardId, onSelectCard, onEditCard, disable
         ))}
       </SimpleGrid>
     </LayoutGroup>
-    <CardDragPreview board={board} />
-    </DndProvider>
   )
 }

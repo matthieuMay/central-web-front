@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge, Box, Button, Heading, HStack, IconButton, Kbd, SimpleGrid, Skeleton, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
 import { ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Cross2Icon } from '@radix-ui/react-icons'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { boardKey, getBoard } from '../api/board'
 import { useMoveCard, useBoardWriteStatus } from '../api/mutations'
 import { boardWriteState } from '../api/boardWrites'
@@ -9,7 +11,8 @@ import { placeCard, type MoveCardInput } from '../api/placement'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
-import type { CardLanding, DragPosition } from '../components/CardDragPreview'
+import { CardDragPreview, type CardLanding, type DragPosition } from '../components/CardDragPreview'
+import { useCalendar } from '../calendar/useCalendar'
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
@@ -17,6 +20,7 @@ function isControl(target: EventTarget | null) {
 
 export function BoardPage() {
   const queryClient = useQueryClient()
+  const calendar = useCalendar('mini-trello')
   const writeStatus = useBoardWriteStatus()
   const { data, isPending, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
@@ -70,11 +74,12 @@ export function BoardPage() {
     setArrival(target)
     setLanding(origin ? { cardId: input.cardId, origin } : null)
     focusAfterMove.current = input.cardId
+    calendar.store.expectMove(input)
     move.mutate(input, {
-      onSettled: () => { moving.current = false },
+      onSettled: () => { moving.current = false; calendar.store.finishMove() },
     })
     return true
-  }, [queryClient, busy, move])
+  }, [queryClient, busy, move, calendar.store])
 
   const cancelDrag = useCallback((id: string, origin: DragPosition) => {
     setLanding({ cardId: id, origin, returning: 'cancelled' })
@@ -156,7 +161,10 @@ export function BoardPage() {
         {move.isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Déplacement impossible : {move.error.message}. Réessayez.</Text>}
         {writeStatus.recovery && !editingCardId && <Box role="alert" mt={2}><Text color="fg.error" fontSize="sm">{writeStatus.recovery}</Text><Button size="xs" variant="outline" disabled={writeStatus.busy} onClick={() => void writeStatus.refresh()}>Actualiser</Button></Box>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} onCancelDrag={cancelDrag} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
+      <DndProvider backend={HTML5Backend}>
+        <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} onCancelDrag={cancelDrag} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
+        <CardDragPreview board={data} />
+      </DndProvider>
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )

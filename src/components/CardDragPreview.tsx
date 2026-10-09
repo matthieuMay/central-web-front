@@ -8,7 +8,7 @@ export type DragPosition = { x: number; y: number }
 export type CardLanding = { cardId: string; origin: DragPosition; returning?: 'cancelled' | 'failed' }
 export type CardDragItem = { cardId: string; width: number; offset: DragPosition }
 
-export function CardDragPreview({ board }: { board: BoardData }) {
+export function CardDragPreview({ board, compact = false }: { board: BoardData; compact?: boolean }) {
   const reducedMotion = useReducedMotion()
   const { item, offset, dragging } = useDragLayer((monitor) => ({
     item: monitor.getItem<CardDragItem>(),
@@ -27,8 +27,8 @@ export function CardDragPreview({ board }: { board: BoardData }) {
               <Heading as="h3" fontSize="sm" lineHeight="1.5" fontWeight="600">{card.title}</Heading>
               <IconButton aria-label="Aperçu du déplacement" tabIndex={-1} variant="ghost" size="xs" minH={{ base: 10, md: 8 }} minW={{ base: 10, md: 8 }} color="fg.muted"><DragHandleDots2Icon /></IconButton>
             </HStack>
-            {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
-            <Button tabIndex={-1} size="xs" variant="ghost" color="fg.muted" mt={3} minH={8} px={2}><Pencil1Icon />Modifier</Button>
+            {!compact && card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+            {!compact && <Button tabIndex={-1} size="xs" variant="ghost" color="fg.muted" mt={3} minH={8} px={2}><Pencil1Icon />Modifier</Button>}
           </Box>
         </motion.div>
       </div>

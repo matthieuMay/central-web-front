@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, IconButton } from '@chakra-ui/react'
-import { DashboardIcon, HomeIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
+import { CalendarIcon, DashboardIcon, HomeIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import { NavLink } from 'react-router'
 
 type HeaderProps = {
@@ -27,6 +27,7 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
           <Flex as="nav" aria-label="Navigation principale" gap={2}>
             <NavLink className="nav-link" to="/" end><HomeIcon aria-hidden="true" />Accueil</NavLink>
             <NavLink className="nav-link" to="/board"><DashboardIcon aria-hidden="true" />Tableau</NavLink>
+            <NavLink className="nav-link" to="/planning"><CalendarIcon aria-hidden="true" />Planning</NavLink>
           </Flex>
           <IconButton variant="ghost" size="sm" role="switch" aria-checked={theme === 'dark'} aria-label="Mode sombre" title={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'} onClick={onToggleTheme}>
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
