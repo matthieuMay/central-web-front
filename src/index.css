@@ -56,6 +56,13 @@ form label {
   margin-bottom: 0.25rem;
 }
 
+.edit-card-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 form input, form textarea, form select {
   background: var(--chakra-colors-bg);
   border: 1px solid var(--chakra-colors-border-emphasized);

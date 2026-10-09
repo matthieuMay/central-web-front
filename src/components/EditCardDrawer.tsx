@@ -90,9 +90,9 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate>
-      <Drawer.Header><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
-      <Drawer.Body>
+    <form className="edit-card-form" onSubmit={handleSubmit(submit)} noValidate>
+      <Drawer.Header flexShrink={0}><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
+      <Drawer.Body flex="1" minH="0" overflowY="auto">
         <Field.Root invalid={!!errors.title} mb={4}>
           <Field.Label htmlFor="edit-title">Title</Field.Label>
           <Input id="edit-title" data-autofocus aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Title is required' })} />
@@ -147,7 +147,7 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
         </Field.Root>
         {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
       </Drawer.Body>
-      <Drawer.Footer>
+      <Drawer.Footer flexShrink={0}>
         <Button type="button" variant="outline" disabled={edit.isPending} onClick={onClose}>Cancel</Button>
         <Button type="submit" disabled={!isValid || tasks.some((task) => !task.description.trim()) || edit.isPending || users.isPending || users.isError}>Save</Button>
       </Drawer.Footer>
@@ -198,7 +198,7 @@ export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClo
       <Portal>
         <Drawer.Backdrop />
         <Drawer.Positioner>
-          <Drawer.Content>
+          <Drawer.Content maxH="100vh" display="flex" flexDirection="column">
             {card && <EditForm key={card.id} card={card} onClose={onClose} />}
           </Drawer.Content>
         </Drawer.Positioner>
