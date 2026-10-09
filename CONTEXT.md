@@ -51,3 +51,27 @@ _Avoid_: done column, last list
 **Completion Celebration**:
 The Confetti effect shown when a Move lands a Card in the Final Column; never on a reorder inside it.
 _Avoid_: reward, prize, animation
+
+**User**:
+A person the API exposes for assignment and authorship, identified by `id` and shown by `firstname` `lastname`.
+_Avoid_: member, person, account
+
+**Assignee**:
+A User associated with a Card as one of the people responsible for it; a Card's Assignees are unique.
+_Avoid_: member, owner
+
+**Comment**:
+A note left on a Card: its text, the User who wrote it, and a server-created timestamp.
+_Avoid_: message, note, reply
+
+**Acting Author**:
+The User selected in the Card Detail whose identity is attached to the next Comment written.
+_Avoid_: current user, selected user
+
+**Checklist Item**:
+A checkable to-do on a Card: a description and a done flag, with no identity of its own.
+_Avoid_: todo, task, subtask, step
+
+**Card Detail**:
+The Dialog surface where a Card's Assignees, Comments, and Checklist Items are viewed and changed.
+_Avoid_: card modal, card panel, card editor
