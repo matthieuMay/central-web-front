@@ -3,8 +3,12 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useDrop, useDrag } from 'react-dnd'
 import { useCallback, useRef, type MouseEvent } from 'react'
 import type { CardData } from '../types/board'
+import type { ColumnData } from '../types/board'
 import { cardElementId, editElementId } from './cardIds'
 import Confetti from './Confetti'
+import { Commentary } from './Commentary'
+import { Member } from './Member'
+import { Task } from './Task'
 
 export type DragCard = { cardId: string; sourceColumnId: string }
 type CardProps = {
@@ -16,9 +20,10 @@ type CardProps = {
   onSelect: () => void
   onEdit: () => void
   onDropCard: (item: DragCard, columnId: string, position: number) => void
+  columns: ColumnData[]
 }
 
-export function Card({ card, columnId, cardIndex, selected, confetti, onSelect, onEdit, onDropCard }: CardProps) {
+export function Card({ card, columnId, cardIndex, selected, confetti, onSelect, onEdit, onDropCard, columns }: CardProps) {
   const reducedMotion = useReducedMotion()
   const ref = useRef<HTMLElement>(null)
   const [{ isDragging }, drag] = useDrag(() => ({
@@ -65,6 +70,9 @@ export function Card({ card, columnId, cardIndex, selected, confetti, onSelect, 
       >
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+        <Member card={card} />
+        <Task card={card} columns={columns} columnId={columnId} />
+        <Commentary card={card} />
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
         <Confetti particleCount={confetti ? 1 : 0} />
       </Box>

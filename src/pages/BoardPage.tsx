@@ -7,12 +7,15 @@ import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
 import type { DragCard } from '../components/Card'
+import { SessionChooser } from '../components/SessionPanel'
+import { useSession } from '../session/SessionContext'
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
 }
 
 export function BoardPage() {
+  const session = useSession()
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
@@ -97,6 +100,7 @@ export function BoardPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selectedCardId, editingCardId, moveSelected])
 
+  if (session.user === undefined) return <SessionChooser />
   if (isPending) return <p role="status">Loading board…</p>
   if (isError) return <p role="alert">Could not load board: {error.message}</p>
   return (
@@ -105,8 +109,8 @@ export function BoardPage() {
         {selectedCard && (
           <HStack flexWrap="wrap" gap={3}>
             <Text>Selected: {selectedCard.title}</Text>
-            <Button size="sm" disabled={selectedColumnIndex === 0 || move.isPending || !!editingCardId} onClick={() => moveSelected(-1)}>Move left</Button>
-            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || move.isPending || !!editingCardId} onClick={() => moveSelected(1)}>Move right</Button>
+            <Button type="button" size="sm" disabled={selectedColumnIndex === 0 || move.isPending || !!editingCardId} onClick={() => moveSelected(-1)}>Move left</Button>
+            <Button type="button" size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || move.isPending || !!editingCardId} onClick={() => moveSelected(1)}>Move right</Button>
             {move.isPending && <Text role="status">Moving card…</Text>}
           </HStack>
         )}

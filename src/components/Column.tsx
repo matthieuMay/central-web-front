@@ -8,6 +8,7 @@ import { Card, type DragCard } from './Card'
 
 type ColumnProps = {
   column: ColumnData
+  columns: ColumnData[]
   selectedCardId: string | null
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
@@ -15,7 +16,7 @@ type ColumnProps = {
   onDropCard: (item: DragCard, columnId: string, position: number) => void
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, confettiCardId, onDropCard }: ColumnProps) {
+export function Column({ column, columns, selectedCardId, onSelectCard, onEditCard, confettiCardId, onDropCard }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -44,7 +45,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, confe
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="fg.muted" className="empty-column-drop-zone">Drop a card here</Text>}
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} columnId={column.id} cardIndex={column.cards.indexOf(card)} selected={card.id === selectedCardId} confetti={card.id === confettiCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} onDropCard={onDropCard} />
+          <Card key={card.id} card={card} columnId={column.id} columns={columns} cardIndex={column.cards.indexOf(card)} selected={card.id === selectedCardId} confetti={card.id === confettiCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} onDropCard={onDropCard} />
         ))}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>

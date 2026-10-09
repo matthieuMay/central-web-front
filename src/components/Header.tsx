@@ -1,5 +1,6 @@
 import { Box, Flex, Heading } from '@chakra-ui/react'
 import { NavLink } from 'react-router'
+import { SessionPanel } from './SessionPanel'
 
 type HeaderProps = {
   theme: 'light' | 'dark'
@@ -24,9 +25,10 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
             <NavLink className="nav-link" to="/board">Tableau</NavLink>
           </Flex>
           <label className="theme-toggle">
-            <input type="checkbox" role="switch" checked={theme === 'dark'} onChange={onToggleTheme} />
+            <input aria-label="Toggle dark mode" type="checkbox" role="switch" checked={theme === 'dark'} onChange={onToggleTheme} />
             <span>Mode sombre</span>
           </label>
+          <SessionPanel />
         </Flex>
       </Flex>
     </Box>
