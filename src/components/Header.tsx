@@ -9,6 +9,12 @@ export function Header() {
     { value: 'system', label: 'Système' },
     { value: 'light', label: 'Clair' },
     { value: 'dark', label: 'Sombre' },
+    { value: 'red', label: 'Rouge' },
+    { value: 'green', label: 'Vert' },
+    { value: 'yellow', label: 'Jaune' },
+    { value: 'blue', label: 'Bleu' },
+    { value: 'pink', label: 'Rose' },
+    { value: 'rainbow', label: 'Arc-en-ciel' },
   ]
 
   return (
@@ -31,21 +37,21 @@ export function Header() {
           <NavLink className="nav-link" to="/" end>Accueil</NavLink>
           <NavLink className="nav-link" to="/board">Tableau</NavLink>
         </Flex>
-      <fieldset className="theme-picker">
-        <legend className="theme-picker__legend">Thème</legend>
-        {modes.map(({ value, label }) => (
-          <label className="theme-option" key={value}>
-            <input
-              type="radio"
-              name="theme-mode"
-              value={value}
-              checked={mode === value}
-              onChange={() => setMode(value)}
-            />
-            <span>{label}</span>
-          </label>
-        ))}
-      </fieldset>
+        <fieldset className="theme-picker">
+          <legend className="theme-picker__legend">Thème</legend>
+          {modes.map(({ value, label }) => (
+            <label className="theme-option" key={value}>
+              <input
+                type="radio"
+                name="theme-mode"
+                value={value}
+                checked={mode === value}
+                onChange={() => setMode(value)}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </fieldset>
       </Flex>
     </Box>
   )

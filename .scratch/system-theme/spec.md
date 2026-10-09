@@ -4,8 +4,9 @@
 
 Add light and dark themes to Mini-Trello. The operating system's color-scheme
 preference is the default and is followed live until the user chooses an
-explicit theme. A visible three-way control in the shared Header lets the user
-choose System, Light, or Dark for the current page session.
+explicit theme. A visible control in the shared Header lets the user choose
+System, Light, Dark, Red, Green, Yellow, Blue, Pink, or Rainbow for the current
+page session.
 
 ## User behavior
 
@@ -17,6 +18,8 @@ choose System, Light, or Dark for the current page session.
   following OS changes for the remainder of the page session.
 - Selecting System again immediately applies the current OS preference and
   resumes following subsequent OS changes.
+- Selecting a color theme applies its palette for the remainder of the page
+  session without changing the behavior of System, Light, or Dark.
 - Do not save the selected mode or override in local storage, cookies, or
   another persistent store. A reload starts in System mode again.
 
@@ -24,7 +27,8 @@ choose System, Light, or Dark for the current page session.
 
 - Apply the theme to `/` and `/board`, including the shared Header, page
   backgrounds, text, links, and interactive controls.
-- Add a visible, keyboard-operable System / Light / Dark control to the Header.
+- Add a visible, keyboard-operable System / Light / Dark / Red / Green /
+  Yellow / Blue / Pink / Rainbow control to the Header.
   Expose its group label and selected state to assistive technology and retain
   a visible keyboard-focus indicator.
 - Keep text, links, and controls legible in both themes. Meet WCAG AA contrast
@@ -46,7 +50,9 @@ choose System, Light, or Dark for the current page session.
    and resumes live updates.
 6. Reloading after choosing Light or Dark returns to System mode using the
    OS's preference at reload time.
-7. The selector is operable with a keyboard, communicates its label and
+7. Each color theme applies its own palette, and selecting System, Light, or
+   Dark retains its existing behavior.
+8. The selector is operable with a keyboard, communicates its label and
    selected option to assistive technology, and has a visible focus indicator.
-8. Text and controls meet the specified contrast ratios in both themes.
-9. Board content, navigation, and existing board behavior remain unchanged.
+9. Text and controls meet the specified contrast ratios in each theme.
+10. Board content, navigation, and existing board behavior remain unchanged.
