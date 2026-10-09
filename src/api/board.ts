@@ -33,12 +33,10 @@ export function editCard({ cardId, title }: { cardId: string; title: string }) {
 }
 
 export function moveCard({ cardId, title }: { cardId: string; title: string }) {
-  return console.log(cardId, title)
-  /*request(`/cards/${encodeURIComponent(cardId)}`, {
-    method: 'PATCH',
+  return request(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title }),
-  })*/
-  
+  })
 }
-  
+
