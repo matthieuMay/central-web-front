@@ -1,9 +1,14 @@
 import { Box, Flex, Heading } from '@chakra-ui/react'
 import { NavLink } from 'react-router'
 
-export function Header() {
+type HeaderProps = {
+  theme: 'light' | 'dark'
+  onToggleTheme: () => void
+}
+
+export function Header({ theme, onToggleTheme }: HeaderProps) {
   return (
-    <Box as="header" borderBottomWidth="1px" bg="white">
+    <Box as="header" borderBottomWidth="1px" bg="bg" borderColor="border">
       <Flex
         px={{ base: 4, md: 8 }}
         py={4}
@@ -13,9 +18,15 @@ export function Header() {
         wrap="wrap"
       >
         <Heading as="span" size="lg">Mini-Trello</Heading>
-        <Flex as="nav" aria-label="Navigation principale" gap={2}>
-          <NavLink className="nav-link" to="/" end>Accueil</NavLink>
-          <NavLink className="nav-link" to="/board">Tableau</NavLink>
+        <Flex align="center" gap={4} wrap="wrap">
+          <Flex as="nav" aria-label="Navigation principale" gap={2}>
+            <NavLink className="nav-link" to="/" end>Accueil</NavLink>
+            <NavLink className="nav-link" to="/board">Tableau</NavLink>
+          </Flex>
+          <label className="theme-toggle">
+            <input type="checkbox" role="switch" checked={theme === 'dark'} onChange={onToggleTheme} />
+            <span>Mode sombre</span>
+          </label>
         </Flex>
       </Flex>
     </Box>

@@ -2,20 +2,50 @@ body {
   margin: 0;
 }
 
+:root {
+  --nav-color: #334155;
+  --nav-active-bg: #dbeafe;
+  --nav-active-color: #1e3a8a;
+  --nav-focus-color: #1d4ed8;
+}
+
+:root.dark {
+  --nav-color: #e2e8f0;
+  --nav-active-bg: #1e3a8a;
+  --nav-active-color: #dbeafe;
+  --nav-focus-color: #93c5fd;
+}
+
 .nav-link {
   border-radius: 0.375rem;
-  color: #334155;
+  color: var(--nav-color);
   padding: 0.5rem 0.75rem;
   text-decoration: none;
 }
 
 .nav-link:hover,
 .nav-link[aria-current='page'] {
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: var(--nav-active-bg);
+  color: var(--nav-active-color);
 }
 
 .nav-link:focus-visible {
-  outline: 2px solid #1d4ed8;
+  outline: 2px solid var(--nav-focus-color);
   outline-offset: 2px;
+}
+
+.theme-toggle {
+  align-items: center;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.theme-toggle input {
+  accent-color: var(--nav-focus-color);
+  cursor: pointer;
+  height: 1.125rem;
+  margin: 0;
+  width: 1.125rem;
 }
