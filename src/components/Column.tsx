@@ -3,7 +3,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useDrop } from 'react-dnd'
 import { v7 as uuidv7 } from 'uuid'
 import { useCreateCard } from '../api/mutations'
-import type { ColumnData } from '../types/board'
+import type { ColumnData, User } from '../types/board'
 import { Card } from './Card'
 
 type ColumnProps = {
@@ -11,6 +11,8 @@ type ColumnProps = {
   selectedCardId: string | null
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
+  onComments: (id: string) => void
+  users: User[]
   moving: boolean
   celebrationCardId: string | null
   celebrationToken: number
@@ -61,7 +63,7 @@ function DropSlot({ columnId, position, moving, empty, onMoveCard }: {
   )
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, moving, celebrationCardId, celebrationToken, onMoveCard, onChecklistChange, checklistDisabled }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, onComments, users, moving, celebrationCardId, celebrationToken, onMoveCard, onChecklistChange, checklistDisabled }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -105,6 +107,8 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, movin
               celebrationToken={card.id === celebrationCardId ? celebrationToken : null}
               onSelect={() => onSelectCard(card.id)}
               onEdit={() => onEditCard(card.id)}
+              onComments={() => onComments(card.id)}
+              users={users}
               onChecklistChange={(items) => onChecklistChange(card.id, items)}
               checklistDisabled={checklistDisabled}
             />

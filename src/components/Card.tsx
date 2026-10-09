@@ -3,9 +3,10 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, type MouseEvent } from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
-import type { CardData } from '../types/board'
-import { cardElementId, editElementId } from './cardIds'
+import type { CardData, User } from '../types/board'
+import { cardElementId, commentsElementId, editElementId } from './cardIds'
 import { CardChecklist } from './CardChecklist'
+import { CardComments } from './CardComments'
 import Confetti from './Confetti'
 
 type CardProps = {
@@ -18,10 +19,12 @@ type CardProps = {
   onSelect: () => void
   onEdit: () => void
   onChecklistChange: (items: CardData['checklistItems']) => void
+  onComments: () => void
+  users: User[]
   checklistDisabled: boolean
 }
 
-export function Card({ card, columnId, position, selected, disabled, celebrationToken, onSelect, onEdit, onChecklistChange, checklistDisabled }: CardProps) {
+export function Card({ card, columnId, position, selected, disabled, celebrationToken, onSelect, onEdit, onChecklistChange, onComments, users, checklistDisabled }: CardProps) {
   const reducedMotion = useReducedMotion()
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
@@ -57,8 +60,12 @@ export function Card({ card, columnId, position, selected, disabled, celebration
         {celebrationToken !== null && <Confetti key={`${card.id}-${celebrationToken}`} particleCount={1} />}
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+        <CardComments comments={card.comments ?? []} users={users} onOpen={onComments} />
         <CardChecklist items={card.checklistItems ?? []} onChange={onChecklistChange} readOnly allowToggle disabled={disabled || checklistDisabled} />
-        <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
+        <Box display="flex" gap={2} mt={2}>
+          <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" onClick={onEdit}>✎</IconButton>
+          {!card.comments?.length && <IconButton id={`add-${commentsElementId(card.id)}`} type="button" aria-label={`Add comment to ${card.title}`} size="xs" variant="outline" onClick={onComments}>💬</IconButton>}
+        </Box>
       </Box>
     </motion.div>
   )

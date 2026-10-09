@@ -41,3 +41,7 @@ _Avoid_: Checklist task
 **Card details drawer**:
 The panel opened from a card's edit control where the card's title, description, and checklist can be modified.
 _Avoid_: Details panel, card modal
+
+**Comments drawer**:
+The left-side panel for viewing every comment on a card, adding a comment, and deleting a comment.
+_Avoid_: Comment modal, comments panel

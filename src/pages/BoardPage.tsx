@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Box, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { boardKey, getBoard } from '../api/board'
+import { boardKey, getBoard, type CommentInput } from '../api/board'
+import { getUsers } from '../api/users'
 import { useEditCard, useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
+import { CardCommentsDrawer } from '../components/CardComments'
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
@@ -13,8 +15,10 @@ function isControl(target: EventTarget | null) {
 
 export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
+  const usersQuery = useQuery({ queryKey: ['users'], queryFn: getUsers })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
+  const [commentsCardId, setCommentsCardId] = useState<string | null>(null)
   const [celebration, setCelebration] = useState<{ cardId: string; token: number } | null>(null)
   const celebrationToken = celebration?.token ?? 0
   const [announcement, setAnnouncement] = useState('')
@@ -25,6 +29,7 @@ export function BoardPage() {
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
+  const commentsCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === commentsCardId) ?? null
 
   useLayoutEffect(() => {
     const pending = focusAfterMove.current
@@ -124,6 +129,8 @@ export function BoardPage() {
           }
         }}
         onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }}
+        onComments={(id) => { if (!moving.current) setCommentsCardId(id) }}
+        users={usersQuery.data ?? []}
         moving={isMoving || move.isPending}
         celebrationCardId={celebration?.cardId ?? null}
         celebrationToken={celebrationToken}
@@ -137,6 +144,35 @@ export function BoardPage() {
         checklistDisabled={edit.isPending}
       />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
+      <CardCommentsDrawer
+        card={commentsCard}
+        users={usersQuery.data ?? []}
+        open={!!commentsCard}
+        onClose={() => setCommentsCardId(null)}
+        onSave={async (comment) => {
+          if (!commentsCard) return false
+          try {
+            const newComment: CommentInput = comment
+            await edit.mutateAsync({ cardId: commentsCard.id, comments: [...commentsCard.comments, newComment] })
+            return true
+          } catch (requestError) {
+            setAnnouncement(`Could not save comment: ${requestError instanceof Error ? requestError.message : 'Unknown error'}. Try again.`)
+            return false
+          }
+        }}
+        onDelete={async (comment) => {
+          if (!commentsCard) return false
+          try {
+            await edit.mutateAsync({ cardId: commentsCard.id, comments: commentsCard.comments.filter((item) => item !== comment) })
+            return true
+          } catch (requestError) {
+            setAnnouncement(`Could not delete comment: ${requestError instanceof Error ? requestError.message : 'Unknown error'}. Try again.`)
+            return false
+          }
+        }}
+        isSaving={edit.isPending}
+        error={edit.isError ? edit.error.message : usersQuery.isError ? usersQuery.error.message : null}
+      />
     </>
   )
 }

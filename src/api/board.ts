@@ -1,4 +1,6 @@
-import type { BoardData } from '../types/board'
+import type { BoardData, CommentData } from '../types/board'
+
+export type CommentInput = Omit<CommentData, 'createdAt'> & { createdAt?: string }
 
 export const boardKey = ['board', 'mini-trello'] as const
 
@@ -24,7 +26,7 @@ export function createCard({ columnId, id, title }: { columnId: string; id: stri
   })
 }
 
-export function editCard({ cardId, title, description, checklistItems }: { cardId: string; title?: string; description?: string | null; checklistItems?: { description: string; done: boolean }[] }) {
+export function editCard({ cardId, title, description, checklistItems, comments }: { cardId: string; title?: string; description?: string | null; checklistItems?: { description: string; done: boolean }[]; comments?: CommentInput[] }) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -32,6 +34,7 @@ export function editCard({ cardId, title, description, checklistItems }: { cardI
       ...(title !== undefined ? { title } : {}),
       ...(description !== undefined ? { description } : {}),
       ...(checklistItems !== undefined ? { checklistItems } : {}),
+      ...(comments !== undefined ? { comments } : {}),
     }),
   })
 }

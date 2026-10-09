@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData, ChecklistItem } from '../types/board'
-import { boardKey, createCard, editCard, moveCard } from './board'
+import { boardKey, createCard, editCard, moveCard, type CommentInput } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
-export type EditCardInput = { cardId: string; title?: string; description?: string | null; checklistItems?: ChecklistItem[] }
+export type EditCardInput = { cardId: string; title?: string; description?: string | null; checklistItems?: ChecklistItem[]; comments?: CommentInput[] }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -90,6 +90,7 @@ export function useEditCard() {
             ...(input.title === undefined ? {} : { title: input.title }),
             ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }),
             ...(input.checklistItems === undefined ? {} : { checklistItems: input.checklistItems }),
+            ...(input.comments === undefined ? {} : { comments: input.comments.map((comment) => ({ ...comment, createdAt: comment.createdAt ?? new Date().toISOString() })) }),
           }
           : card),
       })),
