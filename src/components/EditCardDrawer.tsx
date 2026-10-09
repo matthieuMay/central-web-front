@@ -1,10 +1,10 @@
-import { Button, Dialog, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui/react'
+import { Button, Dialog, Drawer, Field, HStack, Input, Portal, Text, Textarea } from '@chakra-ui/react'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { getUsers, usersKey } from '../api/board'
 import { useEditCard } from '../api/mutations'
-import type { CardData, UserData } from '../types/board'
+import type { CardData, TaskData, UserData } from '../types/board'
 import { editElementId } from './cardIds'
 
 type Fields = { title: string; description: string }
@@ -13,6 +13,8 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
   const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
   const [assignedUsers, setAssignedUsers] = useState<UserData[]>(() => (card.assignees ?? []).filter((user): user is UserData => typeof user !== 'string'))
+  const [tasks, setTasks] = useState<TaskData[]>(() => card.checklistItems ?? [])
+  const [newTaskDescription, setNewTaskDescription] = useState('')
   const [isAssigneeDialogOpen, setIsAssigneeDialogOpen] = useState(false)
   const [draftAssignedUsers, setDraftAssignedUsers] = useState<UserData[]>([])
   const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
@@ -54,9 +56,20 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
     setIsAssigneeDialogOpen(false)
   }
 
+  function addTask() {
+    const description = newTaskDescription.trim()
+    if (!description) return
+    setTasks((current) => [...current, { description, done: false }])
+    setNewTaskDescription('')
+  }
+
+  function removeTask(index: number) {
+    setTasks((current) => current.filter((_task, taskIndex) => taskIndex !== index))
+  }
+
   async function submit(values: Fields) {
     try {
-      await edit.mutateAsync({ cardId: card.id, title: values.title.trim(), description: values.description || null, assignees: assignedUsers.map((user) => user.id), assignedUsers })
+      await edit.mutateAsync({ cardId: card.id, title: values.title.trim(), description: values.description || null, assignees: assignedUsers.map((user) => user.id), assignedUsers, checklistItems: tasks.map((task) => ({ ...task, description: task.description.trim() })) })
       onClose()
     } catch {
       // Keep the form and its values in place so the user can retry.
@@ -89,11 +102,26 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
           {users.isPending && <Text role="status">Loading users…</Text>}
           {users.isError && <Text role="alert" color="red.700">Could not load users: {users.error.message}. Try again.</Text>}
         </Field.Root>
+        <Field.Root mt={4}>
+          <Field.Label htmlFor="new-task">Tâches</Field.Label>
+          {tasks.length === 0 && <Text color="fg.muted">Aucune tâche</Text>}
+          {tasks.map((task, index) => (
+            <HStack key={`${index}-${task.description}`} mt={2} alignItems="flex-start">
+              <Input value={task.description} aria-label={`Tâche ${index + 1}`} onChange={(event) => setTasks((current) => current.map((currentTask, taskIndex) => taskIndex === index ? { ...currentTask, description: event.target.value } : currentTask))} />
+              <Button type="button" size="xs" variant="outline" onClick={() => removeTask(index)}>Enlever</Button>
+            </HStack>
+          ))}
+          <HStack mt={2} alignItems="flex-start">
+            <Input id="new-task" placeholder="Nouvelle tâche" value={newTaskDescription} onChange={(event) => setNewTaskDescription(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addTask() } }} />
+            <Button type="button" size="sm" variant="outline" onClick={addTask} disabled={!newTaskDescription.trim()}>Ajouter</Button>
+          </HStack>
+          {tasks.some((task) => !task.description.trim()) && <Field.ErrorText role="alert">La description de chaque tâche est obligatoire.</Field.ErrorText>}
+        </Field.Root>
         {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
       </Drawer.Body>
       <Drawer.Footer>
         <Button type="button" variant="outline" disabled={edit.isPending} onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={!isValid || edit.isPending || users.isPending || users.isError}>Save</Button>
+        <Button type="submit" disabled={!isValid || tasks.some((task) => !task.description.trim()) || edit.isPending || users.isPending || users.isError}>Save</Button>
       </Drawer.Footer>
       <Dialog.Root open={isAssigneeDialogOpen} onOpenChange={({ open }) => setIsAssigneeDialogOpen(open)}>
         <Portal>

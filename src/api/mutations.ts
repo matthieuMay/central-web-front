@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData, CommentInput, UserData } from '../types/board'
-import { boardKey, createCard, editCard, moveCard, updateCardComments } from './board'
+import type { BoardData, CommentInput, TaskData, UserData } from '../types/board'
+import { boardKey, createCard, editCard, moveCard, updateCardChecklistItems, updateCardComments } from './board'
 import { moveCardToPosition } from '../domain/boardMovement'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
-export type EditCardInput = { cardId: string; title: string; description?: string | null; assignees: string[]; assignedUsers: UserData[] }
+export type EditCardInput = { cardId: string; title: string; description?: string | null; assignees: string[]; assignedUsers: UserData[]; checklistItems: TaskData[] }
 export type MoveCardInput = { cardId: string; column: string; position?: number }
 export type UpdateCardCommentsInput = { cardId: string; comments: CommentInput[] }
+export type UpdateCardChecklistItemsInput = { cardId: string; checklistItems: TaskData[] }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -79,8 +80,25 @@ export function useEditCard() {
       columns: board.columns.map((column) => ({
         ...column,
         cards: column.cards.map((card) => card.id === input.cardId
-          ? { ...card, title: input.title, assignees: input.assignedUsers, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
+          ? { ...card, title: input.title, assignees: input.assignedUsers, checklistItems: input.checklistItems, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
           : card),
+      })),
+    })),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+export function useUpdateCardChecklistItems() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: updateCardChecklistItems,
+    onMutate: (input: UpdateCardChecklistItemsInput) => begin(queryClient, (board) => ({
+      ...board,
+      columns: board.columns.map((column) => ({
+        ...column,
+        cards: column.cards.map((card) => card.id === input.cardId ? { ...card, checklistItems: input.checklistItems } : card),
       })),
     })),
     onError: (_error, _input, context) => rollback(queryClient, context),

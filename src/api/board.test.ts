@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { editCard, getUsers, moveCard, updateCardComments } from './board'
+import { editCard, getUsers, moveCard, updateCardChecklistItems, updateCardComments } from './board'
 
 describe('moveCard', () => {
   afterEach(() => vi.restoreAllMocks())
@@ -38,11 +38,24 @@ describe('moveCard', () => {
     const response = { ok: true, json: () => Promise.resolve({}) }
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response as Response)
 
-    await editCard({ cardId: 'card/1', title: 'Updated', description: null, assignees: ['user-1', 'user-2'] })
+    await editCard({ cardId: 'card/1', title: 'Updated', description: null, assignees: ['user-1', 'user-2'], checklistItems: [{ description: 'Review', done: false }] })
 
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/cards/card%2F1', expect.objectContaining({
       method: 'PATCH',
-      body: JSON.stringify({ title: 'Updated', description: null, assignees: ['user-1', 'user-2'] }),
+      body: JSON.stringify({ title: 'Updated', description: null, assignees: ['user-1', 'user-2'], checklistItems: [{ description: 'Review', done: false }] }),
+    }))
+  })
+
+  it('sends the complete task list when toggling a card task', async () => {
+    const response = { ok: true, json: () => Promise.resolve({}) }
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response as Response)
+    const tasks = [{ description: 'Review', done: true }, { description: 'Deploy', done: false }]
+
+    await updateCardChecklistItems({ cardId: 'card/1', checklistItems: tasks })
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/cards/card%2F1', expect.objectContaining({
+      method: 'PATCH',
+      body: JSON.stringify({ checklistItems: tasks }),
     }))
   })
 

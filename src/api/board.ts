@@ -1,4 +1,4 @@
-import type { BoardData, CommentInput, UserData } from '../types/board'
+import type { BoardData, CommentInput, TaskData, UserData } from '../types/board'
 
 export const boardKey = ['board', 'mini-trello'] as const
 export const usersKey = ['users'] as const
@@ -32,11 +32,19 @@ export function createCard({ columnId, id, title }: { columnId: string; id: stri
   })
 }
 
-export function editCard({ cardId, title, description, assignees }: { cardId: string; title: string; description?: string | null; assignees: string[] }) {
+export function editCard({ cardId, title, description, assignees, checklistItems }: { cardId: string; title: string; description?: string | null; assignees: string[]; checklistItems: TaskData[] }) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}), assignees }),
+    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}), assignees, checklistItems }),
+  })
+}
+
+export function updateCardChecklistItems({ cardId, checklistItems }: { cardId: string; checklistItems: TaskData[] }) {
+  return request(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ checklistItems }),
   })
 }
 

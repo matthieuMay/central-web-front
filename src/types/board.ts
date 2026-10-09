@@ -12,12 +12,18 @@ export type CommentData = {
 
 export type CommentInput = Omit<CommentData, 'createdAt'> & { createdAt?: string }
 
+export type TaskData = {
+  description: string
+  done: boolean
+}
+
 export type CardData = {
   id: string
   title: string
   description?: string
   assignees?: Array<UserData | string>
   comments?: CommentData[]
+  checklistItems?: TaskData[]
 }
 
 export type ColumnData = {
