@@ -2,7 +2,7 @@ import { Box, Button, Heading, IconButton, Text } from '@chakra-ui/react'
 import { useQuery } from '@tanstack/react-query'
 import { useDrag } from 'react-dnd'
 import { motion, useReducedMotion } from 'motion/react'
-import { useState, type MouseEvent } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import type { CardData } from '../types/board'
 import { getUsers, usersKey } from '../api/board'
 import { useUpdateCardChecklistItems } from '../api/mutations'
@@ -10,6 +10,8 @@ import { cardElementId, editElementId } from './cardIds'
 import Confetti from './Confetti'
 import { CommentsDialog } from './CommentsDialog'
 import { sortCommentsNewestFirst } from '../domain/comments'
+import { CountdownClock } from './CountdownClock'
+import { countdownChangedEvent, getCountdownDeadline } from './countdownStorage'
 
 type CardProps = { card: CardData; selected: boolean; confettiBurst?: number; onSelect: () => void; onEdit: () => void }
 
@@ -37,6 +39,17 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
   const comments = card.comments ?? []
   const latest = sortCommentsNewestFirst(comments)[0]
   const latestUser = latest ? users.data?.find((user) => user.id === latest.user) : undefined
+  const [deadline, setDeadline] = useState(() => getCountdownDeadline(card.id))
+
+  useEffect(() => {
+    const refresh = () => setDeadline(getCountdownDeadline(card.id))
+    window.addEventListener(countdownChangedEvent(), refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener(countdownChangedEvent(), refresh)
+      window.removeEventListener('storage', refresh)
+    }
+  }, [card.id])
 
   function toggleTask(index: number) {
     if (updateTasks.isPending) return
@@ -51,6 +64,7 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
         bg={selected ? 'bg.info' : 'bg'} borderColor={selected ? 'border.info' : 'border'}
         borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere" position="relative">
         <Heading as="h3" size="sm">{card.title}</Heading>
+        {deadline && <CountdownClock deadline={deadline} />}
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         {assigneeNames.length > 0 && <Text mt={2} fontSize="sm" aria-label={`Assigned users: ${assigneeNames.join(', ')}`}>Users: {assigneeNames.join(', ')}</Text>}
         {card.checklistItems && card.checklistItems.length > 0 && (

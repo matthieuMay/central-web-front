@@ -6,8 +6,17 @@ import { getUsers, usersKey } from '../api/board'
 import { useEditCard } from '../api/mutations'
 import type { CardData, TaskData, UserData } from '../types/board'
 import { editElementId } from './cardIds'
+import { getCountdownDeadline, setCountdownDeadline } from './countdownStorage'
 
-type Fields = { title: string; description: string }
+type Fields = { title: string; description: string; countdownEnabled: boolean; deadline: string }
+
+function toDatetimeLocal(value?: string) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const offset = date.getTimezoneOffset() * 60_000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
 
 function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
@@ -17,8 +26,11 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const [newTaskDescription, setNewTaskDescription] = useState('')
   const [isAssigneeDialogOpen, setIsAssigneeDialogOpen] = useState(false)
   const [draftAssignedUsers, setDraftAssignedUsers] = useState<UserData[]>([])
-  const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
-  const { register, handleSubmit, reset, trigger, formState: { errors, isValid } } = useForm<Fields>({
+  const [initial] = useState(() => {
+    const deadline = getCountdownDeadline(card.id)
+    return { title: card.title, description: card.description ?? '', countdownEnabled: !!deadline, deadline: toDatetimeLocal(deadline) }
+  })
+  const { register, handleSubmit, reset, trigger, watch, formState: { errors, isValid } } = useForm<Fields>({
     mode: 'onChange',
     defaultValues: initial,
   })
@@ -70,6 +82,7 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   async function submit(values: Fields) {
     try {
       await edit.mutateAsync({ cardId: card.id, title: values.title.trim(), description: values.description || null, assignees: assignedUsers.map((user) => user.id), assignedUsers, checklistItems: tasks.map((task) => ({ ...task, description: task.description.trim() })) })
+      setCountdownDeadline(card.id, values.countdownEnabled ? new Date(values.deadline).toISOString() : null)
       onClose()
     } catch {
       // Keep the form and its values in place so the user can retry.
@@ -88,6 +101,21 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
         <Field.Root>
           <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
           <Textarea id="edit-description" rows={5} {...register('description')} />
+        </Field.Root>
+        <Field.Root mt={4} invalid={!!errors.deadline}>
+          <label className="countdown-option">
+            <input type="checkbox" {...register('countdownEnabled')} />
+            Activer le countdown
+          </label>
+          {watch('countdownEnabled') && (
+            <>
+              <Field.Label htmlFor="edit-deadline">Deadline</Field.Label>
+              <Input id="edit-deadline" type="datetime-local" {...register('deadline', {
+                validate: (value) => !watch('countdownEnabled') || !value ? 'La deadline est obligatoire.' : new Date(value).getTime() > Date.now() || 'La deadline doit être dans le futur.',
+              })} />
+              {errors.deadline && <Field.ErrorText role="alert">{errors.deadline.message}</Field.ErrorText>}
+            </>
+          )}
         </Field.Root>
         <Field.Root mt={4}>
           <Field.Label>Assignés</Field.Label>

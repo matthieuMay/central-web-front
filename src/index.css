@@ -123,3 +123,49 @@ form :focus-visible, article > button:focus-visible {
   outline: 3px solid var(--nav-focus-color);
   outline-offset: 2px;
 }
+
+.countdown-clock {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  float: right;
+  gap: 0.35rem;
+  margin: -0.5rem -0.5rem 0 0.5rem;
+  padding: 0.25rem;
+}
+
+.countdown-clock:hover {
+  background: var(--chakra-colors-bg-muted);
+}
+
+.countdown-clock:focus-visible {
+  outline: 2px solid var(--nav-focus-color);
+  outline-offset: 2px;
+}
+
+.countdown-clock svg {
+  height: 2.5rem;
+  width: 2.5rem;
+}
+
+.countdown-clock__track {
+  fill: var(--chakra-colors-bg-subtle);
+  stroke: var(--chakra-colors-border-emphasized);
+  stroke-width: 2;
+}
+
+.countdown-clock__ray {
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.countdown-option {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
