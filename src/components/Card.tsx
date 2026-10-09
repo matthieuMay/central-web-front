@@ -1,34 +1,62 @@
 import { Box, Heading, HStack, IconButton, Text } from '@chakra-ui/react'
-import { motion, useReducedMotion } from 'motion/react'
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
+import { motion, useAnimate, useReducedMotion } from 'motion/react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import type { CardData } from '../types/board'
 import { cardElementId, editElementId } from './cardIds'
 import Confetti from './Confetti'
+import type { DragPosition } from './CardDragPreview'
 
-type CardProps = { card: CardData; selected: boolean; onSelect: () => void; onEdit: () => void; disabled: boolean; arriving: boolean; onArrival: () => boolean }
+type CardProps = { card: CardData; selected: boolean; onSelect: () => void; onEdit: () => void; disabled: boolean; arriving: boolean; onArrival: () => boolean; dropOrigin: DragPosition | null; returning: boolean }
 
-export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onArrival }: CardProps) {
+export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onArrival, dropOrigin, returning }: CardProps) {
   const reducedMotion = useReducedMotion()
   const animating = useRef(false)
   const element = useRef<HTMLElement | null>(null)
+  const handle = useRef<HTMLButtonElement | null>(null)
+  const arrivalHandler = useRef(onArrival)
+  const [scope, animate] = useAnimate<HTMLDivElement>()
   const [burst, setBurst] = useState(0)
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
-    item: () => ({ cardId: card.id, width: element.current?.offsetWidth ?? 240 }),
+    item: () => {
+      const cardRect = element.current!.getBoundingClientRect()
+      const handleRect = handle.current!.getBoundingClientRect()
+      return { cardId: card.id, width: cardRect.width, offset: { x: cardRect.left - handleRect.left, y: cardRect.top - handleRect.top } }
+    },
     canDrag: !disabled,
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   }), [card.id, disabled])
 
   useEffect(() => { preview(getEmptyImage(), { captureDraggingState: true }) }, [preview])
 
+  useLayoutEffect(() => { arrivalHandler.current = onArrival }, [onArrival])
+
   const finishArrival = useCallback(() => {
-    if (arriving && onArrival()) setBurst((current) => current + 1)
-  }, [arriving, onArrival])
+    if ((arriving || returning) && arrivalHandler.current()) setBurst((current) => current + 1)
+  }, [arriving, returning])
+
+  useLayoutEffect(() => {
+    if (!dropOrigin || (!arriving && !returning) || reducedMotion) return
+    const node = element.current!.parentElement!
+    node.style.transform = 'none'
+    const rect = node.getBoundingClientRect()
+    const from = `translate3d(${dropOrigin.x - rect.left}px, ${dropOrigin.y - rect.top}px, 0) rotate(${returning ? 0 : -3}deg)`
+    node.style.transform = from
+    node.style.opacity = returning ? '1' : '0.88'
+    animating.current = true
+    let cancelled = false
+    const playback = animate(node, {
+      transform: [from, 'translate3d(0, 0, 0) rotate(0deg)'],
+      opacity: [returning ? 1 : 0.88, 1],
+    }, { type: 'spring', stiffness: 280, damping: 32 })
+    void playback.then(() => { if (!cancelled) { animating.current = false; finishArrival() } })
+    return () => { cancelled = true; playback.stop(); animating.current = false }
+  }, [dropOrigin, arriving, returning, reducedMotion, animate, finishArrival])
 
   useEffect(() => {
-    if (!arriving) return
+    if (!arriving && !returning) return
     // No layout callback occurs for reduced motion or a same-position layout.
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
@@ -36,7 +64,7 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
       })
     })
     return () => cancelAnimationFrame(frame)
-  }, [arriving, finishArrival, reducedMotion])
+  }, [arriving, returning, finishArrival, reducedMotion])
 
   function select(event: MouseEvent<HTMLElement>) {
     if ((event.target as Element).closest('button, input, textarea, select, a, [contenteditable]:not([contenteditable="false"])')) return
@@ -44,7 +72,7 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
   }
 
   return (
-    <motion.div layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }} onLayoutAnimationStart={() => { animating.current = true }} onLayoutAnimationComplete={() => { animating.current = false; finishArrival() }}>
+    <motion.div ref={scope} layout={!reducedMotion && !(dropOrigin && (arriving || returning))} layoutId={reducedMotion || dropOrigin ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }} onLayoutAnimationStart={() => { animating.current = true }} onLayoutAnimationComplete={() => { animating.current = false; finishArrival() }}>
       <Box
         ref={element} as="article" id={cardElementId(card.id)} data-card-id={card.id} tabIndex={0} onClick={select}
         onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onSelect() } }}
@@ -55,7 +83,7 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
       >
         <HStack justify="space-between" align="start" gap={2}>
           <Heading as="h3" size="sm">{card.title}</Heading>
-          <IconButton ref={(node) => { drag(node) }} type="button" aria-label={`Drag ${card.title}`} title="Drag to reorder" variant="ghost" size="xs" cursor={disabled ? 'default' : 'grab'} disabled={disabled} onClick={(event) => event.stopPropagation()}>⠿</IconButton>
+          <IconButton ref={(node) => { handle.current = node; drag(node) }} type="button" aria-label={`Drag ${card.title}`} title="Drag to reorder" variant="ghost" size="xs" cursor={disabled ? 'default' : 'grab'} disabled={disabled} onClick={(event) => event.stopPropagation()}>⠿</IconButton>
         </HStack>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>

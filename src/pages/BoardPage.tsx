@@ -7,6 +7,7 @@ import { placeCard, type MoveCardInput } from '../api/placement'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
+import type { CardLanding, DragPosition } from '../components/CardDragPreview'
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
@@ -19,16 +20,19 @@ export function BoardPage() {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const [arrival, setArrival] = useState<MoveCardInput | null>(null)
+  const [landing, setLanding] = useState<CardLanding | null>(null)
   const [announcement, setAnnouncement] = useState('')
   const pendingArrival = useRef<MoveCardInput | null>(null)
   const moving = useRef(false)
   const focusAfterMove = useRef<string | null>(null)
   const move = useMoveCard((input) => {
+    const rect = document.getElementById(cardElementId(input.cardId))?.getBoundingClientRect()
     pendingArrival.current = null
     setArrival(null)
+    setLanding(rect ? { cardId: input.cardId, origin: { x: rect.left, y: rect.top }, returning: true } : null)
     focusAfterMove.current = input.cardId
   })
-  const busy = writes > 0 || isFetching || isError || !!editingCardId || !!arrival
+  const busy = writes > 0 || isFetching || isError || !!editingCardId || !!arrival || !!landing?.returning
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
   const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
@@ -48,7 +52,7 @@ export function BoardPage() {
     document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
   }
 
-  const moveTo = useCallback((input: MoveCardInput) => {
+  const moveTo = useCallback((input: MoveCardInput, origin?: DragPosition) => {
     const current = queryClient.getQueryData<typeof data>(boardKey)
     if (!current || busy || moving.current || queryClient.isMutating({ predicate: (mutation) => mutation.options.scope?.id === 'board-writes' }) || queryClient.isFetching({ queryKey: boardKey, exact: true })) return false
     const placed = placeCard(current, input)
@@ -60,6 +64,7 @@ export function BoardPage() {
     const target = { ...input, position: destination.cards.findIndex((card) => card.id === input.cardId) }
     pendingArrival.current = target
     setArrival(target)
+    setLanding(origin ? { cardId: input.cardId, origin } : null)
     focusAfterMove.current = input.cardId
     move.mutate(input, {
       onSettled: () => { moving.current = false },
@@ -68,6 +73,10 @@ export function BoardPage() {
   }, [queryClient, busy, move])
 
   const arrived = (id: string) => {
+    if (landing?.returning && landing.cardId === id) {
+      setLanding({ ...landing, returning: false })
+      return false
+    }
     if (!arrival || pendingArrival.current !== arrival || arrival.cardId !== id) return false
     const destination = data?.columns.find((column) => column.id === arrival.column)
     setAnnouncement(`${selectedCard?.title ?? 'Card'} placed in ${destination?.title ?? arrival.column}, position ${arrival.position! + 1}.`)
@@ -123,7 +132,7 @@ export function BoardPage() {
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
         {isError && <Text role="alert" color="red.700">Could not refresh board: {error.message}. <Button size="xs" onClick={() => void refetch()}>Retry</Button></Text>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} arrivingCardId={arrivingCardId} onArrival={arrived} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )

@@ -6,6 +6,7 @@ import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
 import type { MoveCardInput } from '../api/placement'
+import type { CardDragItem, CardLanding, DragPosition } from './CardDragPreview'
 
 type ColumnProps = {
   column: ColumnData
@@ -13,12 +14,13 @@ type ColumnProps = {
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
   disabled: boolean
-  onMoveCard: (input: MoveCardInput) => boolean
+  onMoveCard: (input: MoveCardInput, origin?: DragPosition) => boolean
+  landing: CardLanding | null
   arrivingCardId: string | null
   onArrival: (id: string) => boolean
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, arrivingCardId, onArrival }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, arrivingCardId, onArrival, landing }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -39,7 +41,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
     return { position, top: (next ? next.top - 6 : previous ? previous.bottom + 6 : region.getBoundingClientRect().top + 24) - region.getBoundingClientRect().top }
   }
 
-  const [{ isOver, canDrop }, drop] = useDrop<{ cardId: string }, { moved: boolean }, { isOver: boolean; canDrop: boolean }>(() => ({
+  const [{ isOver, canDrop }, drop] = useDrop<CardDragItem, { moved: boolean }, { isOver: boolean; canDrop: boolean }>(() => ({
     accept: 'CARD',
     canDrop: () => !disabled,
     hover: (item, monitor) => {
@@ -51,7 +53,9 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
     drop: (item, monitor) => {
       const point = monitor.getClientOffset()
       const target = point && locate(item.cardId, point.y)
-      return { moved: !!target && onMoveCard({ cardId: item.cardId, column: column.id, position: target.position }) }
+      const source = monitor.getSourceClientOffset()
+      const origin = source ? { x: source.x + item.offset.x, y: source.y + item.offset.y } : undefined
+      return { moved: !!target && onMoveCard({ cardId: item.cardId, column: column.id, position: target.position }, origin) }
     },
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }), canDrop: monitor.canDrop() }),
   }), [column, disabled, onMoveCard])
@@ -75,7 +79,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
       <Stack ref={(node) => { cardsRef.current = node; drop(node) }} role="group" aria-label={`Cards in ${column.title}`} gap={3} minH="6rem" position="relative" borderRadius="md" outline={isOver && canDrop ? '2px dashed' : undefined} outlineColor="border.info" outlineOffset="8px" pb={3}>
         {column.cards.length === 0 && <Text color="fg.muted" p={4}>Drop a card here</Text>}
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} disabled={disabled} arriving={card.id === arrivingCardId} onArrival={() => onArrival(card.id)} />
+          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} disabled={disabled} arriving={card.id === arrivingCardId} onArrival={() => onArrival(card.id)} dropOrigin={landing?.cardId === card.id ? landing.origin : null} returning={landing?.cardId === card.id && !!landing.returning} />
         ))}
         {isOver && canDrop && insertion && <Box aria-hidden="true" data-drop-indicator="" position="absolute" top={`${insertion.top}px`} insetInline={0} height="3px" bg="border.info" borderRadius="full" pointerEvents="none" zIndex={2} boxShadow="0 0 12px var(--chakra-colors-border-info)" />}
       </Stack>
