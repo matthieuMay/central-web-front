@@ -4,6 +4,7 @@ import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type MoveCardInput = { cardId: string; column: string; position?: number }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -85,12 +86,28 @@ export function useEditCard() {
   })
 }
 
+// Mirrors the API: remove the card, then insert it at `position` (or append).
+export function moveCardInBoard(board: BoardData, { cardId, column, position }: MoveCardInput): BoardData {
+  const card = board.columns.flatMap((item) => item.cards).find((item) => item.id === cardId)
+  if (!card) return board
+  return {
+    ...board,
+    columns: board.columns.map((item) => {
+      const cards = item.cards.filter((other) => other.id !== cardId)
+      if (item.id !== column) return cards.length === item.cards.length ? item : { ...item, cards }
+      const index = Math.min(Math.max(position ?? cards.length, 0), cards.length)
+      return { ...item, cards: [...cards.slice(0, index), card, ...cards.slice(index)] }
+    }),
+  }
+}
+
 export function useMoveCard() {
   const queryClient = useQueryClient()
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
-    // The response is not put in the cache: only a successful refetch moves the rendered card.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
+    onMutate: (input: MoveCardInput) => begin(queryClient, (board) => moveCardInBoard(board, input)),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })
 }

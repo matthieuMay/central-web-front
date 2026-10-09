@@ -1,4 +1,5 @@
-import { Box, Flex, Heading } from '@chakra-ui/react'
+import { Box, Flex, Heading, IconButton } from '@chakra-ui/react'
+import { Moon, Sun } from 'lucide-react'
 import { NavLink } from 'react-router'
 
 type HeaderProps = {
@@ -8,7 +9,7 @@ type HeaderProps = {
 
 export function Header({ theme, onToggleTheme }: HeaderProps) {
   return (
-    <Box as="header" borderBottomWidth="1px" bg="bg" borderColor="border">
+    <Box as="header" className="app-header glass">
       <Flex
         px={{ base: 4, md: 8 }}
         py={4}
@@ -17,16 +18,19 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
         gap={4}
         wrap="wrap"
       >
-        <Heading as="span" size="lg">Mini-Trello</Heading>
+        <Heading as="span" size="xl" className="brand shimmer-text">✦ Mini-Trello</Heading>
         <Flex align="center" gap={4} wrap="wrap">
           <Flex as="nav" aria-label="Navigation principale" gap={2}>
             <NavLink className="nav-link" to="/" end>Accueil</NavLink>
             <NavLink className="nav-link" to="/board">Tableau</NavLink>
           </Flex>
-          <label className="theme-toggle">
-            <input type="checkbox" role="switch" checked={theme === 'dark'} onChange={onToggleTheme} />
-            <span>Mode sombre</span>
-          </label>
+          <IconButton
+            type="button" variant="ghost" size="sm" rounded="full" className="theme-button" onClick={onToggleTheme}
+            aria-label={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+            title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+          >
+            {theme === 'dark' ? <Sun /> : <Moon />}
+          </IconButton>
         </Flex>
       </Flex>
     </Box>

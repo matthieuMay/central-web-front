@@ -1,21 +1,47 @@
-import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import { useRef, useState, type FormEvent } from 'react'
+import { Box, Heading, Stack } from '@chakra-ui/react'
+import { Fragment, useRef, useState, type FormEvent } from 'react'
+import { useDrop } from 'react-dnd'
 import { v7 as uuidv7 } from 'uuid'
 import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
+import { CARD, type DraggedCard } from './cardIds'
 
 type ColumnProps = {
   column: ColumnData
   selectedCardId: string | null
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
+  onDropCard: (cardId: string, columnId: string, index: number) => void
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, onDropCard }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
   const create = useCreateCard()
+
+  // Insertion index among the rendered cards (the dragged one included):
+  // the number of cards whose vertical middle is above the pointer.
+  function indexAt(y: number | undefined) {
+    const cards = sectionRef.current?.querySelectorAll('.board-card') ?? []
+    if (y === undefined) return cards.length
+    return Array.from(cards).filter((card) => {
+      const rect = card.getBoundingClientRect()
+      return rect.top + rect.height / 2 < y
+    }).length
+  }
+
+  const [{ isOver }, drop] = useDrop<DraggedCard, void, { isOver: boolean }>({
+    accept: CARD,
+    hover: (_item, monitor) => setDropIndex(indexAt(monitor.getClientOffset()?.y)),
+    drop: (item, monitor) => {
+      onDropCard(item.id, column.id, indexAt(monitor.getClientOffset()?.y))
+      setDropIndex(null)
+    },
+    collect: (monitor) => ({ isOver: monitor.isOver() }),
+  }, [column.id, onDropCard])
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -29,14 +55,29 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard }: Col
     })
   }
 
+  const indicator = <div aria-hidden className="drop-indicator" />
+  const shownIndex = isOver ? dropIndex : null
+
   return (
-    <Box as="section" aria-label={column.title} bg="bg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
-      <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
+    <Box
+      ref={(node: HTMLElement | null) => { sectionRef.current = node; drop(node) }}
+      as="section" aria-label={column.title} className="column glass" data-column={column.id} data-over={isOver || undefined} p={4} pt={5} minW={0}
+      minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}
+    >
+      <div className="column-header">
+        <span className="column-dot" aria-hidden />
+        <Heading as="h2" size="md">{column.title}</Heading>
+        <span className="column-count">{column.cards.length}</span>
+      </div>
       <Stack gap={3}>
-        {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
-        {column.cards.map((card) => (
-          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
+        {column.cards.length === 0 && <div className="column-empty">{isOver ? 'Drop here' : 'No cards yet'}</div>}
+        {column.cards.map((card, index) => (
+          <Fragment key={card.id}>
+            {shownIndex === index && indicator}
+            <Card card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
+          </Fragment>
         ))}
+        {shownIndex === column.cards.length && column.cards.length > 0 && indicator}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
           <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />

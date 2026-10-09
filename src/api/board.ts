@@ -32,10 +32,12 @@ export function editCard({ cardId, title, description }: { cardId: string; title
   })
 }
 
-export function moveCard({ cardId, column }: { cardId: string; column: string }) {
+// `position` is the 0-based index in the destination column once the card has
+// left its current place; omitting it appends the card to the end.
+export function moveCard({ cardId, column, position }: { cardId: string; column: string; position?: number }) {
   return request<BoardData>(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ column }),
+    body: JSON.stringify({ column, ...(position === undefined ? {} : { position }) }),
   })
 }
