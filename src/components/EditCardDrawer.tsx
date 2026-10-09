@@ -2,15 +2,17 @@ import { Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
-import type { CardData } from '../types/board'
+import type { CardData, User } from '../types/board'
 import { editElementId } from './cardIds'
+import { CardAssignees } from './CardAssignees'
 import { CardChecklist } from './CardChecklist'
 
 type Fields = { title: string; description: string }
 
-function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
+function EditForm({ card, onClose, users, usersLoading, usersError }: { card: CardData; onClose: () => void; users: User[]; usersLoading: boolean; usersError: string | null }) {
   const edit = useEditCard()
   const [checklistError, setChecklistError] = useState<string | null>(null)
+  const [assigneeError, setAssigneeError] = useState<string | null>(null)
   const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
   const { register, handleSubmit, reset, trigger, formState: { errors, isValid } } = useForm<Fields>({
     mode: 'onChange',
@@ -42,6 +44,15 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
     }
   }
 
+  async function saveAssignees(assignees: string[]) {
+    setAssigneeError(null)
+    try {
+      await edit.mutateAsync({ cardId: card.id, assignees })
+    } catch (error) {
+      setAssigneeError(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit(submit)} noValidate>
       <Drawer.Header><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
@@ -55,6 +66,16 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
           <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
           <Textarea id="edit-description" rows={5} {...register('description')} />
         </Field.Root>
+        <CardAssignees
+          variant="editor"
+          assigneeIds={card.assignees}
+          users={users}
+          onChange={(assignees) => { void saveAssignees(assignees) }}
+          disabled={edit.isPending || usersLoading || !!usersError || users.length === 0}
+          loading={usersLoading}
+          error={usersError ?? (users.length === 0 ? 'No users are available to assign.' : assigneeError)}
+          errorType={usersError || users.length === 0 ? 'load' : 'update'}
+        />
         <CardChecklist items={card.checklistItems ?? []} onChange={(items) => { void saveChecklist(items) }} disabled={edit.isPending} />
         {checklistError && <Text role="alert" color="red.700" mt={3}>Could not save checklist: {checklistError}. Try again.</Text>}
         {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
@@ -67,7 +88,7 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   )
 }
 
-export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClose: () => void }) {
+export function EditCardDrawer({ card, onClose, users, usersLoading, usersError }: { card: CardData | null; onClose: () => void; users: User[]; usersLoading: boolean; usersError: string | null }) {
   const lastEditedId = useRef<string | null>(null)
   useEffect(() => { if (card) lastEditedId.current = card.id }, [card])
   return (
@@ -76,7 +97,7 @@ export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClo
         <Drawer.Backdrop />
         <Drawer.Positioner>
           <Drawer.Content>
-            {card && <EditForm key={card.id} card={card} onClose={onClose} />}
+            {card && <EditForm key={card.id} card={card} onClose={onClose} users={users} usersLoading={usersLoading} usersError={usersError} />}
           </Drawer.Content>
         </Drawer.Positioner>
       </Portal>

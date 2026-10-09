@@ -6,6 +6,7 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import type { CardData, User } from '../types/board'
 import { cardElementId, commentsElementId, editElementId } from './cardIds'
 import { CardChecklist } from './CardChecklist'
+import { CardAssignees } from './CardAssignees'
 import { CardComments } from './CardComments'
 import Confetti from './Confetti'
 
@@ -58,7 +59,10 @@ export function Card({ card, columnId, position, selected, disabled, celebration
         cursor={disabled ? 'default' : 'grab'} position="relative" overflow="visible"
       >
         {celebrationToken !== null && <Confetti key={`${card.id}-${celebrationToken}`} particleCount={1} />}
-        <Heading as="h3" size="sm">{card.title}</Heading>
+        <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={2}>
+          <Heading as="h3" size="sm" flex="1" minW={0}>{card.title}</Heading>
+          <CardAssignees assigneeIds={card.assignees} users={users} onOpenDetails={onEdit} />
+        </Box>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         <CardComments comments={card.comments ?? []} users={users} onOpen={onComments} />
         <CardChecklist items={card.checklistItems ?? []} onChange={onChecklistChange} readOnly allowToggle disabled={disabled || checklistDisabled} />

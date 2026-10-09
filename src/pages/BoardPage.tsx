@@ -143,7 +143,13 @@ export function BoardPage() {
         }}
         checklistDisabled={edit.isPending}
       />
-      <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
+      <EditCardDrawer
+        card={editingCard ?? null}
+        onClose={() => setEditingCardId(null)}
+        users={usersQuery.data ?? []}
+        usersLoading={usersQuery.isPending}
+        usersError={usersQuery.isError ? usersQuery.error.message : null}
+      />
       <CardCommentsDrawer
         card={commentsCard}
         users={usersQuery.data ?? []}
