@@ -1,21 +1,22 @@
 import { useState } from 'react'
-import { useImmer } from 'use-immer'
 import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
 import type { BoardData } from '../types/board'
 import type { CardDragPayload, DropPoint } from '../lib/dnd'
+import { useMoveCard, useUpdateCard } from '../lib/queries'
 import { Column } from './Column'
 import type { CardPatch } from './Card'
 import Confetti from './Confetti'
 
 type BoardProps = { board: BoardData }
 
-export function Board({ board: initialBoard }: BoardProps) {
-  const [board, updateBoard] = useImmer(initialBoard)
+export function Board({ board }: BoardProps) {
   const [confetti, setConfetti] = useState<{ id: number; x: number; y: number } | null>(null)
+  const moveCard = useMoveCard()
+  const updateCard = useUpdateCard()
 
   const lastColumnId = board.columns[board.columns.length - 1]?.id
 
-  function moveCard(
+  function handleMoveCard(
     payload: CardDragPayload,
     toColumnId: string,
     toIndex: number,
@@ -23,21 +24,18 @@ export function Board({ board: initialBoard }: BoardProps) {
   ) {
     const { cardId, columnId: fromColumnId } = payload
 
-    updateBoard((draft) => {
-      const from = draft.columns.find((column) => column.id === fromColumnId)
-      const to = draft.columns.find((column) => column.id === toColumnId)
-      if (!from || !to) return
+    const from = board.columns.find((column) => column.id === fromColumnId)
+    const to = board.columns.find((column) => column.id === toColumnId)
+    if (!from || !to) return
 
-      const fromIndex = from.cards.findIndex((card) => card.id === cardId)
-      if (fromIndex === -1) return
+    const fromIndex = from.cards.findIndex((card) => card.id === cardId)
+    if (fromIndex === -1) return
 
-      const [card] = from.cards.splice(fromIndex, 1)
+    let index = toIndex
+    if (fromColumnId === toColumnId && fromIndex < toIndex) index -= 1
+    index = Math.max(0, Math.min(index, to.cards.length))
 
-      let index = toIndex
-      if (fromColumnId === toColumnId && fromIndex < toIndex) index -= 1
-      index = Math.max(0, Math.min(index, to.cards.length))
-      to.cards.splice(index, 0, card)
-    })
+    moveCard.mutate({ cardId, columnId: toColumnId, position: index })
 
     if (toColumnId === lastColumnId && fromColumnId !== lastColumnId) {
       setConfetti((previous) => ({
@@ -48,15 +46,8 @@ export function Board({ board: initialBoard }: BoardProps) {
     }
   }
 
-  function updateCard(columnId: string, cardId: string, patch: CardPatch) {
-    updateBoard((draft) => {
-      const column = draft.columns.find((item) => item.id === columnId)
-      const card = column?.cards.find((item) => item.id === cardId)
-      if (!card) return
-
-      if (patch.title !== undefined) card.title = patch.title
-      if (patch.description !== undefined) card.description = patch.description
-    })
+  function handleUpdateCard(_columnId: string, cardId: string, patch: CardPatch) {
+    updateCard.mutate({ cardId, patch })
   }
 
   return (
@@ -69,8 +60,8 @@ export function Board({ board: initialBoard }: BoardProps) {
           <Column
             key={column.id}
             column={column}
-            onMoveCard={moveCard}
-            onUpdateCard={updateCard}
+            onMoveCard={handleMoveCard}
+            onUpdateCard={handleUpdateCard}
           />
         ))}
       </SimpleGrid>

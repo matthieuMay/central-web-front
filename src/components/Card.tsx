@@ -11,12 +11,12 @@ import {
   Text,
   Textarea,
 } from '@chakra-ui/react'
-import type { CardData } from '../types/board'
+import type { CardData, CardPatch } from '../types/board'
 import type { CardDragPayload, DropPoint } from '../lib/dnd'
 import { getCardDragData, setCardDragData } from '../lib/dnd'
 import { GripIcon, PencilIcon } from './icons'
 
-export type CardPatch = Partial<Omit<CardData, 'id'>>
+export type { CardPatch }
 
 type CardProps = {
   card: CardData
