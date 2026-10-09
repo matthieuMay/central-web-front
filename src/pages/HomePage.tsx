@@ -6,7 +6,7 @@ export function HomePage() {
     <Stack gap={4} maxW="3xl" mx="auto">
       <Heading as="h1">Bienvenue sur Mini-Trello</Heading>
       <Text>Retrouvez vos tâches dans un tableau partagé.</Text>
-      <Link asChild color="blue.700" width="fit-content">
+      <Link asChild colorPalette="blue" width="fit-content">
         <RouterLink to="/board">Ouvrir le tableau</RouterLink>
       </Link>
     </Stack>

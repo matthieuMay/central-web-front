@@ -1,0 +1,3 @@
+# Color Mode Preference is not persisted
+
+The app exposes a manual System/Light/Dark control, but deliberately does not persist the user's Color Mode Preference: it is held in memory only and resets to `system` on every load. We chose this so that Automatic Dark Mode remains the always-true default and the app never carries stale, hidden state for an appearance choice; the cost, knowingly accepted, is that a manual override is forgotten on reload. The alternative — persisting the preference in `localStorage` — was rejected, which is also why `next-themes` (whose primary value is persisted storage) was not used in favour of a small `matchMedia`-based hook.

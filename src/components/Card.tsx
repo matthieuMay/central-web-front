@@ -5,9 +5,9 @@ type CardProps = { card: CardData }
 
 export function Card({ card }: CardProps) {
   return (
-    <Box as="article" bg="white" borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
+    <Box as="article" bg="bg.panel" borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere">
       <Heading as="h3" size="sm">{card.title}</Heading>
-      {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
+      {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
     </Box>
   )
 }
