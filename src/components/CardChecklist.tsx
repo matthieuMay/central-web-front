@@ -1,28 +1,53 @@
-import React from 'react';
-
-type ChecklistItem = {
-  description: string;
-  done: boolean;
-};
+import { useState, type FormEvent } from 'react'
+import { Button, Input, Stack, Text } from '@chakra-ui/react'
+import type { ChecklistItem } from '../types/board'
 
 type CardChecklistProps = {
   items: ChecklistItem[];
-  onAddItem: (description: string) => void;
-  onToggleItem: (index: number) => void;
+  disabled?: boolean;
+  onAddItem: (description: string) => Promise<boolean>;
+  onToggleItem: (index: number) => Promise<boolean>;
 };
 
-/**
- * Responsabilité : Gérer la liste des tâches à cocher (création, cochage/décochage).
- * Cas à vérifier :
- * - Ajout d'une nouvelle tâche textuelle.
- * - Basculement de l'état (done: true / false) via une case à cocher.
- * - Attention : pas d'ID unique fourni par l'API pour les items de checklist.
- */
-export const CardChecklist: React.FC<CardChecklistProps> = () => {
+export function CardChecklist({ items, disabled = false, onAddItem, onToggleItem }: CardChecklistProps) {
+  const [description, setDescription] = useState('')
+
+  async function submitItem(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const nextDescription = description.trim()
+    if (!nextDescription) return
+    if (await onAddItem(nextDescription)) setDescription('')
+  }
+
   return (
-    <div className="card-checklist-stub">
-      {/* Rendu temporaire */}
-      <p>[TODO: Interface de la checklist]</p>
-    </div>
-  );
-};
+    <Stack gap={2}>
+      {items.length === 0 && <Text color="var(--app-muted-text)" fontSize="sm">No checklist items yet</Text>}
+      {items.map((item, index) => (
+        <label key={`${item.description}-${index}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
+          <input
+            type="checkbox"
+            checked={item.done}
+            disabled={disabled}
+            onChange={() => { void onToggleItem(index) }}
+          />
+          <span style={{ textDecoration: item.done ? 'line-through' : undefined }}>{item.description}</span>
+        </label>
+      ))}
+      <form onSubmit={(event) => { void submitItem(event) }}>
+        <Stack direction="row" gap={2}>
+          <Input
+            aria-label="New checklist item"
+            placeholder="Add a task"
+            size="sm"
+            value={description}
+            disabled={disabled}
+            onChange={(event) => setDescription(event.currentTarget.value)}
+          />
+          <Button type="submit" size="xs" disabled={disabled || !description.trim()}>
+            Add
+          </Button>
+        </Stack>
+      </form>
+    </Stack>
+  )
+}

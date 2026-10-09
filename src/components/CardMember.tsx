@@ -1,24 +1,42 @@
-import React from 'react';
+import { Box, Button, Stack, Text } from '@chakra-ui/react'
+import type { UserData } from '../types/board'
 
 type CardMembersProps = {
   assignees: string[];
-  availableUsers: string[];
-  onAssign: (user: string) => void;
-  onRemove: (user: string) => void;
+  availableUsers: UserData[];
+  disabled?: boolean;
+  onAssign: (user: string) => Promise<boolean>;
+  onRemove: (user: string) => Promise<boolean>;
 };
 
-/**
- * Responsabilité : Gérer l'affichage, l'assignation et le retrait des membres de la carte.
- * Cas à vérifier : 
- * - Affichage correct des avatars/noms des membres assignés.
- * - Possibilité d'ajouter un membre depuis la liste fournie par l'API (GET /users).
- * - Possibilité de retirer un membre existant.
- */
-export const CardMembers: React.FC<CardMembersProps> = () => {
+export function CardMembers({ assignees, availableUsers, disabled = false, onAssign, onRemove }: CardMembersProps) {
+  const availableIds = new Set(availableUsers.map((user) => user.id))
+
   return (
-    <div className="card-members-stub">
-      {/* Rendu temporaire */}
-      <p>[TODO: Interface des membres]</p>
-    </div>
-  );
-};
+    <Stack gap={1}>
+      {availableUsers.length === 0 && <Text color="var(--app-muted-text)" fontSize="sm">No members available</Text>}
+      {availableUsers.map((user) => {
+        const isAssigned = assignees.includes(user.id)
+        return (
+          <label key={user.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+            <input
+              type="checkbox"
+              checked={isAssigned}
+              disabled={disabled}
+              onChange={() => { void (isAssigned ? onRemove(user.id) : onAssign(user.id)) }}
+            />
+            {user.firstname} {user.lastname}
+          </label>
+        )
+      })}
+      {assignees.filter((id) => !availableIds.has(id)).map((id) => (
+        <Box key={id} display="flex" alignItems="center" justifyContent="space-between" gap={2}>
+          <Text color="var(--app-muted-text)" fontSize="sm">Unavailable member</Text>
+          <Button size="xs" disabled={disabled} onClick={() => { void onRemove(id) }}>
+            Remove
+          </Button>
+        </Box>
+      ))}
+    </Stack>
+  )
+}

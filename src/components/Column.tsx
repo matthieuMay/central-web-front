@@ -1,12 +1,15 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
 import type { DragEvent, KeyboardEvent } from 'react'
-import type { ColumnData } from '../types/board'
+import type { CardCollectionsUpdate, ColumnData, UserData } from '../types/board'
 import { Card } from './Card'
 
 type ColumnProps = {
   column: ColumnData
   canMoveCards: boolean
   movingCardId: string | null
+  users: UserData[]
+  isUpdating: boolean
+  onUpdateCard: (cardId: string, changes: CardCollectionsUpdate) => Promise<boolean>
   draggingCardId: string | null
   onCardKeyDown: (cardId: string, event: KeyboardEvent<HTMLElement>) => void
   onCardDragStart: (cardId: string) => void
@@ -19,6 +22,9 @@ export function Column({
   column,
   canMoveCards,
   movingCardId,
+  users,
+  isUpdating,
+  onUpdateCard,
   draggingCardId,
   onCardKeyDown,
   onCardDragStart,
@@ -54,6 +60,9 @@ export function Column({
             isSelected={movingCardId === card.id}
             isDragging={draggingCardId === card.id}
             canMove={canMoveCards}
+            users={users}
+            isUpdating={isUpdating}
+            onUpdate={(changes) => onUpdateCard(card.id, changes)}
             onKeyDown={(event) => onCardKeyDown(card.id, event)}
             onDragStart={(event) => {
               event.dataTransfer.effectAllowed = 'move'

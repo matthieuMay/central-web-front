@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { Alert, Heading, SimpleGrid, Stack, Text } from '@chakra-ui/react'
-import type { BoardData } from '../types/board'
+import type { BoardData, CardCollectionsUpdate, CardData, UserData } from '../types/board'
 import { Column } from './Column'
 import Confetti from './Confetti'
 
@@ -9,8 +9,10 @@ const apiBaseUrl = import.meta.env.VITE_API_URL ?? '/api'
 
 export function Board({ board }: BoardProps) {
   const [currentBoard, setCurrentBoard] = useState(board)
+  const [users, setUsers] = useState<UserData[]>([])
   const [isReady, setIsReady] = useState(false)
   const [movingCardId, setMovingCardId] = useState<string | null>(null)
+  const [updatingCardId, setUpdatingCardId] = useState<string | null>(null)
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confettiCount, setConfettiCount] = useState(0)
@@ -19,14 +21,22 @@ export function Board({ board }: BoardProps) {
   useEffect(() => {
     let active = true
 
-    fetch(`${apiBaseUrl}/boards/${encodeURIComponent(board.id)}`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Unable to load board (${response.status})`)
-        return await response.json() as BoardData
+    Promise.all([
+      fetch(`${apiBaseUrl}/boards/${encodeURIComponent(board.id)}`),
+      fetch(`${apiBaseUrl}/users`),
+    ])
+      .then(async ([boardResponse, usersResponse]) => {
+        if (!boardResponse.ok) throw new Error(`Unable to load board (${boardResponse.status})`)
+        if (!usersResponse.ok) throw new Error(`Unable to load members (${usersResponse.status})`)
+        return await Promise.all([
+          boardResponse.json() as Promise<BoardData>,
+          usersResponse.json() as Promise<UserData[]>,
+        ])
       })
-      .then((loadedBoard) => {
+      .then(([loadedBoard, loadedUsers]) => {
         if (!active) return
         setCurrentBoard(loadedBoard)
+        setUsers(loadedUsers)
         setIsReady(true)
         setError(null)
       })
@@ -46,7 +56,7 @@ export function Board({ board }: BoardProps) {
   }, [currentBoard])
 
   async function moveCard(cardId: string, destinationColumnId: string, position?: number) {
-    if (!isReady || movingCardId) return
+    if (!isReady || movingCardId || updatingCardId) return
 
     const sourceColumn = currentBoard.columns.find((column) =>
       column.cards.some((card) => card.id === cardId))
@@ -81,7 +91,41 @@ export function Board({ board }: BoardProps) {
     }
   }
 
+  async function updateCard(cardId: string, changes: CardCollectionsUpdate): Promise<boolean> {
+    if (!isReady || movingCardId || updatingCardId) return false
+
+    setUpdatingCardId(cardId)
+    setError(null)
+    try {
+      const response = await fetch(`${apiBaseUrl}/cards/${encodeURIComponent(cardId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(changes),
+      })
+      const result = await response.json() as CardData | { error?: string }
+      if (!response.ok) {
+        throw new Error('error' in result && result.error ? result.error : `Unable to update card (${response.status})`)
+      }
+
+      const updatedCard = result as CardData
+      setCurrentBoard((current) => ({
+        ...current,
+        columns: current.columns.map((column) => ({
+          ...column,
+          cards: column.cards.map((card) => card.id === cardId ? updatedCard : card),
+        })),
+      }))
+      return true
+    } catch (updateError: unknown) {
+      setError(updateError instanceof Error ? updateError.message : 'Unable to update card')
+      return false
+    } finally {
+      setUpdatingCardId(null)
+    }
+  }
+
   function handleKeyDown(cardId: string, event: KeyboardEvent<HTMLElement>) {
+    if (event.target !== event.currentTarget) return
     const columnIndex = currentBoard.columns.findIndex((column) =>
       column.cards.some((card) => card.id === cardId))
     if (columnIndex < 0) return
@@ -161,8 +205,11 @@ export function Board({ board }: BoardProps) {
           <Column
             key={column.id}
             column={column}
-            canMoveCards={isReady && !movingCardId}
+            canMoveCards={isReady && !movingCardId && !updatingCardId}
             movingCardId={movingCardId}
+            users={users}
+            isUpdating={updatingCardId !== null}
+            onUpdateCard={updateCard}
             draggingCardId={draggingCardId}
             onCardKeyDown={handleKeyDown}
             onCardDragStart={setDraggingCardId}
