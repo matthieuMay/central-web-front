@@ -8,7 +8,7 @@ import { Board } from '../components/Board'
 import type { DropPoint } from '../components/cardDrag'
 import { cardElementId } from '../components/cardIds'
 import Confetti from '../components/Confetti'
-import { EditCardDrawer } from '../components/EditCardDrawer'
+import { CardDialog } from '../components/CardDialog'
 
 function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
@@ -100,25 +100,25 @@ export function BoardPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selectedCardId, editingCardId, moveSelected])
 
-  if (isPending) return <p role="status">Loading board…</p>
-  if (isError) return <p role="alert">Could not load board: {error.message}</p>
+  if (isPending) return <p role="status">Chargement du tableau…</p>
+  if (isError) return <p role="alert">Impossible de charger le tableau : {error.message}</p>
   return (
     <>
       <Box mb={4} minH="3rem">
         {selectedCard && (
           <HStack flexWrap="wrap" gap={3}>
-            <Text>Selected: {selectedCard.title}</Text>
-            <Button size="sm" disabled={selectedColumnIndex === 0 || !!editingCardId} onClick={() => moveSelected('left')}>Move left</Button>
-            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || !!editingCardId} onClick={() => moveSelected('right')}>Move right</Button>
-            <Button size="sm" disabled={selectedCardIndex === 0 || !!editingCardId} onClick={() => moveSelected('up')}>Move up</Button>
-            <Button size="sm" disabled={selectedCardIndex === (selectedColumn?.cards.length ?? 0) - 1 || !!editingCardId} onClick={() => moveSelected('down')}>Move down</Button>
-            {move.isPending && <Text role="status">Moving card…</Text>}
+            <Text>Sélectionnée : {selectedCard.title}</Text>
+            <Button size="sm" disabled={selectedColumnIndex === 0 || !!editingCardId} onClick={() => moveSelected('left')}>Vers la gauche</Button>
+            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || !!editingCardId} onClick={() => moveSelected('right')}>Vers la droite</Button>
+            <Button size="sm" disabled={selectedCardIndex === 0 || !!editingCardId} onClick={() => moveSelected('up')}>Vers le haut</Button>
+            <Button size="sm" disabled={selectedCardIndex === (selectedColumn?.cards.length ?? 0) - 1 || !!editingCardId} onClick={() => moveSelected('down')}>Vers le bas</Button>
+            {move.isPending && <Text role="status">Déplacement de la carte…</Text>}
           </HStack>
         )}
-        {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
+        {move.isError && <Text role="alert" color="red.700">Impossible de déplacer la carte : {move.error.message}. Réessayez.</Text>}
       </Box>
       <Board board={data} selectedCardId={selectedCardId} dragDisabled={!!editingCardId} onSelectCard={selectCard} onEditCard={setEditingCardId} onDropCard={dropCard} />
-      <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
+      <CardDialog card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
       {burst && (
         <Box aria-hidden position="fixed" left={`${burst.x}px`} top={`${burst.y}px`} zIndex="overlay" pointerEvents="none">
           <Confetti particleCount={burst.count} />

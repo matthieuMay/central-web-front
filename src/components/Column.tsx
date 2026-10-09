@@ -87,16 +87,16 @@ export function Column({ column, selectedCardId, dragDisabled, onSelectCard, onE
         <Box aria-hidden position="absolute" left={4} right={4} top={`${line.top}px`} h="2px" mt="-1px" bg="border.info" borderRadius="full" pointerEvents="none" />
       )}
       <Stack gap={3} ref={listRef}>
-        {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
+        {column.cards.length === 0 && <Text color="fg.muted">Aucune carte</Text>}
         {column.cards.map((card) => (
           <Card key={card.id} card={card} selected={card.id === selectedCardId} dragDisabled={dragDisabled} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
         ))}
         <form onSubmit={submit}>
-          <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
+          <label htmlFor={`new-card-${column.id}`}>Titre de la nouvelle carte dans {column.title}</label>
           <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
-          <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
-          {create.isPending && <p role="status">Adding card…</p>}
-          {create.isError && <p role="alert">Could not add card: {create.error.message}</p>}
+          <button type="submit" disabled={create.isPending || !title.trim()}>Ajouter une carte</button>
+          {create.isPending && <p role="status">Ajout de la carte…</p>}
+          {create.isError && <p role="alert">Impossible d’ajouter la carte : {create.error.message}</p>}
         </form>
       </Stack>
     </Box>
