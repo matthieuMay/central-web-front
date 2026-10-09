@@ -269,12 +269,6 @@ button, input, textarea, select {
   transition: background 0.3s, border-color 0.3s;
 }
 
-.column-empty::before {
-  content: '✨';
-  font-size: 1.5rem;
-  animation: float 3s ease-in-out infinite;
-}
-
 .column[data-over] .column-empty {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
@@ -375,23 +369,16 @@ button, input, textarea, select {
 
 /* Cards in Done wear a check badge. */
 .column[data-column='done'] .board-card h3::before {
-  content: '✓';
+  content: '';
   display: inline-grid;
   place-items: center;
   width: 1.25rem;
   height: 1.25rem;
   margin-right: 0.5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd166, #06d6a0);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 900;
-  vertical-align: 0.1em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 65% no-repeat, linear-gradient(135deg, #ffd166, #06d6a0);
+  vertical-align: -0.2em;
   box-shadow: 0 0 12px -2px #06d6a0;
-}
-
-.column[data-column='done'] .column-header h2::after {
-  content: ' 🏆';
 }
 
 .board-card .card-edit {
@@ -601,11 +588,6 @@ form :focus-visible {
 @keyframes glow {
   from { opacity: 0.65; }
   to { opacity: 1; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(12deg); }
 }
 
 @keyframes spin {

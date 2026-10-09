@@ -179,7 +179,7 @@ export function Celebration({ origin, title, onDone }: CelebrationProps) {
           Bravo !
         </span>
         <span style={{ color: '#fff', fontSize: 'clamp(1rem, 2.5vw, 1.4rem)', fontWeight: 600, maxWidth: '40ch', opacity: 0.9 }}>
-          « {title} » est terminée 🎉
+          « {title} » est terminée
         </span>
       </motion.div>
     </div>

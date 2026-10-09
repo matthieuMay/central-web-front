@@ -18,7 +18,7 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
         gap={4}
         wrap="wrap"
       >
-        <Heading as="span" size="xl" className="brand shimmer-text">✦ Mini-Trello</Heading>
+        <Heading as="span" size="xl" className="brand shimmer-text">Mini-Trello</Heading>
         <Flex align="center" gap={4} wrap="wrap">
           <Flex as="nav" aria-label="Navigation principale" gap={2}>
             <NavLink className="nav-link" to="/" end>Accueil</NavLink>
