@@ -81,6 +81,8 @@ describe('Header language switcher', () => {
     await waitFor(() => expect(trigger.textContent).toBe('English'))
     expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('en')
     expect(document.documentElement.lang).toBe('en')
+    // A translated Message re-renders in the new Active Locale.
+    expect(await screen.findByRole('button', { name: 'Color mode: System' })).toBeTruthy()
   })
 })
 

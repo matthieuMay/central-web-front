@@ -9,180 +9,223 @@ msgstr ""
 "X-Plurals-Order: one, many, other\n"
 
 #: src/locale.tsx
+#, ai
 msgid "Chargement de la langue"
-msgstr ""
+msgstr "Cargando el idioma"
 
 #: src/pages/HomePage.tsx
+#, ai
 msgid "Ouvrir le tableau"
-msgstr ""
+msgstr "Abrir el tablero"
 
 #: src/pages/HomePage.tsx
+#, ai
 msgid "Bienvenue sur Mini-Trello"
-msgstr ""
+msgstr "Bienvenido a Mini-Trello"
 
 #: src/pages/HomePage.tsx
+#, ai
 msgid "Retrouvez vos tâches dans un tableau partagé."
-msgstr ""
+msgstr "Encuentra tus tareas en un tablero compartido."
 
 #: src/pages/NotFoundPage.tsx
+#, ai
 msgid "Retour à l’accueil"
-msgstr ""
+msgstr "Volver a la página de inicio"
 
 #: src/pages/NotFoundPage.tsx
+#, ai
 msgid "Page introuvable"
-msgstr ""
+msgstr "Página no encontrada"
 
 #: src/pages/NotFoundPage.tsx
+#, ai
 msgid "Cette adresse ne correspond à aucune page."
-msgstr ""
+msgstr "Esta dirección no corresponde a ninguna página."
 
 #. 0: (error as Error).message
 #: src/components/Board.tsx
+#, ai
 msgid "Could not load the board: {0}"
-msgstr ""
+msgstr "No se pudo cargar el tablero: {0}"
 
 #: src/components/Board.tsx
+#, ai
 msgid "Loading board"
-msgstr ""
+msgstr "Cargando tablero"
 
 #. 0: title
 #: src/components/Board.tsx
+#, ai
 msgid "{0} completed!"
-msgstr ""
+msgstr "¡{0} completado!"
 
 #. 0: title; 1: columnTitle(column)
 #: src/components/Board.tsx
+#, ai
 msgid "Moved {0} to {1}"
-msgstr ""
+msgstr "Movido {0} a {1}"
 
 #. 0: title
 #: src/components/Board.tsx
+#, ai
 msgid "Could not move {0}"
-msgstr ""
+msgstr "No se pudo mover {0}"
 
 #: src/components/Board.tsx
+#, ai
 msgid "Board announcements"
-msgstr ""
+msgstr "Anuncios del tablero"
 
 #. 0: card.title
 #: src/components/Card.tsx
+#, ai
 msgid "Ouvrir la carte {0}"
-msgstr ""
+msgstr "Abrir la tarjeta {0}"
 
 #: src/components/Card.tsx
+#, ai
 msgid "Ouvrir"
-msgstr ""
+msgstr "Abrir"
 
 #: src/components/CardAssignees.tsx
+#, ai
 msgid "Les membres sont indisponibles."
-msgstr ""
+msgstr "Ninguna persona disponible."
 
 #: src/components/CardAssignees.tsx
+#, ai
 msgid "Aucune personne disponible."
-msgstr ""
+msgstr "Ningún comentario."
 
 #: src/components/CardChecklist.tsx
+#, ai
 msgid "Ajouter"
-msgstr ""
+msgstr "Agregar"
 
 #: src/components/CardChecklist.tsx
+#, ai
 msgid "Aucune tâche."
-msgstr ""
+msgstr "Ninguna tarea."
 
 #: src/components/CardChecklist.tsx
 #: src/components/CardChecklist.tsx
+#, ai
 msgid "Nouvelle tâche"
-msgstr ""
+msgstr "Nueva tarea"
 
 #: src/components/CardComments.tsx
+#, ai
 msgid "Aucun commentaire."
-msgstr ""
+msgstr "Los comentarios no están disponibles."
 
 #: src/components/CardComments.tsx
+#, ai
 msgid "Les commentaires sont indisponibles."
-msgstr ""
+msgstr "Autor del comentario"
 
 #: src/components/CardComments.tsx
+#, ai
 msgid "Auteur du commentaire"
-msgstr ""
+msgstr "Nuevo comentario"
 
 #: src/components/CardComments.tsx
+#, ai
 msgid "Nouveau commentaire"
-msgstr ""
+msgstr "Escribir un comentario"
 
 #: src/components/CardComments.tsx
+#, ai
 msgid "Écrire un commentaire"
-msgstr ""
+msgstr "Escribir un comentario"
 
 #: src/components/CardComments.tsx
+#, ai
 msgid "Publier"
-msgstr ""
+msgstr "Publicar"
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "Chargement des personnes"
-msgstr ""
+msgstr "Cargando personas"
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "Impossible de charger les personnes."
-msgstr ""
+msgstr "No se pudieron cargar las personas."
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "Membres"
-msgstr ""
+msgstr "Miembros"
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "Commentaires"
-msgstr ""
+msgstr "Comentarios"
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "Tâches à cocher"
-msgstr ""
+msgstr "Tareas por marcar"
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "La modification n'a pas pu être enregistrée."
-msgstr ""
+msgstr "No se pudo guardar la modificación."
 
 #: src/components/CardDetail.tsx
+#, ai
 msgid "Fermer"
-msgstr ""
+msgstr "Cerrar"
 
 #: src/components/Column.tsx
+#, ai
 msgid "No cards yet"
-msgstr ""
+msgstr "No hay tarjetas aún"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Système"
-msgstr ""
+msgstr "Sistema"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Clair"
-msgstr ""
+msgstr "Claro"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Sombre"
-msgstr ""
+msgstr "Oscuro"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Accueil"
-msgstr ""
+msgstr "Inicio"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Tableau"
-msgstr ""
+msgstr "Tablero"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Navigation principale"
-msgstr ""
+msgstr "Navegación principal"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Changer de langue"
-msgstr ""
+msgstr "Cambiar idioma"
 
 #. 0: preferenceLabels[preference]
 #: src/components/Header.tsx
+#, ai
 msgid "Mode de couleur : {0}"
-msgstr ""
+msgstr "Modo de color: {0}"
 
 #: src/components/Header.tsx
+#, ai
 msgid "Mini-Trello"
-msgstr ""
+msgstr "Mini-Trello"

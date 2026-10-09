@@ -4,6 +4,61 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
+// wuchale reinforces "respond with a JSON array" but models tend to echo the
+// input item's `id` field for single-item batches. This contract makes the
+// expected shape unambiguous.
+const OUTPUT_CONTRACT =
+  '\n\nEach array element MUST be a JSON object whose keys are locale codes ' +
+  '(e.g. {"en": "..."}) and whose values are the translations. Do NOT include ' +
+  'id, context, or references fields in the output.'
+
+/**
+ * Coerces the model output into the JSON array of locale-keyed objects that
+ * wuchale parses, tolerating markdown fences, a bare object instead of an
+ * array, and non-string values (which would otherwise crash wuchale).
+ *
+ * @param {string} text
+ */
+function normalizeTranslationOutput(text) {
+  let cleaned = text.trim()
+  const fenced = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fenced) cleaned = fenced[1].trim()
+
+  const firstBracket = cleaned.indexOf('[')
+  const lastBracket = cleaned.lastIndexOf(']')
+  if (firstBracket !== -1 && lastBracket > firstBracket) {
+    cleaned = cleaned.slice(firstBracket, lastBracket + 1)
+  } else {
+    const firstBrace = cleaned.indexOf('{')
+    const lastBrace = cleaned.lastIndexOf('}')
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      cleaned = `[${cleaned.slice(firstBrace, lastBrace + 1)}]`
+    }
+  }
+
+  let parsed
+  try {
+    parsed = JSON.parse(cleaned)
+  } catch {
+    return text
+  }
+
+  const entries = Array.isArray(parsed) ? parsed : [parsed]
+  const normalized = entries.map((entry) => {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return {}
+    const out = {}
+    for (const [locale, value] of Object.entries(entry)) {
+      if (typeof value === 'string') out[locale] = value
+      else if (Array.isArray(value) && value.every((form) => typeof form === 'string')) {
+        out[locale] = value
+      }
+    }
+    return out
+  })
+
+  return JSON.stringify(normalized)
+}
+
 /**
  * OpenRouter-backed AI translation provider for wuchale.
  *
@@ -45,10 +100,11 @@ export function openrouterAi(options = {}) {
     translate: async (content, instruction) => {
       const { text } = await generateText({
         model: client.chat(model),
-        system: instruction,
+        system: instruction + OUTPUT_CONTRACT,
         prompt: content,
+        temperature: 0,
       })
-      return text
+      return normalizeTranslationOutput(text)
     },
   }
 }

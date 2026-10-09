@@ -28,7 +28,7 @@ A `central-web-front` where every user-facing and accessible string renders thro
 - **Comment timestamps use `Intl.DateTimeFormat(ActiveLocale)`**; wuchale l10n for future plurals/numbers.
 - **AI via OpenRouter** (`@openrouter/ai-sdk-provider` + Vercel AI SDK), key from `OPENROUTER_API_KEY`, dev/CLI convenience with review flags.
 - **Tests pin `fr`** in the shared setup so existing French assertions survive; one added test covers switching + persistence.
-- **Implemented.** Tickets 01–07 and 09–10 resolved; the app ships `fr`/`en`/`es` with wuchale, the Header switcher, lazy catalogs, locale-aware dates, and a green `lint`/`build`/37-test suite. Two wuchale parser quirks were worked around (see ticket 03). Ticket 08 (drafting `en`/`es`) remains open pending the user's `OPENROUTER_API_KEY`; the provider is wired and `npm run i18n` will draft the catalogs once the key is exported.
+- **Implemented.** Tickets 01–07 and 09–10 resolved; the app ships `fr`/`en`/`es` with wuchale, the Header switcher, lazy catalogs, locale-aware dates, and a green `lint`/`build`/37-test suite. Two wuchale parser quirks were worked around (see ticket 03). Ticket 08 is **resolved**: `OpenRouter` drafted 43/44 `en`/`es` Messages (all `#, ai` flagged); the provider needed an explicit output contract because `gpt-4o-mini` echoed the input `id` on single-item batches (see ticket 08).
 
 ## Not yet specified
 
