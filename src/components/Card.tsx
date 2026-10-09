@@ -1,18 +1,21 @@
-import { Box, Heading, IconButton, Text } from '@chakra-ui/react'
+import { Box, Button, Heading, IconButton, Text } from '@chakra-ui/react'
 import { useQuery } from '@tanstack/react-query'
 import { useDrag } from 'react-dnd'
 import { motion, useReducedMotion } from 'motion/react'
-import type { MouseEvent } from 'react'
+import { useState, type MouseEvent } from 'react'
 import type { CardData } from '../types/board'
 import { getUsers, usersKey } from '../api/board'
 import { cardElementId, editElementId } from './cardIds'
 import Confetti from './Confetti'
+import { CommentsDialog } from './CommentsDialog'
+import { sortCommentsNewestFirst } from '../domain/comments'
 
 type CardProps = { card: CardData; selected: boolean; confettiBurst?: number; onSelect: () => void; onEdit: () => void }
 
 export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: CardProps) {
   const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
   const reducedMotion = useReducedMotion()
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'card',
     item: { cardId: card.id },
@@ -29,6 +32,9 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
     const user = users.data?.find((candidate) => candidate.id === assignee)
     return user ? `${user.firstname} ${user.lastname}` : assignee
   })
+  const comments = card.comments ?? []
+  const latest = sortCommentsNewestFirst(comments)[0]
+  const latestUser = latest ? users.data?.find((user) => user.id === latest.user) : undefined
 
   return (
     <motion.div layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }}>
@@ -39,9 +45,12 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         {assigneeNames.length > 0 && <Text mt={2} fontSize="sm" aria-label={`Assigned users: ${assigneeNames.join(', ')}`}>Users: {assigneeNames.join(', ')}</Text>}
+        {latest && <Text mt={2} fontSize="sm">Dernier commentaire — {latestUser ? `${latestUser.firstname} ${latestUser.lastname}` : latest.user}: {latest.comment}</Text>}
+        <Button type="button" size="sm" variant="outline" mt={2} onClick={() => setCommentsOpen(true)}>Commentaires ({comments.length})</Button>
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
         <Confetti particleCount={confettiBurst} />
       </Box>
+      {commentsOpen && <CommentsDialog card={card} onClose={() => setCommentsOpen(false)} />}
     </motion.div>
   )
 }

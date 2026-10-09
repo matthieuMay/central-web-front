@@ -4,11 +4,20 @@ export type UserData = {
   lastname: string
 }
 
+export type CommentData = {
+  user: string
+  comment: string
+  createdAt: string
+}
+
+export type CommentInput = Omit<CommentData, 'createdAt'> & { createdAt?: string }
+
 export type CardData = {
   id: string
   title: string
   description?: string
   assignees?: Array<UserData | string>
+  comments?: CommentData[]
 }
 
 export type ColumnData = {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { editCard, getUsers, moveCard } from './board'
+import { editCard, getUsers, moveCard, updateCardComments } from './board'
 
 describe('moveCard', () => {
   afterEach(() => vi.restoreAllMocks())
@@ -43,6 +43,19 @@ describe('moveCard', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/cards/card%2F1', expect.objectContaining({
       method: 'PATCH',
       body: JSON.stringify({ title: 'Updated', description: null, assignees: ['user-1', 'user-2'] }),
+    }))
+  })
+
+  it('sends the complete comments string array when adding a comment', async () => {
+    const response = { ok: true, json: () => Promise.resolve({}) }
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response as Response)
+    const comments = [{ user: 'user-1', comment: 'blabla' }]
+
+    await updateCardComments({ cardId: 'card/1', comments })
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/cards/card%2F1', expect.objectContaining({
+      method: 'PATCH',
+      body: JSON.stringify({ comments }),
     }))
   })
 })

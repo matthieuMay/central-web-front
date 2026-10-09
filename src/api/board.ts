@@ -1,4 +1,4 @@
-import type { BoardData, UserData } from '../types/board'
+import type { BoardData, CommentInput, UserData } from '../types/board'
 
 export const boardKey = ['board', 'mini-trello'] as const
 export const usersKey = ['users'] as const
@@ -37,6 +37,14 @@ export function editCard({ cardId, title, description, assignees }: { cardId: st
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}), assignees }),
+  })
+}
+
+export function updateCardComments({ cardId, comments }: { cardId: string; comments: CommentInput[] }) {
+  return request(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comments }),
   })
 }
 

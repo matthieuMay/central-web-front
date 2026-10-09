@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData, UserData } from '../types/board'
-import { boardKey, createCard, editCard, moveCard } from './board'
+import type { BoardData, CommentInput, UserData } from '../types/board'
+import { boardKey, createCard, editCard, moveCard, updateCardComments } from './board'
 import { moveCardToPosition } from '../domain/boardMovement'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null; assignees: string[]; assignedUsers: UserData[] }
 export type MoveCardInput = { cardId: string; column: string; position?: number }
+export type UpdateCardCommentsInput = { cardId: string; comments: CommentInput[] }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -79,6 +80,25 @@ export function useEditCard() {
         ...column,
         cards: column.cards.map((card) => card.id === input.cardId
           ? { ...card, title: input.title, assignees: input.assignedUsers, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
+          : card),
+      })),
+    })),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+export function useUpdateCardComments() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: updateCardComments,
+    onMutate: (input: UpdateCardCommentsInput) => begin(queryClient, (board) => ({
+      ...board,
+      columns: board.columns.map((column) => ({
+        ...column,
+        cards: column.cards.map((card) => card.id === input.cardId
+          ? { ...card, comments: input.comments.map((comment) => ({ ...comment, createdAt: comment.createdAt ?? new Date().toISOString() })) }
           : card),
       })),
     })),
