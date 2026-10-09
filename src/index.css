@@ -19,3 +19,18 @@ body {
   outline: 2px solid #1d4ed8;
   outline-offset: 2px;
 }
+
+/* Dark theme: the "dark" class is set on <html> by useColorMode */
+.dark .nav-link {
+  color: #cbd5e1;
+}
+
+.dark .nav-link:hover,
+.dark .nav-link[aria-current='page'] {
+  background: #1e3a8a;
+  color: #dbeafe;
+}
+
+.dark .nav-link:focus-visible {
+  outline-color: #60a5fa;
+}
