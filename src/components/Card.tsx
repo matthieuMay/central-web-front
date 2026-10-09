@@ -4,6 +4,7 @@ import { Pencil } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { useDrag } from 'react-dnd'
 import type { CardData } from '../types/board'
+import { CardBadges } from './CardBadges'
 import { CARD, cardElementId, editElementId, type DraggedCard } from './cardIds'
 import { withoutEmoji } from './withoutEmoji'
 
@@ -34,6 +35,7 @@ export function Card({ card, selected, onSelect, onEdit }: CardProps) {
       >
         <Heading as="h3" size="sm">{title}</Heading>
         {description && <Text color="fg.muted" mt={2} fontSize="sm">{description}</Text>}
+        <CardBadges card={card} />
         <IconButton id={editElementId(card.id)} className="card-edit" type="button" aria-label={`Edit ${title}`} size="xs" variant="ghost" onClick={onEdit}><Pencil /></IconButton>
       </Box>
     </motion.div>
