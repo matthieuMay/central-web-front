@@ -1,4 +1,4 @@
-import { Box, Button, Field, Text, Textarea } from '@chakra-ui/react'
+import { Box, Button, Drawer, Field, Portal, Text, Textarea } from '@chakra-ui/react'
 import { useMemo, useState, type FormEvent } from 'react'
 import type { CardData, CommentData, User } from '../types/board'
 
@@ -89,11 +89,13 @@ export function CardCommentsDrawer({ card, users, open, onClose, onSave, onDelet
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="comments-drawer-title" hidden={!open}>
-      {open && card && (
-        <Box position="fixed" inset={0} zIndex={10} onClick={onClose}>
-          <Box position="absolute" inset={0} bg="blackAlpha.500" />
-          <Box position="absolute" insetY={0} left={0} width={{ base: '100%', md: '28rem' }} bg="bg" borderRightWidth="1px" p={6} overflowY="auto" shadow="lg" onClick={(event) => event.stopPropagation()}>
+    <Drawer.Root open={open} placement="start" onOpenChange={({ open: isOpen }) => { if (!isOpen) onClose() }}>
+      <Portal>
+        <Drawer.Backdrop />
+        <Drawer.Positioner>
+          <Drawer.Content>
+            {card && (
+              <Box p={6} overflowY="auto">
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Text as="h2" id="comments-drawer-title" fontSize="xl" fontWeight="bold">Comments for {card.title}</Text>
           </Box>
@@ -134,9 +136,11 @@ export function CardCommentsDrawer({ card, users, open, onClose, onSave, onDelet
               </Box>
             ))}
           </Box>
-          </Box>
-        </Box>
-      )}
-    </div>
+              </Box>
+            )}
+          </Drawer.Content>
+        </Drawer.Positioner>
+      </Portal>
+    </Drawer.Root>
   )
 }

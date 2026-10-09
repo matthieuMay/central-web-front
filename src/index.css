@@ -38,16 +38,9 @@ body {
   align-items: center;
   cursor: pointer;
   display: inline-flex;
-  gap: 0.5rem;
-  white-space: nowrap;
-}
-
-.theme-toggle input {
-  accent-color: var(--nav-focus-color);
-  cursor: pointer;
-  height: 1.125rem;
-  margin: 0;
-  width: 1.125rem;
+  font-size: 1.125rem;
+  line-height: 1;
+  min-width: 2.25rem;
 }
 
 form label {

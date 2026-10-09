@@ -45,7 +45,8 @@ function DropSlot({ columnId, position, moving, empty, onMoveCard }: {
     <Box
       ref={drop}
       aria-hidden
-      minH={empty ? '4rem' : '2.5rem'}
+      minH={empty ? '4rem' : position === 0 ? '0.25rem' : '2.5rem'}
+      mt={position === 0 && !empty ? -3 : undefined}
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -54,7 +55,7 @@ function DropSlot({ columnId, position, moving, empty, onMoveCard }: {
       <Box
         aria-hidden
         width="100%"
-        height="0.75rem"
+        height={position === 0 && !empty ? '0' : '0.75rem'}
         borderRadius="sm"
         bg={isOver && canDrop ? 'blue.500' : 'transparent'}
         transition="background-color 120ms ease"
@@ -92,7 +93,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onCom
 
   return (
     <Box ref={drop} as="section" aria-label={column.title} bg={isOver ? 'bg.info' : 'bg.muted'} borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
-      <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
+      <Heading as="h2" size="lg" mb={column.cards.length ? 0 : 4}>{column.title}</Heading>
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
         <DropSlot columnId={column.id} position={0} moving={moving} empty={column.cards.length === 0} onMoveCard={onMoveCard} />

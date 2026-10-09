@@ -1,4 +1,4 @@
-import { Box, Flex, Heading } from '@chakra-ui/react'
+import { Box, Flex, Heading, IconButton } from '@chakra-ui/react'
 import { NavLink } from 'react-router'
 
 type HeaderProps = {
@@ -23,10 +23,17 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
             <NavLink className="nav-link" to="/" end>Accueil</NavLink>
             <NavLink className="nav-link" to="/board">Tableau</NavLink>
           </Flex>
-          <label className="theme-toggle">
-            <input type="checkbox" role="switch" checked={theme === 'dark'} onChange={onToggleTheme} />
-            <span>Mode sombre</span>
-          </label>
+          <IconButton
+            type="button"
+            className="theme-toggle"
+            aria-label={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+            title={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+            onClick={onToggleTheme}
+            variant="outline"
+            size="sm"
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </IconButton>
         </Flex>
       </Flex>
     </Box>

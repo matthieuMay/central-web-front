@@ -10,6 +10,7 @@ export type CardAssigneesProps = {
   loading?: boolean
   error?: string | null
   errorType?: 'load' | 'update'
+  showLabel?: boolean
   onChange?: (assigneeIds: string[]) => void
   onOpenDetails?: () => void
 }
@@ -30,7 +31,7 @@ function colorForUser(id: string) {
   return `hsl(${Math.abs(hash) % 360} 65% 42%)`
 }
 
-export function CardAssignees({ assigneeIds, users, variant = 'compact', disabled = false, loading = false, error, errorType = 'update', onChange, onOpenDetails }: CardAssigneesProps) {
+export function CardAssignees({ assigneeIds, users, variant = 'compact', disabled = false, loading = false, error, errorType = 'update', onChange, onOpenDetails, showLabel = true }: CardAssigneesProps) {
   const [query, setQuery] = useState('')
   const userById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users])
   const assignedUsers = assigneeIds.map((id) => userById.get(id)).filter((user): user is User => !!user)
@@ -96,8 +97,8 @@ export function CardAssignees({ assigneeIds, users, variant = 'compact', disable
   }
 
   return (
-    <Stack gap={2} mt={5}>
-      <Text fontWeight="medium">Assignees</Text>
+    <Stack gap={2} mt={showLabel ? 0 : undefined}>
+      {showLabel && <Text fontWeight="medium">Assignees</Text>}
       <Box display="flex" flexWrap="wrap" gap={2} maxW="100%" overflow="hidden">
         {assignedUsers.map((user) => (
           <Button

@@ -1,4 +1,4 @@
-import { Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui/react'
+import { Box, Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui/react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
@@ -54,30 +54,52 @@ function EditForm({ card, onClose, users, usersLoading, usersError }: { card: Ca
   }
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate>
+    <form onSubmit={handleSubmit(submit)} noValidate style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
       <Drawer.Header><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
-      <Drawer.Body>
-        <Field.Root invalid={!!errors.title} mb={4}>
-          <Field.Label htmlFor="edit-title">Title</Field.Label>
-          <Input id="edit-title" data-autofocus aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Title is required' })} />
-          {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
-        </Field.Root>
-        <Field.Root>
-          <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
-          <Textarea id="edit-description" rows={5} {...register('description')} />
-        </Field.Root>
-        <CardAssignees
-          variant="editor"
-          assigneeIds={card.assignees}
-          users={users}
-          onChange={(assignees) => { void saveAssignees(assignees) }}
-          disabled={edit.isPending || usersLoading || !!usersError || users.length === 0}
-          loading={usersLoading}
-          error={usersError ?? (users.length === 0 ? 'No users are available to assign.' : assigneeError)}
-          errorType={usersError || users.length === 0 ? 'load' : 'update'}
-        />
-        <CardChecklist items={card.checklistItems ?? []} onChange={(items) => { void saveChecklist(items) }} disabled={edit.isPending} />
-        {checklistError && <Text role="alert" color="red.700" mt={3}>Could not save checklist: {checklistError}. Try again.</Text>}
+      <Drawer.Body overflowY="auto" minH={0}>
+        <Box borderWidth="1px" borderColor="border" borderRadius="lg" overflow="hidden">
+          <Box px={4} py={2} bg="bg.subtle" borderBottomWidth="1px" borderColor="border">
+            <Text as="h3" fontSize="sm" fontWeight="bold">✎ Edit card</Text>
+          </Box>
+          <Box p={4}>
+            <Field.Root invalid={!!errors.title} mb={4}>
+              <Field.Label htmlFor="edit-title">Title</Field.Label>
+              <Input id="edit-title" data-autofocus aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Title is required' })} />
+              {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
+            </Field.Root>
+            <Field.Root>
+              <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
+              <Textarea id="edit-description" rows={5} {...register('description')} />
+            </Field.Root>
+          </Box>
+        </Box>
+        <Box mt={4} borderWidth="1px" borderColor="border" borderRadius="lg" overflow="hidden">
+          <Box px={4} py={2} bg="bg.subtle" borderBottomWidth="1px" borderColor="border">
+            <Text as="h3" fontSize="sm" fontWeight="bold">👥 Assignees</Text>
+          </Box>
+          <Box p={4}>
+            <CardAssignees
+              variant="editor"
+              showLabel={false}
+              assigneeIds={card.assignees}
+              users={users}
+              onChange={(assignees) => { void saveAssignees(assignees) }}
+              disabled={edit.isPending || usersLoading || !!usersError || users.length === 0}
+              loading={usersLoading}
+              error={usersError ?? (users.length === 0 ? 'No users are available to assign.' : assigneeError)}
+              errorType={usersError || users.length === 0 ? 'load' : 'update'}
+            />
+          </Box>
+        </Box>
+        <Box mt={4} borderWidth="1px" borderColor="border" borderRadius="lg" overflow="hidden">
+          <Box px={4} py={2} bg="bg.subtle" borderBottomWidth="1px" borderColor="border">
+            <Text as="h3" fontSize="sm" fontWeight="bold">☑ Checklist</Text>
+          </Box>
+          <Box p={4}>
+            <CardChecklist showLabel={false} items={card.checklistItems ?? []} onChange={(items) => { void saveChecklist(items) }} disabled={edit.isPending} />
+            {checklistError && <Text role="alert" color="red.700" mt={3}>Could not save checklist: {checklistError}. Try again.</Text>}
+          </Box>
+        </Box>
         {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
       </Drawer.Body>
       <Drawer.Footer>

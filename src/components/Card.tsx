@@ -60,7 +60,7 @@ export function Card({ card, columnId, position, selected, disabled, celebration
       >
         {celebrationToken !== null && <Confetti key={`${card.id}-${celebrationToken}`} particleCount={1} />}
         <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={2}>
-          <Heading as="h3" size="sm" flex="1" minW={0}>{card.title}</Heading>
+          <Heading as="h3" size="md" flex="1" minW={0}>{card.title}</Heading>
           <CardAssignees assigneeIds={card.assignees} users={users} onOpenDetails={onEdit} />
         </Box>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}

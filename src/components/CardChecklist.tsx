@@ -8,9 +8,10 @@ export type CardChecklistProps = {
   readOnly?: boolean
   allowToggle?: boolean
   disabled?: boolean
+  showLabel?: boolean
 }
 
-export function CardChecklist({ items, onChange, readOnly = false, allowToggle = false, disabled = false }: CardChecklistProps) {
+export function CardChecklist({ items, onChange, readOnly = false, allowToggle = false, disabled = false, showLabel = true }: CardChecklistProps) {
   const [draft, setDraft] = useState('')
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingDraft, setEditingDraft] = useState('')
@@ -31,7 +32,7 @@ export function CardChecklist({ items, onChange, readOnly = false, allowToggle =
 
   return (
     <Box data-component="card-checklist" data-item-count={items.length} mt={4}>
-      <Text fontWeight="semibold" mb={2}>Checklist</Text>
+      {showLabel && <Text fontWeight="semibold" fontSize="sm" mb={2}>Checklist</Text>}
       <Stack gap={2}>
         {items.map((item, index) => (
           <Box key={`${index}-${item.description}`} display="flex" alignItems="center" gap={2}>
