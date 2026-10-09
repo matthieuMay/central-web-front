@@ -8,7 +8,7 @@ export type CardData = {
   id: string
   title: string
   description?: string
-  assignees?: UserData[]
+  assignees?: Array<UserData | string>
 }
 
 export type ColumnData = {

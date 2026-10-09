@@ -1,14 +1,17 @@
 import { Box, Heading, IconButton, Text } from '@chakra-ui/react'
+import { useQuery } from '@tanstack/react-query'
 import { useDrag } from 'react-dnd'
 import { motion, useReducedMotion } from 'motion/react'
 import type { MouseEvent } from 'react'
 import type { CardData } from '../types/board'
+import { getUsers, usersKey } from '../api/board'
 import { cardElementId, editElementId } from './cardIds'
 import Confetti from './Confetti'
 
 type CardProps = { card: CardData; selected: boolean; confettiBurst?: number; onSelect: () => void; onEdit: () => void }
 
 export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: CardProps) {
+  const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
   const reducedMotion = useReducedMotion()
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'card',
@@ -21,6 +24,12 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
     onSelect()
   }
 
+  const assigneeNames = (card.assignees ?? []).map((assignee) => {
+    if (typeof assignee !== 'string') return `${assignee.firstname} ${assignee.lastname}`
+    const user = users.data?.find((candidate) => candidate.id === assignee)
+    return user ? `${user.firstname} ${user.lastname}` : assignee
+  })
+
   return (
     <motion.div layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }}>
       <Box ref={drag} opacity={isDragging ? 0.45 : 1} as="article" id={cardElementId(card.id)} tabIndex={-1} onClick={select}
@@ -29,7 +38,7 @@ export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: Ca
         borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere" position="relative">
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
-        {card.assignees && card.assignees.length > 0 && <Text mt={2} fontSize="sm" aria-label={`Assigned users: ${card.assignees.map((user) => `${user.firstname} ${user.lastname}`).join(', ')}`}>Users: {card.assignees.map((user) => `${user.firstname} ${user.lastname}`).join(', ')}</Text>}
+        {assigneeNames.length > 0 && <Text mt={2} fontSize="sm" aria-label={`Assigned users: ${assigneeNames.join(', ')}`}>Users: {assigneeNames.join(', ')}</Text>}
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
         <Confetti particleCount={confettiBurst} />
       </Box>

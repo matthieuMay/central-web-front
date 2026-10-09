@@ -12,7 +12,7 @@ type Fields = { title: string; description: string }
 function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
   const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
-  const [assignedUsers, setAssignedUsers] = useState<UserData[]>(() => card.assignees ?? [])
+  const [assignedUsers, setAssignedUsers] = useState<UserData[]>(() => (card.assignees ?? []).filter((user): user is UserData => typeof user !== 'string'))
   const [isAddingUsers, setIsAddingUsers] = useState(false)
   const [usersToAdd, setUsersToAdd] = useState<string[]>([])
   const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
@@ -27,6 +27,12 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
     // The form mounts afresh on every opening or card change. A background
     // refetch of this same card must not discard unsaved edits or a failed save.
   }, [initial, reset, trigger])
+
+  useEffect(() => {
+    if (!users.data || !card.assignees?.some((assignee) => typeof assignee === 'string')) return
+    const assignedIds = new Set(card.assignees.filter((assignee): assignee is string => typeof assignee === 'string'))
+    setAssignedUsers(users.data.filter((user) => assignedIds.has(user.id)))
+  }, [card.assignees, users.data])
 
   function removeUser(userId: string) {
     setAssignedUsers((current) => current.filter((user) => user.id !== userId))
