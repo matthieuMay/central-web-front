@@ -47,6 +47,18 @@ Board writes share one TanStack mutation scope to serialize network requests. Th
 
 ## Sprint 2 correction
 
-Click a card to select it; click again to deselect. Move left/right uses the adjacent column in board order, appends there (even if Review is empty), then waits for the API and board refetch. While a card is selected, Left/Right arrow keys do the same thing outside of form controls and the edit Drawer. Failed moves leave the displayed card in place and show an error; successful ones preserve selection and focus and persist on reload.
+Click a card to select it; click again or press Escape to deselect. Cards can also be selected with Enter/Space when focused. Move left/right and Left/Right arrows append to the adjacent column in board order, including empty columns. Up/Down arrows reorder the selected card by one position without wrapping. Arrow shortcuts leave form controls and the edit Drawer alone.
 
-The pencil opens an optional enriched Drawer for title and description; Cancel makes no request, Save validates the title, and failed saves keep the form available to retry. Cross-column Motion travel is also an optional teaching extension, disabled for reduced-motion users. The common Sprint 2 exercise only requires selection and persistent left/right movement.
+Drag the grip at a card's top right to insert it before, between or after cards, in the same column or another one. The translucent, slightly tilted preview follows the pointer; the insertion line marks the destination. Empty columns accept drops. Dropping outside a cards region or at the unchanged position sends no request. Touch dragging and multi-card dragging are outside this version's scope.
+
+Moves appear immediately and use the same optimistic ledger as creation/editing. A failed save animates back and shows an error while retaining other writes. New moves wait for current board writes and reconciliation to finish. Selection/focus is preserved and saved order survives reload. Failed reconciliation offers Retry without discarding the displayed board.
+
+Indexed moves send `PUT /cards/:cardId`, `Content-Type: application/json`, with e.g. `{"column":"doing","position":1}` and receive `BoardData`. Position is zero-based **after removing the card**. Horizontal actions omit position to append.
+
+Motion animates reordering, cross-column travel and rollback; after a drag, landing starts at the release position. A localized confetti burst acknowledges forward visual arrival, including while saving is still pending. A later failure returns the card without another burst. Reduced-motion users get placement feedback without travel, tilt or flying particles.
+
+The pencil opens an optional enriched Drawer for title and description; Cancel makes no request, Save validates the title, and failed saves keep the form available to retry.
+
+## Verification
+
+Run `npm test` for placement boundaries/index arithmetic, `npm run build`, and `npm run lint`. Use Chrome MCP against the already running local frontend and API for focused keyboard/drag/drop, arrival and rollback checks; hot reload allows short checks during changes. A failure test can extend the console snippet above to include `PUT`, intercepting before the request reaches the server. Restore test cards to their original positions after successful checks.

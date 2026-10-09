@@ -46,7 +46,7 @@ export function BoardPage() {
   }, [data])
 
   function selectCard(id: string) {
-    if (moving.current) return
+    if (moving.current || arrival || landing?.returning) return
     move.reset()
     setSelectedCardId((current) => current === id ? null : id)
     document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
@@ -132,7 +132,7 @@ export function BoardPage() {
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
         {isError && <Text role="alert" color="red.700">Could not refresh board: {error.message}. <Button size="xs" onClick={() => void refetch()}>Retry</Button></Text>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )

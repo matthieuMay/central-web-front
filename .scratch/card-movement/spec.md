@@ -1,6 +1,6 @@
-# Card movement — planning draft
+# Card movement
 
-State: confirmed requirements; technical research and interaction review tracked in [the map](map.md).
+State: implemented; focused browser results and limitations are recorded in [validation](validation.md).
 
 ## Behavior
 
@@ -18,7 +18,7 @@ State: confirmed requirements; technical research and interaction review tracked
 - Reject a new committed move while board writes or reconciliation are pending; keep existing create/edit behavior and replay surviving writes. Recheck current board data at drop rather than relying on a drag-start index. See [persistence research](research/persistence.md).
 - On failed persistence, animate the card back in the reverse direction without losing other successful/pending creates or edits, preserve selection/focus, and expose a retryable error. The user explicitly confirmed immediate movement and this reverse animation on 2026-10-09.
 - Reuse Motion layout/shared-layout infrastructure so the moved card travels and displaced cards smoothly make space. The preview must clearly indicate the actual drop location.
-- Start with one React DnD provider, card drag sources, and a cards-only drop region per column. Use current card midpoints to select the insertion index after removal. Keep preview state outside the query cache and exclude the create form from drop targeting. Native versus custom drag-preview continuity is the remaining prototype decision. See [drag-and-drop research](research/drag-and-drop.md).
+- Use one React DnD provider, card grip sources, and a cards-only drop region per column. Use current card midpoints to select the insertion index after removal. Keep preview state outside the query cache and exclude the create form from drop targeting. A custom preview is translucent and slightly tilted; its offset accounts for the grip position within the card. Animate landing from the release position, and animate a failed write back from the card's current visual position.
 - Reuse Confetti and trigger a localized burst at the card's visual arrival, without waiting for the API response. Cover every movement method and same-column reordering; the destination need not be the last column. This timing is explicitly confirmed by the user, including the possibility that the API subsequently fails.
 - Drive completion from movement identity and animation lifecycle, not a guessed timeout. Handle reduced motion and unchanged-layout completion explicitly. Avoid repeat bursts from refetches or duplicate completion callbacks.
 - Use the layout-specific `onLayoutAnimationComplete` callback for the existing layout animations; ordinary `onAnimationComplete` excludes layout transitions. Source: [Motion component documentation](https://motion.dev/docs/react-motion-component#onlayoutanimationcomplete).
@@ -37,13 +37,15 @@ The burst acknowledges visual arrival. A subsequent failed save animates the car
 | `src/components/Column.tsx` | Usable empty-column and end-of-column targets; preserve create form. |
 | `src/components/Card.tsx` | Drag source, position targeting, visual preview, arrival callback and confetti anchor. |
 | `src/components/Confetti.tsx` | Reuse the existing component; make bursts repeatable, localized, noninteractive and reduced-motion aware. |
+| `src/components/CardDragPreview.tsx` | Custom translucent/tilted pointer preview and visual landing coordinates. |
+| `src/api/placement.ts` | Shared immutable after-removal placement used by optimistic moves and tests. |
 | `package.json`, `package-lock.json` | React DnD and the chosen mouse backend; retain pre-existing lockfile changes. |
 | `README.md` | Explain the new controls, persistence and failure behavior. |
 | Small test/self-check | Verify removal/insertion arithmetic, boundaries, rollback and completion behavior. |
 
 Keep `src/types/board.ts`, static `data/board.json`, and card/edit IDs unchanged unless research identifies a concrete need.
 
-## Candidate implementation sequence
+## Implementation sequence
 
 1. Extend the move request and the shared optimistic mutation; verify persisted same-column and cross-column positions, boundaries and rollback.
 2. Add Up/Down and route all movement methods through the same placement operation, preserving horizontal append behavior and focus.
@@ -51,7 +53,7 @@ Keep `src/types/board.ts`, static `data/board.json`, and card/edit IDs unchanged
 4. Refine Motion placement transitions, reverse rollback transitions, and wire confetti to forward visual arrival, including reduced-motion behavior.
 5. Run build/lint and a focused final Chrome MCP pass against the already running local frontend/API; report observed results and remaining limits. Multi-card dragging is deferred.
 
-This sequence is provisional; it is not a set of ready-for-agent implementation tickets until the remaining decisions are resolved.
+The user authorized direct implementation after planning. Changes were delivered in intermediate commits and checked against the running local app through Chrome MCP.
 
 ## Browser validation and feedback
 

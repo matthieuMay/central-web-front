@@ -4,11 +4,11 @@ Labels: wayfinder:map
 
 ## Destination
 
-Prepare a reviewable specification and decision tickets for persistent card reordering and precise drag-and-drop, preserving existing horizontal movement and adding Motion transitions and arrival confetti.
+Implement persistent card reordering and precise drag-and-drop, preserving existing horizontal movement and adding Motion transitions and arrival confetti.
 
 ## Notes
 
-- Planning only, explicitly confirmed by the user on 2026-10-09. No application implementation in this session.
+- The user initially requested planning, then authorized direct implementation and intermediate commits on 2026-10-09.
 - Use wayfinder, grilling, domain-modeling, research, and animate. The user's request for animated movement overrides animate's general recommendation against keyboard-triggered animation.
 - Confirmed: Up/Down move the selected card one place within its column without wrapping. Left/Right and existing toolbar buttons append to the adjacent column in board order. Drag-and-drop selects a precise insertion point, including empty columns.
 - Confirmed: movement appears immediately; failed persistence animates the card back in the reverse direction, restores the appropriate order and displays an error. Do not delay departure for the API response.
@@ -24,12 +24,13 @@ Prepare a reviewable specification and decision tickets for persistent card reor
 
 - [Persist precise placement and preserve optimistic writes](issues/01-persistent-placement.md): the existing API accepts an after-removal index; reuse the optimistic ledger and guard indexed moves against unsettled board writes.
 - [Assess React DnD integration and the multi-card bonus](issues/02-multi-card-feasibility.md): use board-scoped mouse DnD and ephemeral insertion previews; defer the multi-card bonus under the small-change constraint.
+- [Review the insertion preview, movement and arrival confetti](issues/03-arrival-feedback.md): delivered the user-refined tilted/translucent preview, release-origin landing, reverse rollback and visual-arrival confetti.
 
-Next frontier: [Review the insertion preview, movement and arrival confetti](issues/03-arrival-feedback.md), now unblocked. It remains open for a subsequent user-reviewed prototype session.
+Interaction delivery: [Review the insertion preview, movement and arrival confetti](issues/03-arrival-feedback.md). The user requested direct implementation, then refined the drag appearance and release-to-destination landing; those changes are delivered. See [validation](validation.md) for browser evidence and remaining verification limits.
 
 ## Not yet specified
 
-- Final implementation slices and acceptance details may change after the interaction/animation review, particularly preview behavior in scrollable and responsive layouts.
+- None for the requested implementation. Remaining verification limits are recorded in [validation](validation.md).
 
 ## Out of scope
 
