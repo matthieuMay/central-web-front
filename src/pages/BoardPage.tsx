@@ -1,5 +1,6 @@
 import { useIsMutating, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Box, Button, HStack, Text, VisuallyHidden } from '@chakra-ui/react'
+import { Badge, Box, Button, Heading, HStack, IconButton, Kbd, SimpleGrid, Skeleton, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
+import { ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Cross2Icon } from '@radix-ui/react-icons'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard } from '../api/board'
 import { useMoveCard } from '../api/mutations'
@@ -79,13 +80,13 @@ export function BoardPage() {
 
   const arrived = (id: string) => {
     if (landing?.returning && landing.cardId === id) {
-      if (landing.returning === 'cancelled') setAnnouncement('Drop cancelled. Card returned to its original position.')
+      if (landing.returning === 'cancelled') setAnnouncement('Déplacement annulé. La carte a retrouvé sa place.')
       setLanding({ ...landing, returning: undefined })
       return false
     }
     if (!arrival || pendingArrival.current !== arrival || arrival.cardId !== id) return false
     const destination = data?.columns.find((column) => column.id === arrival.column)
-    setAnnouncement(`${selectedCard?.title ?? 'Card'} placed in ${destination?.title ?? arrival.column}, position ${arrival.position! + 1}.`)
+    setAnnouncement(`${selectedCard?.title ?? 'Carte'} déplacée dans ${destination?.title ?? arrival.column}, position ${arrival.position! + 1}.`)
     pendingArrival.current = null
     setArrival(null)
     return true
@@ -120,23 +121,37 @@ export function BoardPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selectedCardId, editingCardId, moveSelected])
 
-  if (isPending) return <p role="status">Loading board…</p>
-  if (!data) return <p role="alert">Could not load board: {error?.message} <Button onClick={() => void refetch()}>Retry</Button></p>
+  if (isPending) return <Stack gap={6} role="status" aria-label="Chargement du tableau"><Skeleton height={9} width="min(20rem, 100%)" /><SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={5}>{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} height="24rem" borderRadius="xl" />)}</SimpleGrid></Stack>
+  if (!data) return <Stack role="alert" gap={3} maxW="lg"><Heading size="lg">Le tableau est indisponible</Heading><Text color="fg.muted">{error?.message}</Text><Button width="fit-content" colorPalette="blue" onClick={() => void refetch()}>Réessayer</Button></Stack>
+  const cardCount = data.columns.reduce((count, column) => count + column.cards.length, 0)
+  const selectedIndex = data.columns[selectedColumnIndex]?.cards.findIndex((card) => card.id === selectedCardId) ?? -1
   return (
     <>
-      <Box mb={4} minH="3rem">
+      <HStack justify="space-between" align="start" flexWrap="wrap" gap={4} mb={6}>
+        <Box>
+          <Heading as="h1" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="600" letterSpacing="-0.03em">{data.title}</Heading>
+          <Text color="fg.muted" fontSize="sm" mt={2}>Organisez vos cartes, une étape à la fois.</Text>
+        </Box>
+        <Badge variant="outline" borderColor="var(--app-border)" color="fg.muted" borderRadius="full" px={3} py={1.5} fontWeight="500">{cardCount} {cardCount === 1 ? 'carte' : 'cartes'} · {data.columns.length} colonnes</Badge>
+      </HStack>
+      <Box mb={6} px={4} py={3} minH="4rem" borderWidth="1px" borderColor={selectedCard ? 'border.info' : 'var(--app-border)'} borderRadius="lg" bg="var(--app-surface)">
         <VisuallyHidden role="status" aria-live="polite">{announcement}</VisuallyHidden>
-        {selectedCard && (
+        {selectedCard ? (
           <HStack flexWrap="wrap" gap={3}>
-            <Text>Selected: {selectedCard.title}</Text>
-            <Button size="sm" disabled={selectedColumnIndex === 0 || busy} onClick={() => moveSelected(-1)}>Move left</Button>
-            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || busy} onClick={() => moveSelected(1)}>Move right</Button>
-            <Text color="fg.muted" fontSize="sm">↑ ↓ Reorder · ← → Change column</Text>
-            {move.isPending && <Text role="status">Moving card…</Text>}
+            <Text fontSize="sm" fontWeight="500" maxW="20rem" truncate title={selectedCard.title}>{selectedCard.title}</Text>
+            <HStack gap={1}>
+              <Button size="sm" variant="outline" disabled={selectedColumnIndex === 0 || busy} onClick={() => moveSelected(-1)}><ArrowLeftIcon aria-hidden="true" />À gauche</Button>
+              <Button size="sm" variant="outline" disabled={selectedColumnIndex === data.columns.length - 1 || busy} onClick={() => moveSelected(1)}>À droite<ArrowRightIcon aria-hidden="true" /></Button>
+              <IconButton size="sm" variant="ghost" aria-label="Monter la carte" title="Monter la carte" disabled={selectedIndex <= 0 || busy} onClick={() => moveSelected(-1, true)}><ArrowUpIcon /></IconButton>
+              <IconButton size="sm" variant="ghost" aria-label="Descendre la carte" title="Descendre la carte" disabled={selectedIndex === data.columns[selectedColumnIndex].cards.length - 1 || busy} onClick={() => moveSelected(1, true)}><ArrowDownIcon /></IconButton>
+            </HStack>
+            <Text color="fg.muted" fontSize="xs">Les flèches du clavier fonctionnent aussi.</Text>
+            <IconButton size="sm" variant="ghost" aria-label="Désélectionner la carte" title="Désélectionner · Échap" marginStart="auto" onClick={() => setSelectedCardId(null)}><Cross2Icon /></IconButton>
+            {move.isPending && <Text role="status" color="fg.muted" fontSize="sm">Enregistrement…</Text>}
           </HStack>
-        )}
-        {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
-        {isError && <Text role="alert" color="red.700">Could not refresh board: {error.message}. <Button size="xs" onClick={() => void refetch()}>Retry</Button></Text>}
+        ) : <HStack flexWrap="wrap" gap={3} minH={9} justify="space-between"><Text color="fg.muted" fontSize="sm">Cliquez sur une carte pour la déplacer, ou glissez sa poignée.</Text><HStack color="fg.muted" fontSize="xs" gap={1}><Kbd>↑</Kbd><Kbd>↓</Kbd><Text mx={1}>Réordonner</Text><Kbd>←</Kbd><Kbd>→</Kbd><Text ml={1}>Changer de colonne</Text></HStack></HStack>}
+        {move.isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Déplacement impossible : {move.error.message}. Réessayez.</Text>}
+        {isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Actualisation impossible : {error.message}. <Button size="xs" variant="outline" onClick={() => void refetch()}>Réessayer</Button></Text>}
       </Box>
       <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} onCancelDrag={cancelDrag} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />

@@ -1,4 +1,4 @@
-import { Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui/react'
+import { Box, Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui/react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
@@ -32,25 +32,27 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   }
 
   return (
+    <Box asChild display="flex" flexDirection="column" flex="1" minH={0}>
     <form onSubmit={handleSubmit(submit)} noValidate>
-      <Drawer.Header><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
+      <Drawer.Header borderBottomWidth="1px" borderColor="var(--app-border)"><Drawer.Title>Modifier la carte</Drawer.Title></Drawer.Header>
       <Drawer.Body>
         <Field.Root invalid={!!errors.title} mb={4}>
-          <Field.Label htmlFor="edit-title">Title</Field.Label>
-          <Input id="edit-title" data-autofocus aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Title is required' })} />
+          <Field.Label htmlFor="edit-title">Titre</Field.Label>
+          <Input id="edit-title" data-autofocus bg="var(--app-surface)" disabled={edit.isPending} aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Le titre est obligatoire' })} />
           {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
         </Field.Root>
         <Field.Root>
-          <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
-          <Textarea id="edit-description" rows={5} {...register('description')} />
+          <Field.Label htmlFor="edit-description">Description <Text as="span" color="fg.muted" fontWeight="400">(facultative)</Text></Field.Label>
+          <Textarea id="edit-description" rows={5} bg="var(--app-surface)" disabled={edit.isPending} {...register('description')} />
         </Field.Root>
-        {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
+        {edit.isError && <Text role="alert" color="fg.error" mt={3}>Enregistrement impossible : {edit.error.message}. Vérifiez votre connexion et réessayez.</Text>}
       </Drawer.Body>
-      <Drawer.Footer>
-        <Button type="button" variant="outline" disabled={edit.isPending} onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={!isValid || edit.isPending}>Save</Button>
+      <Drawer.Footer borderTopWidth="1px" borderColor="var(--app-border)">
+        <Button type="button" variant="outline" disabled={edit.isPending} onClick={onClose}>Annuler</Button>
+        <Button type="submit" colorPalette="blue" disabled={!isValid || edit.isPending} loading={edit.isPending} loadingText="Enregistrement…">Enregistrer</Button>
       </Drawer.Footer>
     </form>
+    </Box>
   )
 }
 
@@ -62,7 +64,7 @@ export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClo
       <Portal>
         <Drawer.Backdrop />
         <Drawer.Positioner>
-          <Drawer.Content>
+          <Drawer.Content bg="var(--app-canvas)" colorPalette="blue">
             {card && <EditForm key={card.id} card={card} onClose={onClose} />}
           </Drawer.Content>
         </Drawer.Positioner>

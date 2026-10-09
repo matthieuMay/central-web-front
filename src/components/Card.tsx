@@ -1,4 +1,5 @@
-import { Box, Heading, HStack, IconButton, Text } from '@chakra-ui/react'
+import { Box, Button, Heading, HStack, IconButton, Text } from '@chakra-ui/react'
+import { DragHandleDots2Icon, Pencil1Icon } from '@radix-ui/react-icons'
 import { motion, useAnimate, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { useDrag } from 'react-dnd'
@@ -84,15 +85,17 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
         onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onSelect() } }}
         aria-label={card.title} position="relative" opacity={isDragging ? 0.4 : 1}
         className="board-card" aria-current={selected ? 'true' : undefined}
-        bg={selected ? 'bg.info' : 'bg'} borderColor={selected ? 'border.info' : 'border'}
-        borderWidth="1px" borderRadius="md" p={4} overflowWrap="anywhere"
+        bg={selected ? 'bg.info' : 'var(--app-surface)'} borderColor={selected ? 'border.info' : 'var(--app-border)'}
+        borderWidth="1px" borderRadius="lg" p={4} overflowWrap="anywhere" boxShadow="0 1px 3px rgba(0, 0, 0, 0.06)"
+        transition="background 150ms ease, border-color 150ms ease, box-shadow 150ms ease"
+        _hover={{ borderColor: selected ? 'border.info' : 'border.emphasized', boxShadow: '0 3px 8px rgba(0, 0, 0, 0.08)' }}
       >
         <HStack justify="space-between" align="start" gap={2}>
-          <Heading as="h3" size="sm">{card.title}</Heading>
-          <IconButton ref={(node) => { handle.current = node; drag(node) }} type="button" aria-label={`Drag ${card.title}`} title="Drag to reorder" variant="ghost" size="xs" cursor={disabled ? 'default' : 'grab'} disabled={disabled} onClick={(event) => event.stopPropagation()}>⠿</IconButton>
+          <Heading as="h3" fontSize="sm" lineHeight="1.5" fontWeight="600">{card.title}</Heading>
+          <IconButton ref={(node) => { handle.current = node; drag(node) }} type="button" aria-label={`Déplacer ${card.title}`} title="Glisser pour déplacer" variant="ghost" size="xs" minH={{ base: 10, md: 8 }} minW={{ base: 10, md: 8 }} color="fg.muted" cursor={disabled ? 'default' : 'grab'} disabled={disabled} onClick={(event) => event.stopPropagation()}><DragHandleDots2Icon aria-hidden="true" /></IconButton>
         </HStack>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
-        <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
+        <Button id={editElementId(card.id)} type="button" aria-label={`Modifier ${card.title}`} size="xs" variant="ghost" color="fg.muted" mt={3} minH={8} px={2} aria-disabled={disabled} onClick={() => { if (!disabled) onEdit() }}><Pencil1Icon aria-hidden="true" />Modifier</Button>
         {burst > 0 && <Confetti key={burst} particleCount={24} />}
       </Box>
     </motion.div>

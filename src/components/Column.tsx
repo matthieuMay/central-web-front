@@ -1,4 +1,5 @@
-import { Box, Heading, Stack, Text } from '@chakra-ui/react'
+import { Badge, Box, Button, Field, Heading, HStack, Input, Stack, Text } from '@chakra-ui/react'
+import { PlusIcon } from '@radix-ui/react-icons'
 import { useRef, useState, type FormEvent } from 'react'
 import { useDrop } from 'react-dnd'
 import { v7 as uuidv7 } from 'uuid'
@@ -61,7 +62,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }), canDrop: monitor.canDrop() }),
   }), [column, disabled, onMoveCard])
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent) {
     event.preventDefault()
     const trimmed = title.trim()
     if (!trimmed || create.isPending) return
@@ -74,23 +75,27 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
   }
 
   return (
-    <Box as="section" aria-label={column.title} bg="bg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
-      <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
-      <Stack gap={3}>
-      <Stack ref={(node) => { cardsRef.current = node; drop(node) }} role="group" aria-label={`Cards in ${column.title}`} gap={3} minH="6rem" position="relative" borderRadius="md" outline={isOver && canDrop ? '2px dashed' : undefined} outlineColor="border.info" outlineOffset="8px" pb={3}>
-        {column.cards.length === 0 && <Text color="fg.muted" p={4}>Drop a card here</Text>}
+    <Box as="section" aria-label={column.title} bg="var(--app-panel)" borderRadius="xl" p={4} minW={0} display="flex" flexDirection="column" minH={{ base: 'auto', xl: '32rem' }}>
+      <HStack justify="space-between" mb={5} gap={3}>
+        <Heading as="h2" size="sm" fontWeight="600">{column.title}</Heading>
+        <Badge bg="var(--app-surface)" color="fg.muted" borderRadius="md" minW={7} justifyContent="center" fontVariantNumeric="tabular-nums" aria-label={`${column.cards.length} cartes`}>{column.cards.length}</Badge>
+      </HStack>
+      <Stack gap={3} flex="1">
+      <Stack ref={(node) => { cardsRef.current = node; drop(node) }} role="group" aria-label={`Cartes dans ${column.title}`} gap={3} minH="7rem" flex="1" position="relative" borderRadius="md" outline={isOver && canDrop ? '2px dashed' : undefined} outlineColor="border.info" outlineOffset="6px" pb={3}>
+        {column.cards.length === 0 && <Box borderWidth="1px" borderStyle="dashed" borderColor="var(--app-border)" borderRadius="lg" px={4} py={7} textAlign="center"><Text fontSize="sm" fontWeight="500">Aucune carte</Text><Text color="fg.muted" fontSize="sm" mt={1}>Déposez une carte ici ou créez-en une.</Text></Box>}
         {column.cards.map((card) => (
           <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} disabled={disabled} arriving={card.id === arrivingCardId} onArrival={() => onArrival(card.id)} onCancelDrag={onCancelDrag} dropOrigin={landing?.cardId === card.id ? landing.origin : null} returning={landing?.cardId === card.id ? landing.returning : undefined} />
         ))}
-        {isOver && canDrop && insertion && <Box aria-hidden="true" data-drop-indicator="" position="absolute" top={`${insertion.top}px`} insetInline={0} height="3px" bg="border.info" borderRadius="full" pointerEvents="none" zIndex={2} boxShadow="0 0 12px var(--chakra-colors-border-info)" />}
+        {isOver && canDrop && insertion && <Box aria-hidden="true" data-drop-indicator="" position="absolute" top={`${insertion.top}px`} insetInline={0} height="3px" bg="border.info" borderRadius="full" pointerEvents="none" zIndex={2} />}
       </Stack>
-        <form onSubmit={submit}>
-          <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
-          <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
-          <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
-          {create.isPending && <p role="status">Adding card…</p>}
-          {create.isError && <p role="alert">Could not add card: {create.error.message}</p>}
-        </form>
+        <Box as="form" onSubmit={submit} mt="auto" pt={4} borderTopWidth="1px" borderColor="var(--app-border)">
+          <Field.Root>
+            <Field.Label htmlFor={`new-card-${column.id}`} fontSize="xs" color="fg.muted">Nouvelle carte</Field.Label>
+            <Input ref={inputRef} id={`new-card-${column.id}`} aria-label={`Titre de la nouvelle carte dans ${column.title}`} placeholder="Titre de la carte…" _placeholder={{ color: 'fg.muted' }} value={title} onChange={(event) => setTitle(event.target.value)} required bg="var(--app-surface)" size="sm" borderRadius="md" disabled={create.isPending} />
+          </Field.Root>
+          <Button type="submit" variant="ghost" colorPalette="blue" size="sm" width="full" mt={2} disabled={create.isPending || !title.trim()} loading={create.isPending} loadingText="Ajout en cours…"><PlusIcon aria-hidden="true" />Ajouter une carte</Button>
+          {create.isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Ajout impossible : {create.error.message}. Réessayez.</Text>}
+        </Box>
       </Stack>
     </Box>
   )

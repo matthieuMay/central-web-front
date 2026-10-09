@@ -1,4 +1,4 @@
-import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
+import { SimpleGrid } from '@chakra-ui/react'
 import { LayoutGroup } from 'motion/react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -24,14 +24,11 @@ export function Board({ board, selectedCardId, onSelectCard, onEditCard, disable
   return (
     <DndProvider backend={HTML5Backend}>
     <LayoutGroup id="board-cards">
-    <Stack gap={6}>
-      <Heading as="h1" size="2xl">{board.title}</Heading>
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={{ base: 4, lg: 5 }} alignItems="stretch">
         {board.columns.map((column) => (
           <Column key={column.id} column={column} selectedCardId={selectedCardId} onSelectCard={onSelectCard} onEditCard={onEditCard} disabled={disabled} onMoveCard={onMoveCard} onCancelDrag={onCancelDrag} arrivingCardId={arrivingCardId} onArrival={onArrival} landing={landing} />
         ))}
       </SimpleGrid>
-    </Stack>
     </LayoutGroup>
     <CardDragPreview board={board} />
     </DndProvider>

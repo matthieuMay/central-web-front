@@ -34,9 +34,9 @@ export function Layout() {
   }, [theme])
 
   return (
-    <Box minH="100dvh" bg="bg.subtle" color="fg">
+    <Box minH="100dvh" bg="var(--app-canvas)" color="fg">
       <Header theme={theme} onToggleTheme={() => setManualTheme(theme === 'dark' ? 'light' : 'dark')} />
-      <Box as="main" px={{ base: 4, md: 8 }} py={8}>
+      <Box as="main" maxW="1600px" mx="auto" px={{ base: 4, md: 8, xl: 10 }} py={{ base: 6, md: 9 }}>
         <Outlet />
       </Box>
     </Box>
