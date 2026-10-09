@@ -422,6 +422,198 @@ form :focus-visible {
   border-radius: var(--radius);
 }
 
+/* ---------------------------------------------------------------------------
+   Card details: members, comments and checklist in the edit drawer, and the
+   summary badges on board cards.
+   --------------------------------------------------------------------------- */
+
+.card-section {
+  padding-top: 1rem;
+  border-top: 2px solid var(--ink);
+}
+
+.card-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-weight: 700;
+}
+
+.card-section-count {
+  padding: 0 0.35rem;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.check-list {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.check-row:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+.check-row input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.15rem;
+  flex: none;
+  accent-color: var(--accent-4);
+}
+
+.check-row:has(input:disabled) {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.check-row[data-done] span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.check-row:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.inline-form label {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.inline-form select,
+.inline-form textarea,
+.inline-form input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.inline-form-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.inline-form-row input {
+  margin-bottom: 0;
+}
+
+.inline-form button {
+  margin: 0;
+  padding: 0.4rem 0.9rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inline-form button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.comment-list {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+}
+
+.comment-list li {
+  margin-bottom: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-left-width: 5px;
+  border-radius: var(--radius);
+  background: var(--paper);
+  overflow-wrap: anywhere;
+}
+
+.comment-list li[data-pending] {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.comment-meta time,
+.comment-meta [role='status'] {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.comment-list p {
+  white-space: pre-wrap;
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-badges li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.card-badges li[data-complete] {
+  background: var(--done);
+  color: var(--on-accent);
+}
+
+.card-badges svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scene *, .scene *::before, .scene *::after {
     transition: none !important;

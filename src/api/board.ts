@@ -1,4 +1,4 @@
-import type { BoardData } from '../types/board'
+import type { BoardData, CardCollectionsPatch, CardData, User } from '../types/board'
 
 export const boardKey = ['board', 'mini-trello'] as const
 
@@ -14,6 +14,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getBoard() {
   return request<BoardData>('/boards/mini-trello')
+}
+
+export function getUsers() {
+  return request<User[]>('/users')
 }
 
 export function createCard({ columnId, id, title }: { columnId: string; id: string; title: string }) {
@@ -39,5 +43,14 @@ export function moveCard({ cardId, column, position }: { cardId: string; column:
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ column, ...(position === undefined ? {} : { position }) }),
+  })
+}
+
+// Each list in `patch` replaces the card's list entirely; lists left out are unchanged.
+export function updateCardCollections({ cardId, patch }: { cardId: string; patch: CardCollectionsPatch }) {
+  return request<CardData>(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
   })
 }

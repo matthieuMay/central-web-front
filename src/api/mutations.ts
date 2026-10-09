@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard, moveCard } from './board'
+import type { BoardData, CardCollectionsPatch } from '../types/board'
+import { boardKey, createCard, editCard, moveCard, updateCardCollections } from './board'
+import { applyCollectionsPatch } from './collections'
 import { moveCardInBoard, type MoveCardInput } from './moves'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type UpdateCardCollectionsInput = { cardId: string; patch: CardCollectionsPatch }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -92,6 +94,17 @@ export function useMoveCard() {
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
     onMutate: (input: MoveCardInput) => begin(queryClient, (board) => moveCardInBoard(board, input)),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+export function useUpdateCardCollections() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: updateCardCollections,
+    onMutate: (input: UpdateCardCollectionsInput) => begin(queryClient, (board) => applyCollectionsPatch(board, input.cardId, input.patch)),
     onError: (_error, _input, context) => rollback(queryClient, context),
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })

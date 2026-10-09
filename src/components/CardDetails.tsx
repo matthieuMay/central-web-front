@@ -1,4 +1,6 @@
-import { Stack } from '@chakra-ui/react'
+import { Stack, Text } from '@chakra-ui/react'
+import { useUpdateCardCollections } from '../api/mutations'
+import { useUsers } from '../api/users'
 import type { CardData } from '../types/board'
 import { Checklist } from './Checklist'
 import { CommentThread } from './CommentThread'
@@ -21,11 +23,32 @@ import { MemberPicker } from './MemberPicker'
 // - a card whose lists are empty or missing renders and stays usable;
 // - while /users loads or fails, the sections say so instead of breaking.
 export function CardDetails({ card }: { card: CardData }) {
+  const users = useUsers()
+  // One mutation per section, so each knows whether its own list is saving or failed.
+  const members = useUpdateCardCollections()
+  const comments = useUpdateCardCollections()
+  const checklist = useUpdateCardCollections()
+  const people = users.data ?? []
+
   return (
     <Stack gap={6} mt={6}>
-      <MemberPicker users={[]} assignees={card.assignees ?? []} disabled onChange={async () => {}} />
-      <CommentThread users={[]} comments={card.comments ?? []} disabled onPost={async () => {}} />
-      <Checklist items={card.checklistItems ?? []} disabled onChange={async () => {}} />
+      {users.isPending && <Text role="status" className="board-status">Loading people…</Text>}
+      {users.isError && <Text role="alert" color="red.fg">Could not load people: {users.error.message}</Text>}
+      <div>
+        <MemberPicker users={people} assignees={card.assignees ?? []} disabled={members.isPending || !users.data}
+          onChange={async (assignees) => { await members.mutateAsync({ cardId: card.id, patch: { assignees } }) }} />
+        {members.isError && <Text role="alert" color="red.fg" mt={2}>Could not save members: {members.error.message}. Try again.</Text>}
+      </div>
+      <div>
+        <CommentThread users={people} comments={card.comments ?? []} disabled={comments.isPending || !users.data}
+          onPost={async (next) => { await comments.mutateAsync({ cardId: card.id, patch: { comments: next } }) }} />
+        {comments.isError && <Text role="alert" color="red.fg" mt={2}>Could not post comment: {comments.error.message}. Try again.</Text>}
+      </div>
+      <div>
+        <Checklist items={card.checklistItems ?? []} disabled={checklist.isPending}
+          onChange={async (checklistItems) => { await checklist.mutateAsync({ cardId: card.id, patch: { checklistItems } }) }} />
+        {checklist.isError && <Text role="alert" color="red.fg" mt={2}>Could not save checklist: {checklist.error.message}. Try again.</Text>}
+      </div>
     </Stack>
   )
 }

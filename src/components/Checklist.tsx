@@ -1,4 +1,6 @@
 import { Heading } from '@chakra-ui/react'
+import { useState, type FormEvent } from 'react'
+import { addChecklistItem, toggleChecklistItem } from '../api/collections'
 import type { ChecklistItem } from '../types/board'
 
 export type ChecklistProps = {
@@ -20,10 +22,44 @@ export type ChecklistProps = {
 // - a blank description cannot be added;
 // - the input is cleared only after a successful save;
 // - with no items the add form still works.
-export function Checklist(_props: ChecklistProps) {
+export function Checklist({ items, disabled, onChange }: ChecklistProps) {
+  const [draft, setDraft] = useState('')
+  const done = items.filter((item) => item.done).length
+
+  async function add(event: FormEvent) {
+    event.preventDefault()
+    if (disabled || !draft.trim()) return
+    try {
+      await onChange(addChecklistItem(items, draft))
+      setDraft('')
+    } catch {
+      // Keep the draft so the user can retry; the parent shows the error.
+    }
+  }
+
   return (
-    <section aria-labelledby="card-checklist">
-      <Heading as="h3" size="sm" id="card-checklist">Checklist</Heading>
+    <section aria-labelledby="card-checklist" className="card-section">
+      <Heading as="h3" size="sm" id="card-checklist">Checklist <span className="card-section-count">{done}/{items.length}</span></Heading>
+      {items.length > 0 && (
+        <ul className="check-list">
+          {items.map((item, index) => (
+            // No id from the API: the index is the item's identity.
+            <li key={index}>
+              <label className="check-row" data-done={item.done || undefined}>
+                <input type="checkbox" checked={item.done} disabled={disabled} onChange={() => { onChange(toggleChecklistItem(items, index)).catch(() => {}) }} />
+                <span>{item.description}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={add} className="inline-form">
+        <label htmlFor="checklist-new">New task</label>
+        <div className="inline-form-row">
+          <input id="checklist-new" value={draft} onChange={(event) => setDraft(event.target.value)} />
+          <button type="submit" disabled={disabled || !draft.trim()}>Add</button>
+        </div>
+      </form>
     </section>
   )
 }
