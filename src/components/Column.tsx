@@ -1,6 +1,8 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
+import { AddCardForm } from './AddCardForm'
+
 
 type ColumnProps = {
     column : ColumnData
@@ -21,6 +23,8 @@ export function Column ({ column} : ColumnProps) {
           ))}
         </Stack>
       )}
+        <AddCardForm columnId={column.id} columnTitle={column.title} />
+
     </Box>
   )
 }

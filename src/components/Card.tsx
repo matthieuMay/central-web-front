@@ -14,7 +14,7 @@ export function Card({card} : CardProps) {
           {card.description}
         </Text>
       )}
-      </Box>
+    </Box>
     )
 }
 
