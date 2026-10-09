@@ -6,17 +6,17 @@
       "id": "sprint-backlog",
       "title": "Sprint backlog",
       "cards": [
-        { "id": "card-1", "title": "Sketch the board layout ✏️", "description": "Keep the four columns readable on small screens." },
-        { "id": "card-2", "title": "Define card props" },
-        { "id": "card-3", "title": "Check keyboard navigation ⌨️" }
+        { "id": "card-1", "title": "Sketch the board layout ✏️", "description": "Keep the four columns readable on small screens.", "assignees": [], "comments": [], "checklistItems": [] },
+        { "id": "card-2", "title": "Define card props", "assignees": [], "comments": [], "checklistItems": [] },
+        { "id": "card-3", "title": "Check keyboard navigation ⌨️", "assignees": [], "comments": [], "checklistItems": [] }
       ]
     },
     {
       "id": "doing",
       "title": "Doing",
       "cards": [
-        { "id": "card-4", "title": "Build the Column component", "description": "Render each card from the JSON data." },
-        { "id": "card-5", "title": "Make the board responsive 📱" }
+        { "id": "card-4", "title": "Build the Column component", "description": "Render each card from the JSON data.", "assignees": [], "comments": [], "checklistItems": [] },
+        { "id": "card-5", "title": "Make the board responsive 📱", "assignees": [], "comments": [], "checklistItems": [] }
       ]
     },
     {
@@ -28,7 +28,7 @@
       "id": "done",
       "title": "Done ✅",
       "cards": [
-        { "id": "card-6", "title": "Prepare the project shell" }
+        { "id": "card-6", "title": "Prepare the project shell", "assignees": [], "comments": [], "checklistItems": [] }
       ]
     }
   ]

@@ -1,11 +1,18 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { placeCard } from '../src/api/placement.ts'
+import type { BoardData } from '../src/types/board.ts'
 
-const board = {
+const emptyCollections = { assignees: [], comments: [], checklistItems: [] }
+const board: BoardData = {
   id: 'board', title: 'Board', columns: [
-    { id: 'left', title: 'Left', cards: [{ id: 'A', title: 'A' }, { id: 'B', title: 'B', description: 'Keep me' }, { id: 'C', title: 'C' }, { id: 'D', title: 'D' }] },
-    { id: 'right', title: 'Right', cards: [{ id: 'E', title: 'E' }] },
+    { id: 'left', title: 'Left', cards: [
+      { ...emptyCollections, id: 'A', title: 'A' },
+      { id: 'B', title: 'B', description: 'Keep me', assignees: ['user-1'], comments: [{ user: 'user-1', comment: 'Keep this too', createdAt: '2026-10-09T10:00:00Z' }], checklistItems: [{ description: 'Check this', done: true }] },
+      { ...emptyCollections, id: 'C', title: 'C' },
+      { ...emptyCollections, id: 'D', title: 'D' },
+    ] },
+    { id: 'right', title: 'Right', cards: [{ ...emptyCollections, id: 'E', title: 'E' }] },
     { id: 'empty', title: 'Empty', cards: [] },
   ],
 }

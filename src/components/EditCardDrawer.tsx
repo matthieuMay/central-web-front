@@ -4,9 +4,18 @@ import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 import { editElementId } from './cardIds'
+import { CardMembers } from './CardMembers'
+import { CardComments } from './CardComments'
+import { CardChecklist } from './CardChecklist'
 
 type Fields = { title: string; description: string }
 
+// SDD : remplacer ce callback par la mutation commune lors de l'implémentation.
+// Les rendus temporaires n'ont aucun contrôle capable de l'appeler.
+async function pendingCollectionAction() {}
+
+// Responsabilité : coordonner catalogue, carte courante, mutations et erreurs.
+// À vérifier : refetch sans perte de brouillon, verrou d'écriture, échec et retour du focus.
 function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
   const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
@@ -32,26 +41,30 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   }
 
   return (
-    <Box asChild display="flex" flexDirection="column" flex="1" minH={0}>
-    <form onSubmit={handleSubmit(submit)} noValidate>
+    <Box display="flex" flexDirection="column" flex="1" minH={0}>
       <Drawer.Header borderBottomWidth="1px" borderColor="var(--app-border)"><Drawer.Title>Modifier la carte</Drawer.Title></Drawer.Header>
       <Drawer.Body>
-        <Field.Root invalid={!!errors.title} mb={4}>
-          <Field.Label htmlFor="edit-title">Titre</Field.Label>
-          <Input id="edit-title" data-autofocus bg="var(--app-surface)" disabled={edit.isPending} aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Le titre est obligatoire' })} />
-          {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
-        </Field.Root>
-        <Field.Root>
-          <Field.Label htmlFor="edit-description">Description <Text as="span" color="fg.muted" fontWeight="400">(facultative)</Text></Field.Label>
-          <Textarea id="edit-description" rows={5} bg="var(--app-surface)" disabled={edit.isPending} {...register('description')} />
-        </Field.Root>
-        {edit.isError && <Text role="alert" color="fg.error" mt={3}>Enregistrement impossible : {edit.error.message}. Vérifiez votre connexion et réessayez.</Text>}
+        <form id="edit-card-form" onSubmit={handleSubmit(submit)} noValidate>
+          <Field.Root invalid={!!errors.title} mb={4}>
+            <Field.Label htmlFor="edit-title">Titre</Field.Label>
+            <Input id="edit-title" data-autofocus bg="var(--app-surface)" disabled={edit.isPending} aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Le titre est obligatoire' })} />
+            {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
+          </Field.Root>
+          <Field.Root>
+            <Field.Label htmlFor="edit-description">Description <Text as="span" color="fg.muted" fontWeight="400">(facultative)</Text></Field.Label>
+            <Textarea id="edit-description" rows={5} bg="var(--app-surface)" disabled={edit.isPending} {...register('description')} />
+          </Field.Root>
+          {edit.isError && <Text role="alert" color="fg.error" mt={3}>Enregistrement impossible : {edit.error.message}. Vérifiez votre connexion et réessayez.</Text>}
+        </form>
+        {/* SDD : brancher GET /users et la mutation commune dans le second commit. */}
+        <CardMembers assignees={card.assignees} users={[]} disabled onChange={pendingCollectionAction} />
+        <CardComments comments={card.comments} users={[]} disabled onPublish={pendingCollectionAction} />
+        <CardChecklist items={card.checklistItems} disabled onAdd={pendingCollectionAction} onSetDone={pendingCollectionAction} />
       </Drawer.Body>
       <Drawer.Footer borderTopWidth="1px" borderColor="var(--app-border)">
         <Button type="button" variant="outline" disabled={edit.isPending} onClick={onClose}>Annuler</Button>
-        <Button type="submit" colorPalette="blue" disabled={!isValid || edit.isPending} loading={edit.isPending} loadingText="Enregistrement…">Enregistrer</Button>
+        <Button type="submit" form="edit-card-form" colorPalette="blue" disabled={!isValid || edit.isPending} loading={edit.isPending} loadingText="Enregistrement…">Enregistrer</Button>
       </Drawer.Footer>
-    </form>
     </Box>
   )
 }

@@ -59,7 +59,7 @@ export function useCreateCard() {
     onMutate: (input: CreateCardInput) => begin(queryClient, (board) => ({
       ...board,
       columns: board.columns.map((column) => column.id === input.columnId
-        ? { ...column, cards: [...column.cards, { id: input.id, title: input.title }] }
+        ? { ...column, cards: [...column.cards, { id: input.id, title: input.title, assignees: [], comments: [], checklistItems: [] }] }
         : column),
     })),
     onError: (_error, _input, context) => rollback(queryClient, context),
