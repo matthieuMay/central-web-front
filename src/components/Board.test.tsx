@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Board } from './Board'
 import { replaceCard } from '../board/collections'
 import { applyMove } from '../board/move'
+import { LocaleProvider } from '../locale'
 import type { BoardData, CardComment, CardData, CommentInput, User } from '../types/board'
 
 const users: User[] = [
@@ -83,9 +84,11 @@ function renderBoard() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <ChakraProvider value={defaultSystem}>
-      <QueryClientProvider client={queryClient}>
-        <Board boardId="mini-trello" />
-      </QueryClientProvider>
+      <LocaleProvider>
+        <QueryClientProvider client={queryClient}>
+          <Board boardId="mini-trello" />
+        </QueryClientProvider>
+      </LocaleProvider>
     </ChakraProvider>,
   )
 }

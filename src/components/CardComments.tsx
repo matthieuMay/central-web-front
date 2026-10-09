@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Box, Button, HStack, Stack, Text, Textarea } from '@chakra-ui/react'
 import type { CardComment, CommentInput, User } from '../types/board'
+import { formatDateTime, useLocale } from '../locale-context'
 import { UserSelect } from './UserSelect'
 
 /**
@@ -34,6 +35,7 @@ function authorName(users: User[], id: string) {
 
 export function CardComments({ comments, users, authorId, onAuthorChange, onSubmit, disabled }: CardCommentsProps) {
   const [draft, setDraft] = useState('')
+  const { locale } = useLocale()
 
   function submit() {
     const comment = draft.trim()
@@ -53,7 +55,7 @@ export function CardComments({ comments, users, authorId, onAuthorChange, onSubm
               <HStack justify="space-between">
                 <Text fontWeight="medium" fontSize="sm">{authorName(users, entry.user)}</Text>
                 <Text color="fg.muted" fontSize="xs">
-                  {new Date(entry.createdAt).toLocaleString()}
+                  {formatDateTime(locale, entry.createdAt)}
                 </Text>
               </HStack>
               <Text mt={1} fontSize="sm">{entry.comment}</Text>

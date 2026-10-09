@@ -25,6 +25,7 @@ type CardChecklistProps = {
 
 export function CardChecklist({ items, onAdd, onToggle }: CardChecklistProps) {
   const [draft, setDraft] = useState('')
+  const addLabel = 'Ajouter'
 
   function submit() {
     const description = draft.trim()
@@ -65,7 +66,7 @@ export function CardChecklist({ items, onAdd, onToggle }: CardChecklistProps) {
             }
           }}
         />
-        <Button size="sm" onClick={submit}>Ajouter</Button>
+        <Button size="sm" onClick={submit}>{addLabel}</Button>
       </HStack>
     </Stack>
   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Dialog, Heading, Portal, Spinner, Stack, Text } from '@chakra-ui/react'
+import { Button, Box, Dialog, Heading, Portal, Spinner, Stack, Text } from '@chakra-ui/react'
 import { addChecklistItem, appendComment, toggleChecklistItem } from '../board/collections'
 import { usePatchCard } from '../board/useBoard'
 import type { CardData, User } from '../types/board'
@@ -55,17 +55,19 @@ export function CardDetail({ boardId, card, users, isUsersLoading, isUsersError,
               <Stack gap={6}>
                 <section>
                   <Heading as="h3" size="sm" mb={2}>Membres</Heading>
-                  {isUsersLoading ? (
-                    <Spinner size="sm" aria-label="Chargement des personnes" />
-                  ) : isUsersError ? (
-                    <Text color="fg.error" fontSize="sm">Impossible de charger les personnes.</Text>
-                  ) : (
-                    <CardAssignees
-                      assignees={card.assignees}
-                      users={users}
-                      onChange={(next) => patch.mutate({ cardId, changes: { assignees: next } })}
-                    />
-                  )}
+                  <Box>
+                    {isUsersLoading ? (
+                      <Spinner size="sm" aria-label="Chargement des personnes" />
+                    ) : isUsersError ? (
+                      <Text color="fg.error" fontSize="sm">Impossible de charger les personnes.</Text>
+                    ) : (
+                      <CardAssignees
+                        assignees={card.assignees}
+                        users={users}
+                        onChange={(next) => patch.mutate({ cardId, changes: { assignees: next } })}
+                      />
+                    )}
+                  </Box>
                 </section>
                 <section>
                   <Heading as="h3" size="sm" mb={2}>Commentaires</Heading>

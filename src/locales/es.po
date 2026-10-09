@@ -1,0 +1,188 @@
+msgid ""
+msgstr ""
+"Source-Language: fr\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3\n"
+"X-Plurals-Order: one, many, other\n"
+
+#: src/locale.tsx
+msgid "Chargement de la langue"
+msgstr ""
+
+#: src/pages/HomePage.tsx
+msgid "Ouvrir le tableau"
+msgstr ""
+
+#: src/pages/HomePage.tsx
+msgid "Bienvenue sur Mini-Trello"
+msgstr ""
+
+#: src/pages/HomePage.tsx
+msgid "Retrouvez vos tâches dans un tableau partagé."
+msgstr ""
+
+#: src/pages/NotFoundPage.tsx
+msgid "Retour à l’accueil"
+msgstr ""
+
+#: src/pages/NotFoundPage.tsx
+msgid "Page introuvable"
+msgstr ""
+
+#: src/pages/NotFoundPage.tsx
+msgid "Cette adresse ne correspond à aucune page."
+msgstr ""
+
+#. 0: (error as Error).message
+#: src/components/Board.tsx
+msgid "Could not load the board: {0}"
+msgstr ""
+
+#: src/components/Board.tsx
+msgid "Loading board"
+msgstr ""
+
+#. 0: title
+#: src/components/Board.tsx
+msgid "{0} completed!"
+msgstr ""
+
+#. 0: title; 1: columnTitle(column)
+#: src/components/Board.tsx
+msgid "Moved {0} to {1}"
+msgstr ""
+
+#. 0: title
+#: src/components/Board.tsx
+msgid "Could not move {0}"
+msgstr ""
+
+#: src/components/Board.tsx
+msgid "Board announcements"
+msgstr ""
+
+#. 0: card.title
+#: src/components/Card.tsx
+msgid "Ouvrir la carte {0}"
+msgstr ""
+
+#: src/components/Card.tsx
+msgid "Ouvrir"
+msgstr ""
+
+#: src/components/CardAssignees.tsx
+msgid "Les membres sont indisponibles."
+msgstr ""
+
+#: src/components/CardAssignees.tsx
+msgid "Aucune personne disponible."
+msgstr ""
+
+#: src/components/CardChecklist.tsx
+msgid "Ajouter"
+msgstr ""
+
+#: src/components/CardChecklist.tsx
+msgid "Aucune tâche."
+msgstr ""
+
+#: src/components/CardChecklist.tsx
+#: src/components/CardChecklist.tsx
+msgid "Nouvelle tâche"
+msgstr ""
+
+#: src/components/CardComments.tsx
+msgid "Aucun commentaire."
+msgstr ""
+
+#: src/components/CardComments.tsx
+msgid "Les commentaires sont indisponibles."
+msgstr ""
+
+#: src/components/CardComments.tsx
+msgid "Auteur du commentaire"
+msgstr ""
+
+#: src/components/CardComments.tsx
+msgid "Nouveau commentaire"
+msgstr ""
+
+#: src/components/CardComments.tsx
+msgid "Écrire un commentaire"
+msgstr ""
+
+#: src/components/CardComments.tsx
+msgid "Publier"
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "Chargement des personnes"
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "Impossible de charger les personnes."
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "Membres"
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "Commentaires"
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "Tâches à cocher"
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "La modification n'a pas pu être enregistrée."
+msgstr ""
+
+#: src/components/CardDetail.tsx
+msgid "Fermer"
+msgstr ""
+
+#: src/components/Column.tsx
+msgid "No cards yet"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Système"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Clair"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Sombre"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Accueil"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Tableau"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Navigation principale"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Changer de langue"
+msgstr ""
+
+#. 0: preferenceLabels[preference]
+#: src/components/Header.tsx
+msgid "Mode de couleur : {0}"
+msgstr ""
+
+#: src/components/Header.tsx
+msgid "Mini-Trello"
+msgstr ""

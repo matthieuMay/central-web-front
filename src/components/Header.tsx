@@ -1,13 +1,8 @@
-import { Box, Button, Flex, Heading } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, Menu, Portal } from '@chakra-ui/react'
 import type { ReactElement } from 'react'
 import { NavLink } from 'react-router'
 import { useColorMode, type ColorModePreference } from '../color-mode-context'
-
-const PREFERENCE_LABELS: Record<ColorModePreference, string> = {
-  system: 'Système',
-  light: 'Clair',
-  dark: 'Sombre',
-}
+import { LOCALE_NAMES, LOCALES, useLocale } from '../locale-context'
 
 const NEXT_PREFERENCE: Record<ColorModePreference, ColorModePreference> = {
   system: 'light',
@@ -49,6 +44,13 @@ const PREFERENCE_ICONS: Record<ColorModePreference, ReactElement> = {
 
 export function Header() {
   const { preference, setPreference } = useColorMode()
+  const { locale, setLocale } = useLocale()
+
+  const preferenceLabels: Record<ColorModePreference, string> = {
+    system: 'Système',
+    light: 'Clair',
+    dark: 'Sombre',
+  }
 
   return (
     <Box as="header" borderBottomWidth="1px" bg="bg.panel">
@@ -66,10 +68,28 @@ export function Header() {
             <NavLink className="nav-link" to="/" end>Accueil</NavLink>
             <NavLink className="nav-link" to="/board">Tableau</NavLink>
           </Flex>
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button variant="ghost" size="sm" aria-label="Changer de langue">
+                {LOCALE_NAMES[locale]}
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content>
+                  {LOCALES.map((code) => (
+                    <Menu.Item key={code} value={code} onClick={() => setLocale(code)}>
+                      <Menu.ItemText>{LOCALE_NAMES[code]}</Menu.ItemText>
+                    </Menu.Item>
+                  ))}
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
           <Button
             variant="ghost"
             size="sm"
-            aria-label={`Mode de couleur : ${PREFERENCE_LABELS[preference]}`}
+            aria-label={`Mode de couleur : ${preferenceLabels[preference]}`}
             onClick={() => setPreference(NEXT_PREFERENCE[preference])}
           >
             {PREFERENCE_ICONS[preference]}

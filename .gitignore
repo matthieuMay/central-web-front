@@ -11,6 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
+
+# wuchale generated compiled catalogs and proxies (built from the committed PO files)
+src/locales/.wuchale
 
 # Editor directories and files
 .vscode/*

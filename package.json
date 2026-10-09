@@ -11,6 +11,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
+    "i18n": "wuchale",
     "mcp:chrome-devtools": "chrome-devtools-mcp",
     "preview": "vite preview"
   },
@@ -21,6 +22,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.14.0",
     "@tanstack/react-query": "^5.104.1",
+    "@wuchale/jsx": "^0.13.0",
     "immer": "^11.1.21",
     "motion": "^14.0.0",
     "react": "^19.2.8",
@@ -29,17 +31,20 @@
     "use-immer": "^0.11.0"
   },
   "devDependencies": {
+    "@openrouter/ai-sdk-provider": "^3.1.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "ai": "^7.0.136",
     "chrome-devtools-mcp": "^1.10.1",
     "jsdom": "^29.1.1",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wuchale": "^0.26.7"
   }
 }

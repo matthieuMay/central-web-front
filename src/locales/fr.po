@@ -1,0 +1,188 @@
+msgid ""
+msgstr ""
+"Source-Language: fr\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3\n"
+"X-Plurals-Order: one, many, other\n"
+
+#: src/locale.tsx
+msgid "Chargement de la langue"
+msgstr "Chargement de la langue"
+
+#: src/pages/HomePage.tsx
+msgid "Ouvrir le tableau"
+msgstr "Ouvrir le tableau"
+
+#: src/pages/HomePage.tsx
+msgid "Bienvenue sur Mini-Trello"
+msgstr "Bienvenue sur Mini-Trello"
+
+#: src/pages/HomePage.tsx
+msgid "Retrouvez vos tâches dans un tableau partagé."
+msgstr "Retrouvez vos tâches dans un tableau partagé."
+
+#: src/pages/NotFoundPage.tsx
+msgid "Retour à l’accueil"
+msgstr "Retour à l’accueil"
+
+#: src/pages/NotFoundPage.tsx
+msgid "Page introuvable"
+msgstr "Page introuvable"
+
+#: src/pages/NotFoundPage.tsx
+msgid "Cette adresse ne correspond à aucune page."
+msgstr "Cette adresse ne correspond à aucune page."
+
+#. 0: (error as Error).message
+#: src/components/Board.tsx
+msgid "Could not load the board: {0}"
+msgstr "Could not load the board: {0}"
+
+#: src/components/Board.tsx
+msgid "Loading board"
+msgstr "Loading board"
+
+#. 0: title
+#: src/components/Board.tsx
+msgid "{0} completed!"
+msgstr "{0} completed!"
+
+#. 0: title; 1: columnTitle(column)
+#: src/components/Board.tsx
+msgid "Moved {0} to {1}"
+msgstr "Moved {0} to {1}"
+
+#. 0: title
+#: src/components/Board.tsx
+msgid "Could not move {0}"
+msgstr "Could not move {0}"
+
+#: src/components/Board.tsx
+msgid "Board announcements"
+msgstr "Board announcements"
+
+#. 0: card.title
+#: src/components/Card.tsx
+msgid "Ouvrir la carte {0}"
+msgstr "Ouvrir la carte {0}"
+
+#: src/components/Card.tsx
+msgid "Ouvrir"
+msgstr "Ouvrir"
+
+#: src/components/CardAssignees.tsx
+msgid "Les membres sont indisponibles."
+msgstr "Les membres sont indisponibles."
+
+#: src/components/CardAssignees.tsx
+msgid "Aucune personne disponible."
+msgstr "Aucune personne disponible."
+
+#: src/components/CardChecklist.tsx
+msgid "Ajouter"
+msgstr "Ajouter"
+
+#: src/components/CardChecklist.tsx
+msgid "Aucune tâche."
+msgstr "Aucune tâche."
+
+#: src/components/CardChecklist.tsx
+#: src/components/CardChecklist.tsx
+msgid "Nouvelle tâche"
+msgstr "Nouvelle tâche"
+
+#: src/components/CardComments.tsx
+msgid "Aucun commentaire."
+msgstr "Aucun commentaire."
+
+#: src/components/CardComments.tsx
+msgid "Les commentaires sont indisponibles."
+msgstr "Les commentaires sont indisponibles."
+
+#: src/components/CardComments.tsx
+msgid "Auteur du commentaire"
+msgstr "Auteur du commentaire"
+
+#: src/components/CardComments.tsx
+msgid "Nouveau commentaire"
+msgstr "Nouveau commentaire"
+
+#: src/components/CardComments.tsx
+msgid "Écrire un commentaire"
+msgstr "Écrire un commentaire"
+
+#: src/components/CardComments.tsx
+msgid "Publier"
+msgstr "Publier"
+
+#: src/components/CardDetail.tsx
+msgid "Chargement des personnes"
+msgstr "Chargement des personnes"
+
+#: src/components/CardDetail.tsx
+msgid "Impossible de charger les personnes."
+msgstr "Impossible de charger les personnes."
+
+#: src/components/CardDetail.tsx
+msgid "Membres"
+msgstr "Membres"
+
+#: src/components/CardDetail.tsx
+msgid "Commentaires"
+msgstr "Commentaires"
+
+#: src/components/CardDetail.tsx
+msgid "Tâches à cocher"
+msgstr "Tâches à cocher"
+
+#: src/components/CardDetail.tsx
+msgid "La modification n'a pas pu être enregistrée."
+msgstr "La modification n'a pas pu être enregistrée."
+
+#: src/components/CardDetail.tsx
+msgid "Fermer"
+msgstr "Fermer"
+
+#: src/components/Column.tsx
+msgid "No cards yet"
+msgstr "No cards yet"
+
+#: src/components/Header.tsx
+msgid "Système"
+msgstr "Système"
+
+#: src/components/Header.tsx
+msgid "Clair"
+msgstr "Clair"
+
+#: src/components/Header.tsx
+msgid "Sombre"
+msgstr "Sombre"
+
+#: src/components/Header.tsx
+msgid "Accueil"
+msgstr "Accueil"
+
+#: src/components/Header.tsx
+msgid "Tableau"
+msgstr "Tableau"
+
+#: src/components/Header.tsx
+msgid "Navigation principale"
+msgstr "Navigation principale"
+
+#: src/components/Header.tsx
+msgid "Changer de langue"
+msgstr "Changer de langue"
+
+#. 0: preferenceLabels[preference]
+#: src/components/Header.tsx
+msgid "Mode de couleur : {0}"
+msgstr "Mode de couleur : {0}"
+
+#: src/components/Header.tsx
+msgid "Mini-Trello"
+msgstr "Mini-Trello"

@@ -75,3 +75,23 @@ _Avoid_: todo, task, subtask, step
 **Card Detail**:
 The Dialog surface where a Card's Assignees, Comments, and Checklist Items are viewed and changed.
 _Avoid_: card modal, card panel, card editor
+
+**Locale**:
+A language the interface can render; the app ships French, English, and Spanish.
+_Avoid_: language, language code, lang
+
+**Source Locale**:
+The Locale the interface's Messages are authored in — French — and the fallback when a Message has no translation.
+_Avoid_: default language, base language, original
+
+**Active Locale**:
+The Locale currently rendered: the user's chosen Locale, or, absent a choice, the one derived from the browser, falling back to the Source Locale.
+_Avoid_: current language, selected language, target language
+
+**Message**:
+A unit of translatable interface text.
+_Avoid_: string, key, label, copy
+
+**Catalog**:
+A Locale's translated Messages, taken together.
+_Avoid_: translation file, dictionary, bundle
