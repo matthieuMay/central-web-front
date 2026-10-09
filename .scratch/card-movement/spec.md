@@ -9,6 +9,7 @@ State: implemented; focused browser results and limitations are recorded in [val
 - Up/Down moves the selected card one place within its column. The first card cannot move up and the last cannot move down; no wrapping or unintended API request.
 - Drag an individual card to a visible insertion point before, between, or after cards, within its own column or another column. An empty column accepts the card at index zero. All columns, including edge columns, accept drops.
 - A drop outside a valid target, drag cancellation, or a drop at the unchanged position performs no write or celebration.
+- Dropping outside a column returns the card from its release point to its original place with a spring animation, restoring its opacity and straightening its tilt. Keep focus on the source card and announce cancellation; reduced motion completes the return without spatial travel.
 - Inputs, edit controls, and the edit drawer retain their keyboard behavior. Editing controls do not initiate dragging. Keep stable card IDs and focus on the moved card.
 - Mouse and keyboard are the initial input methods. Multi-card dragging is deferred under the user's small-change condition; see [Assess React DnD integration and the multi-card bonus](issues/02-multi-card-feasibility.md).
 
@@ -69,7 +70,7 @@ The user authorized direct implementation after planning. Changes were delivered
 - Reorder the middle/first/last card using Up/Down and drag; reload and verify identical order.
 - Move left/right with keyboard and buttons; confirm append behavior, selection/focus, empty destination and edge no-ops.
 - Drop before the first card, between cards, after the last card and into an empty edge column; verify after-removal index arithmetic in both drag directions.
-- Drop outside the board or at the original position; ensure no request or burst.
+- Drop outside the board; verify return starts at the release point, ends at the original position, and unlocks interaction without a request or burst. A same-position drop also performs no write or celebration.
 - Simulate a failed PUT; confirm reverse animated rollback, visible error and selection/focus. If forward arrival completed before failure, its burst is allowed; rollback never triggers another burst. Repeat with an overlapping create/edit to verify ledger replay.
 - Verify an insertion preview never writes to the server and cancelling it leaves authoritative board data intact.
 - If PUT succeeds but the subsequent GET fails, report reconciliation failure separately and offer retry; do not falsely treat the successful write as rejected. A transport failure may occur after server commit, so rollback is provisional until authoritative refetch.

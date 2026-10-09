@@ -16,6 +16,8 @@ Used Chrome MCP against the existing dev frontend at `http://localhost:5173/boar
 | Reverse travel | Recorded rollback frames after rejecting a request: nonzero translation back toward the source, then identity. No extra confetti burst. |
 | Empty destination | Temporarily moved the sole Doing card out, then dragged it back into the empty region. PUT used `{ "column": "doing", "position": 0 }`; GET confirmed placement and focus was retained. |
 | Boundary, unchanged and outside drops | Impossible left/bottom moves, a same-position drag and an outside drop produced no additional move request or burst. Drag preview and insertion marker were removed. |
+| Animated outside-drop return | Native Chrome drag onto the board heading recorded release origin `(569.25, 152)`, first transform `translate3d(57px, -129px, 0px) rotate(-3deg)`, and final identity at source `(512.25, 281)`. Board order remained unchanged, no PUT or burst occurred, focus stayed on the card, and drag controls became available again. Pausing layout projection while dragging removed a competing initial layout jump. |
+| Failed-drop regression after cancellation change | Rejected a cross-column PUT before it reached the server. Forward arrival started from release with opacity `0.88`; rollback used an upright reverse transform and ended at identity. One forward burst, original order restored, focus retained, controls enabled, and visible error. Removed the temporary interception afterward. |
 | Reduced motion | Forced the application's `prefers-reduced-motion` media-query preference through Chrome's navigation script. Reorder remained usable, no transform or particles were emitted, focus was preserved and controls became available again. |
 | Reload persistence and cleanup | API GET and fresh page loads showed persisted positions. Temporary request interceptions and the reduced-motion test tab were removed. Test moves were restored as checks completed; no test card was saved and the user’s subsequent changes were retained. |
 
@@ -32,5 +34,6 @@ Used Chrome MCP against the existing dev frontend at `http://localhost:5173/boar
 - `f6df14b` — optimistic persistent placement, keyboard reorder, dependencies and placement tests.
 - `5a62e2c` — positional DnD, drag preview, Motion arrival and confetti.
 - `d2cde92` — release-position landing and explicit reverse rollback.
+- `41b72d6` — final validation documentation and interaction guards.
 
-Final documentation/interaction guard changes follow in the closing commit. The pre-existing lockfile changes and starting prompt remain outside these commits.
+The outside-drop return follows in an additional commit. The pre-existing lockfile changes and starting prompt remain outside these commits.

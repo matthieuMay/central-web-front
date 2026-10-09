@@ -15,12 +15,13 @@ type ColumnProps = {
   onEditCard: (id: string) => void
   disabled: boolean
   onMoveCard: (input: MoveCardInput, origin?: DragPosition) => boolean
+  onCancelDrag: (id: string, origin: DragPosition) => void
   landing: CardLanding | null
   arrivingCardId: string | null
   onArrival: (id: string) => boolean
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, arrivingCardId, onArrival, landing }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, onCancelDrag, arrivingCardId, onArrival, landing }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -79,7 +80,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
       <Stack ref={(node) => { cardsRef.current = node; drop(node) }} role="group" aria-label={`Cards in ${column.title}`} gap={3} minH="6rem" position="relative" borderRadius="md" outline={isOver && canDrop ? '2px dashed' : undefined} outlineColor="border.info" outlineOffset="8px" pb={3}>
         {column.cards.length === 0 && <Text color="fg.muted" p={4}>Drop a card here</Text>}
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} disabled={disabled} arriving={card.id === arrivingCardId} onArrival={() => onArrival(card.id)} dropOrigin={landing?.cardId === card.id ? landing.origin : null} returning={landing?.cardId === card.id && !!landing.returning} />
+          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} disabled={disabled} arriving={card.id === arrivingCardId} onArrival={() => onArrival(card.id)} onCancelDrag={onCancelDrag} dropOrigin={landing?.cardId === card.id ? landing.origin : null} returning={landing?.cardId === card.id ? landing.returning : undefined} />
         ))}
         {isOver && canDrop && insertion && <Box aria-hidden="true" data-drop-indicator="" position="absolute" top={`${insertion.top}px`} insetInline={0} height="3px" bg="border.info" borderRadius="full" pointerEvents="none" zIndex={2} boxShadow="0 0 12px var(--chakra-colors-border-info)" />}
       </Stack>

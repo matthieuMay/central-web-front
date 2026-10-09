@@ -14,12 +14,13 @@ type BoardProps = {
   onEditCard: (id: string) => void
   disabled: boolean
   onMoveCard: (input: MoveCardInput, origin?: DragPosition) => boolean
+  onCancelDrag: (id: string, origin: DragPosition) => void
   landing: CardLanding | null
   arrivingCardId: string | null
   onArrival: (id: string) => boolean
 }
 
-export function Board({ board, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, arrivingCardId, onArrival, landing }: BoardProps) {
+export function Board({ board, selectedCardId, onSelectCard, onEditCard, disabled, onMoveCard, onCancelDrag, arrivingCardId, onArrival, landing }: BoardProps) {
   return (
     <DndProvider backend={HTML5Backend}>
     <LayoutGroup id="board-cards">
@@ -27,7 +28,7 @@ export function Board({ board, selectedCardId, onSelectCard, onEditCard, disable
       <Heading as="h1" size="2xl">{board.title}</Heading>
       <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
         {board.columns.map((column) => (
-          <Column key={column.id} column={column} selectedCardId={selectedCardId} onSelectCard={onSelectCard} onEditCard={onEditCard} disabled={disabled} onMoveCard={onMoveCard} arrivingCardId={arrivingCardId} onArrival={onArrival} landing={landing} />
+          <Column key={column.id} column={column} selectedCardId={selectedCardId} onSelectCard={onSelectCard} onEditCard={onEditCard} disabled={disabled} onMoveCard={onMoveCard} onCancelDrag={onCancelDrag} arrivingCardId={arrivingCardId} onArrival={onArrival} landing={landing} />
         ))}
       </SimpleGrid>
     </Stack>

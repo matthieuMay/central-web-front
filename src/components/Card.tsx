@@ -6,11 +6,11 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import type { CardData } from '../types/board'
 import { cardElementId, editElementId } from './cardIds'
 import Confetti from './Confetti'
-import type { DragPosition } from './CardDragPreview'
+import type { CardDragItem, CardLanding, DragPosition } from './CardDragPreview'
 
-type CardProps = { card: CardData; selected: boolean; onSelect: () => void; onEdit: () => void; disabled: boolean; arriving: boolean; onArrival: () => boolean; dropOrigin: DragPosition | null; returning: boolean }
+type CardProps = { card: CardData; selected: boolean; onSelect: () => void; onEdit: () => void; disabled: boolean; arriving: boolean; onArrival: () => boolean; onCancelDrag: (id: string, origin: DragPosition) => void; dropOrigin: DragPosition | null; returning: CardLanding['returning'] }
 
-export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onArrival, dropOrigin, returning }: CardProps) {
+export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onArrival, onCancelDrag, dropOrigin, returning }: CardProps) {
   const reducedMotion = useReducedMotion()
   const animating = useRef(false)
   const element = useRef<HTMLElement | null>(null)
@@ -18,7 +18,7 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
   const arrivalHandler = useRef(onArrival)
   const [scope, animate] = useAnimate<HTMLDivElement>()
   const [burst, setBurst] = useState(0)
-  const [{ isDragging }, drag, preview] = useDrag(() => ({
+  const [{ isDragging }, drag, preview] = useDrag<CardDragItem, { moved: boolean }, { isDragging: boolean }>(() => ({
     type: 'CARD',
     item: () => {
       const cardRect = element.current!.getBoundingClientRect()
@@ -26,8 +26,13 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
       return { cardId: card.id, width: cardRect.width, offset: { x: cardRect.left - handleRect.left, y: cardRect.top - handleRect.top } }
     },
     canDrag: !disabled,
+    end: (item, monitor) => {
+      if (monitor.didDrop()) return
+      const source = monitor.getSourceClientOffset()
+      if (source) onCancelDrag(item.cardId, { x: source.x + item.offset.x, y: source.y + item.offset.y })
+    },
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  }), [card.id, disabled])
+  }), [card.id, disabled, onCancelDrag])
 
   useEffect(() => { preview(getEmptyImage(), { captureDraggingState: true }) }, [preview])
 
@@ -42,14 +47,15 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
     const node = element.current!.parentElement!
     node.style.transform = 'none'
     const rect = node.getBoundingClientRect()
-    const from = `translate3d(${dropOrigin.x - rect.left}px, ${dropOrigin.y - rect.top}px, 0) rotate(${returning ? 0 : -3}deg)`
+    const opacity = returning === 'failed' ? 1 : 0.88
+    const from = `translate3d(${dropOrigin.x - rect.left}px, ${dropOrigin.y - rect.top}px, 0) rotate(${returning === 'failed' ? 0 : -3}deg)`
     node.style.transform = from
-    node.style.opacity = returning ? '1' : '0.88'
+    node.style.opacity = String(opacity)
     animating.current = true
     let cancelled = false
     const playback = animate(node, {
       transform: [from, 'translate3d(0, 0, 0) rotate(0deg)'],
-      opacity: [returning ? 1 : 0.88, 1],
+      opacity: [opacity, 1],
     }, { type: 'spring', stiffness: 280, damping: 32 })
     void playback.then(() => { if (!cancelled) { animating.current = false; finishArrival() } })
     return () => { cancelled = true; playback.stop(); animating.current = false }
@@ -72,7 +78,7 @@ export function Card({ card, selected, onSelect, onEdit, disabled, arriving, onA
   }
 
   return (
-    <motion.div ref={scope} layout={!reducedMotion && !(dropOrigin && (arriving || returning))} layoutId={reducedMotion || dropOrigin ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }} onLayoutAnimationStart={() => { animating.current = true }} onLayoutAnimationComplete={() => { animating.current = false; finishArrival() }}>
+    <motion.div ref={scope} layout={!reducedMotion && !isDragging && !(dropOrigin && (arriving || returning))} layoutId={reducedMotion || isDragging || dropOrigin ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }} onLayoutAnimationStart={() => { animating.current = true }} onLayoutAnimationComplete={() => { animating.current = false; finishArrival() }}>
       <Box
         ref={element} as="article" id={cardElementId(card.id)} data-card-id={card.id} tabIndex={0} onClick={select}
         onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onSelect() } }}

@@ -29,7 +29,7 @@ export function BoardPage() {
     const rect = document.getElementById(cardElementId(input.cardId))?.getBoundingClientRect()
     pendingArrival.current = null
     setArrival(null)
-    setLanding(rect ? { cardId: input.cardId, origin: { x: rect.left, y: rect.top }, returning: true } : null)
+    setLanding(rect ? { cardId: input.cardId, origin: { x: rect.left, y: rect.top }, returning: 'failed' } : null)
     focusAfterMove.current = input.cardId
   })
   const busy = writes > 0 || isFetching || isError || !!editingCardId || !!arrival || !!landing?.returning
@@ -72,9 +72,15 @@ export function BoardPage() {
     return true
   }, [queryClient, busy, move])
 
+  const cancelDrag = useCallback((id: string, origin: DragPosition) => {
+    setLanding({ cardId: id, origin, returning: 'cancelled' })
+    document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
+  }, [])
+
   const arrived = (id: string) => {
     if (landing?.returning && landing.cardId === id) {
-      setLanding({ ...landing, returning: false })
+      if (landing.returning === 'cancelled') setAnnouncement('Drop cancelled. Card returned to its original position.')
+      setLanding({ ...landing, returning: undefined })
       return false
     }
     if (!arrival || pendingArrival.current !== arrival || arrival.cardId !== id) return false
@@ -132,7 +138,7 @@ export function BoardPage() {
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
         {isError && <Text role="alert" color="red.700">Could not refresh board: {error.message}. <Button size="xs" onClick={() => void refetch()}>Retry</Button></Text>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} onCancelDrag={cancelDrag} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )

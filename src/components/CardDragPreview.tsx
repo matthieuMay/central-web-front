@@ -4,7 +4,7 @@ import { useDragLayer } from 'react-dnd'
 import type { BoardData } from '../types/board'
 
 export type DragPosition = { x: number; y: number }
-export type CardLanding = { cardId: string; origin: DragPosition; returning?: boolean }
+export type CardLanding = { cardId: string; origin: DragPosition; returning?: 'cancelled' | 'failed' }
 export type CardDragItem = { cardId: string; width: number; offset: DragPosition }
 
 export function CardDragPreview({ board }: { board: BoardData }) {
