@@ -32,10 +32,10 @@ export function editCard({ cardId, title, description }: { cardId: string; title
   })
 }
 
-export function moveCard({ cardId, column }: { cardId: string; column: string }) {
+export function moveCard({ cardId, column, position }: { cardId: string; column: string; position?: number }) {
   return request<BoardData>(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ column }),
+    body: JSON.stringify({ column, ...(position === undefined ? {} : { position }) }),
   })
 }

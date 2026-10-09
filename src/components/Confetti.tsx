@@ -7,6 +7,7 @@ interface Particle {
   y: number;
   rotate: number;
   color: string;
+  round: boolean;
 }
 
 export default function Confetti({particleCount = 0}: {particleCount?:number}) {
@@ -22,7 +23,8 @@ export default function Confetti({particleCount = 0}: {particleCount?:number}) {
       x: (Math.random() - 0.5) * 300, // Dispersion horizontale
       y: -(Math.random() * 200 + 100), // Propulsion vers le haut
       rotate: Math.random() * 360,
-      color: colors[Math.floor(Math.random() * colors.length)]
+      color: colors[Math.floor(Math.random() * colors.length)],
+      round: Math.random() > 0.5
     }));
 
     setParticles(newParticles);
@@ -54,7 +56,7 @@ export default function Confetti({particleCount = 0}: {particleCount?:number}) {
                 width: '10px',
                 height: '10px',
                 backgroundColor: p.color,
-                borderRadius: Math.random() > 0.5 ? '50%' : '0px' // Forme mixte (cercles / carrés)
+                borderRadius: p.round ? '50%' : '0px' // Forme mixte (cercles / carrés)
               }}
             />
           ))}

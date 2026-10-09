@@ -1,0 +1,1 @@
+/mattpocock-skills:wayfinder we're about to code a new feature of selecting cards in a trello, then being able to move it from a column to another by simply using the keyboard arrows and changing it's hierarchy within a column using the up/down arrows. When arriving to the end of the columns or top or bottom of a column, impossible to move the card further.

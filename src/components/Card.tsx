@@ -1,13 +1,21 @@
 import { Box, Heading, IconButton, Text } from '@chakra-ui/react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { MouseEvent } from 'react'
+import { useDrag } from 'react-dnd'
 import type { CardData } from '../types/board'
+import { CARD_DRAG_TYPE, type CardDragItem } from './cardDrag'
 import { cardElementId, editElementId } from './cardIds'
 
-type CardProps = { card: CardData; selected: boolean; onSelect: () => void; onEdit: () => void }
+type CardProps = { card: CardData; selected: boolean; dragDisabled: boolean; onSelect: () => void; onEdit: () => void }
 
-export function Card({ card, selected, onSelect, onEdit }: CardProps) {
+export function Card({ card, selected, dragDisabled, onSelect, onEdit }: CardProps) {
   const reducedMotion = useReducedMotion()
+  const [{ isDragging }, drag] = useDrag<CardDragItem, void, { isDragging: boolean }>(() => ({
+    type: CARD_DRAG_TYPE,
+    item: { id: card.id },
+    canDrag: !dragDisabled,
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  }), [card.id, dragDisabled])
 
   function select(event: MouseEvent<HTMLElement>) {
     if ((event.target as Element).closest('button, input, textarea, select, a, [contenteditable]:not([contenteditable="false"])')) return
@@ -18,6 +26,7 @@ export function Card({ card, selected, onSelect, onEdit }: CardProps) {
     <motion.div layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }}>
       <Box
         as="article" id={cardElementId(card.id)} tabIndex={-1} onClick={select}
+        ref={(node: HTMLElement | null) => { drag(node) }} opacity={isDragging ? 0.4 : 1} cursor={dragDisabled ? undefined : 'grab'}
         className="board-card" aria-current={selected ? 'true' : undefined}
         bg={selected ? 'bg.info' : 'bg'} borderColor={selected ? 'border.info' : 'border'}
         borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere"

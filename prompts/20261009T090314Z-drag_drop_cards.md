@@ -1,0 +1,1 @@
+it works for me, now I would like to implement a drag and drop feature, using react-dnd this feature should allow us to rearrange the order of the cards within a column, or if we switch columns, the card should land where are arrow wa leading to. An empty column should also be able to receive new cards
