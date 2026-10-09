@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { Alert, Heading, SimpleGrid, Stack, Text } from '@chakra-ui/react'
-import type { BoardData, CardCollectionsUpdate, CardData, UserData } from '../types/board'
+import type { BoardData, CardCollectionsUpdate, CardData, UserData, Urgency } from '../types/board'
 import { Column } from './Column'
 import Confetti from './Confetti'
 
 type BoardProps = { board: BoardData }
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? '/api'
+const urgencyRank: Record<Urgency, number> = {
+  extremely_urgent: 0,
+  very_urgent: 1,
+  moderately_urgent: 2,
+  softly_urgent: 3,
+}
 
 export function Board({ board }: BoardProps) {
   const [currentBoard, setCurrentBoard] = useState(board)
@@ -112,7 +118,10 @@ export function Board({ board }: BoardProps) {
         ...current,
         columns: current.columns.map((column) => ({
           ...column,
-          cards: column.cards.map((card) => card.id === cardId ? updatedCard : card),
+          cards: column.cards
+            .map((card) => card.id === cardId ? updatedCard : card)
+              .sort((left, right) => urgencyRank[left.urgency ?? 'softly_urgent'] -
+                urgencyRank[right.urgency ?? 'softly_urgent']),
         })),
       }))
       return true
