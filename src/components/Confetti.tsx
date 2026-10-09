@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react'
 
 interface Particle {
   id: number;
@@ -7,36 +6,34 @@ interface Particle {
   y: number;
   rotate: number;
   color: string;
+  shape: 'circle' | 'square';
 }
 
-export default function Confetti({particleCount = 0}: {particleCount?:number}) {
-  const [particles, setParticles] = useState<Particle[]>([]);
+const colors = ['#ff0055', '#0099ff', '#00ff66', '#ffaa00']
+const particles: Particle[] = Array.from({ length: 40 }, (_, index) => ({
+  id: index,
+  x: ((index % 8) - 3.5) * 35 + (index * 17) % 19,
+  y: -(100 + (index * 37) % 200),
+  rotate: (index * 97) % 360,
+  color: colors[index % colors.length],
+  shape: index % 2 === 0 ? 'circle' : 'square',
+}))
 
-  React.useEffect(() => {
-    if (particleCount <= 0) return;
-    const colors = ['#ff0055', '#0099ff', '#00ff66', '#ffaa00'];
-    
-    // Génère 40 confettis avec des trajectoires aléatoires
-    const newParticles = Array.from({ length: 40 }).map((_, i) => ({
-      id: Date.now() + i,
-      x: (Math.random() - 0.5) * 300, // Dispersion horizontale
-      y: -(Math.random() * 200 + 100), // Propulsion vers le haut
-      rotate: Math.random() * 360,
-      color: colors[Math.floor(Math.random() * colors.length)]
-    }));
-
-    setParticles(newParticles);
-
-    // Nettoie les particules après l'animation
-    const timeoutId = setTimeout(() => setParticles([]), 2000);
-    return () => clearTimeout(timeoutId);
-  },[particleCount]);
+export default function Confetti({ particleCount = 0 }: { particleCount?: number }) {
+  if (particleCount <= 0) return null
 
   return (
+    <div aria-hidden="true" style={{
+      position: 'fixed',
+      inset: 0,
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      zIndex: 1500,
+    }}>
         <AnimatePresence>
           {particles.map((p) => (
             <motion.div
-              key={p.id}
+              key={`${particleCount}-${p.id}`}
               initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
               animate={{ 
                 x: p.x, 
@@ -51,13 +48,16 @@ export default function Confetti({particleCount = 0}: {particleCount?:number}) {
               }}
               style={{
                 position: 'absolute',
+                left: '50%',
+                top: '35%',
                 width: '10px',
                 height: '10px',
                 backgroundColor: p.color,
-                borderRadius: Math.random() > 0.5 ? '50%' : '0px' // Forme mixte (cercles / carrés)
+                borderRadius: p.shape === 'circle' ? '50%' : '0px',
               }}
             />
           ))}
         </AnimatePresence>
+    </div>
   );
 }
