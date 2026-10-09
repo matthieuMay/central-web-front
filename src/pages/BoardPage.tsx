@@ -23,7 +23,6 @@ export function BoardPage() {
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
-  const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
 
   useLayoutEffect(() => {
