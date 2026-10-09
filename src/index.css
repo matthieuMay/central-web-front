@@ -1,21 +1,45 @@
+:root {
+  color-scheme: light;
+  --app-background: #f8fafc;
+  --app-surface: #ffffff;
+  --app-column: #f1f5f9;
+  --app-border: #e2e8f0;
+  --app-text: #0f172a;
+  --app-muted-text: #475569;
+  --app-link: #1d4ed8;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --app-background: #0f172a;
+  --app-surface: #1e293b;
+  --app-column: #1e293b;
+  --app-border: #475569;
+  --app-text: #f8fafc;
+  --app-muted-text: #cbd5e1;
+  --app-link: #93c5fd;
+}
+
 body {
+  background: var(--app-background);
+  color: var(--app-text);
   margin: 0;
 }
 
 .nav-link {
   border-radius: 0.375rem;
-  color: #334155;
+  color: var(--app-text);
   padding: 0.5rem 0.75rem;
   text-decoration: none;
 }
 
 .nav-link:hover,
 .nav-link[aria-current='page'] {
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: color-mix(in srgb, var(--app-link) 18%, transparent);
+  color: var(--app-link);
 }
 
 .nav-link:focus-visible {
-  outline: 2px solid #1d4ed8;
+  outline: 2px solid var(--app-link);
   outline-offset: 2px;
 }
