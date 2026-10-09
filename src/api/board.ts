@@ -1,4 +1,5 @@
 import type { BoardData } from '../types/board'
+import type { MoveCardInput } from './placement'
 
 export const boardKey = ['board', 'mini-trello'] as const
 
@@ -32,10 +33,10 @@ export function editCard({ cardId, title, description }: { cardId: string; title
   })
 }
 
-export function moveCard({ cardId, column }: { cardId: string; column: string }) {
+export function moveCard({ cardId, column, position }: MoveCardInput) {
   return request<BoardData>(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ column }),
+    body: JSON.stringify({ column, position }),
   })
 }
