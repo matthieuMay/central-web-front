@@ -16,18 +16,16 @@ export default function Confetti({particleCount = 0}: {particleCount?:number}) {
     if (particleCount <= 0) return;
     const colors = ['#ff0055', '#0099ff', '#00ff66', '#ffaa00'];
     
-    // Génère 40 confettis avec des trajectoires aléatoires
     const newParticles = Array.from({ length: 40 }).map((_, i) => ({
       id: Date.now() + i,
-      x: (Math.random() - 0.5) * 300, // Dispersion horizontale
-      y: -(Math.random() * 200 + 100), // Propulsion vers le haut
+      x: (Math.random() - 0.5) * 300,
+      y: -(Math.random() * 200 + 100),
       rotate: Math.random() * 360,
       color: colors[Math.floor(Math.random() * colors.length)]
     }));
 
     setParticles(newParticles);
 
-    // Nettoie les particules après l'animation
     const timeoutId = setTimeout(() => setParticles([]), 2000);
     return () => clearTimeout(timeoutId);
   },[particleCount]);
@@ -51,10 +49,13 @@ export default function Confetti({particleCount = 0}: {particleCount?:number}) {
               }}
               style={{
                 position: 'absolute',
+                left: '50%',
+                top: '50%',
                 width: '10px',
                 height: '10px',
                 backgroundColor: p.color,
-                borderRadius: Math.random() > 0.5 ? '50%' : '0px' // Forme mixte (cercles / carrés)
+                borderRadius: Math.random() > 0.5 ? '50%' : '0px',
+                pointerEvents: 'none',
               }}
             />
           ))}

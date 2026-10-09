@@ -12,9 +12,11 @@ type ColumnProps = {
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
   onMoveCard: (cardId: string, columnId: string, position: number) => void
+  confettiCardId: string | null
+  confettiBurst: number
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMoveCard }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMoveCard, confettiCardId, confettiBurst }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -64,7 +66,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMov
         {column.cards.map((card, index) => (
           <div key={card.id}>
             {insertionPosition === index && <Box height="5rem" border="2px dashed" borderColor="border.info" borderRadius="md" />}
-            <Card card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
+            <Card card={card} selected={card.id === selectedCardId} confettiBurst={card.id === confettiCardId ? confettiBurst : 0} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
           </div>
         ))}
         {insertionPosition === column.cards.length && <Box height="5rem" border="2px dashed" borderColor="border.info" borderRadius="md" />}

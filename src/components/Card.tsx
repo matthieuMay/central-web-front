@@ -4,10 +4,11 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { MouseEvent } from 'react'
 import type { CardData } from '../types/board'
 import { cardElementId, editElementId } from './cardIds'
+import Confetti from './Confetti'
 
-type CardProps = { card: CardData; selected: boolean; onSelect: () => void; onEdit: () => void }
+type CardProps = { card: CardData; selected: boolean; confettiBurst?: number; onSelect: () => void; onEdit: () => void }
 
-export function Card({ card, selected, onSelect, onEdit }: CardProps) {
+export function Card({ card, selected, confettiBurst = 0, onSelect, onEdit }: CardProps) {
   const reducedMotion = useReducedMotion()
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'card',
@@ -25,10 +26,11 @@ export function Card({ card, selected, onSelect, onEdit }: CardProps) {
       <Box ref={drag} opacity={isDragging ? 0.45 : 1} as="article" id={cardElementId(card.id)} tabIndex={-1} onClick={select}
         className="board-card" aria-current={selected ? 'true' : undefined}
         bg={selected ? 'bg.info' : 'bg'} borderColor={selected ? 'border.info' : 'border'}
-        borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere">
+        borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere" position="relative">
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
+        <Confetti particleCount={confettiBurst} />
       </Box>
     </motion.div>
   )

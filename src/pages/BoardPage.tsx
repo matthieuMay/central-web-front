@@ -6,7 +6,6 @@ import { useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
-import Confetti from '../components/Confetti'
 import { entersLastColumn, moveCardToPosition, moveCardWithinColumn, type MoveDirection } from '../domain/boardMovement'
 
 function isControl(target: EventTarget | null) {
@@ -17,7 +16,7 @@ export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
-  const [confettiBurst, setConfettiBurst] = useState(0)
+  const [confetti, setConfetti] = useState<{ cardId: string; burst: number } | null>(null)
   const move = useMoveCard()
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
@@ -49,7 +48,9 @@ export function BoardPage() {
     moving.current = true
     move.reset()
     focusAfterMove.current = { id: cardId, destination: destination.id }
-    if (entersLastColumn(data, next, cardId)) setConfettiBurst((value) => value + 1)
+    if (entersLastColumn(data, next, cardId)) {
+      setConfetti((current) => ({ cardId, burst: (current?.burst ?? 0) + 1 }))
+    }
     move.mutate({ cardId, column: destination.id, ...(position === undefined ? {} : { position }) }, {
       onError: () => { focusAfterMove.current = null },
       onSettled: () => { moving.current = false },
@@ -100,8 +101,7 @@ export function BoardPage() {
         )}
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
       </Box>
-      <Confetti particleCount={confettiBurst} />
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} onMoveCard={(cardId, columnId, position) => moveCard(cardId, columnId, position)} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} onMoveCard={(cardId, columnId, position) => moveCard(cardId, columnId, position)} confettiCardId={confetti?.cardId ?? null} confettiBurst={confetti?.burst ?? 0} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )
