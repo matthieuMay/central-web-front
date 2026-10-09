@@ -1,5 +1,6 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import { useRef, useState, type FormEvent } from 'react'
+import { useDrop } from 'react-dnd'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
@@ -10,12 +11,29 @@ type ColumnProps = {
   selectedCardId: string | null
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
+  onMoveCard: (cardId: string, columnId: string, position: number) => void
 }
 
-export function Column({ column, selectedCardId, onSelectCard, onEditCard }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMoveCard }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
+  const [insertionPosition, setInsertionPosition] = useState<number | null>(null)
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'card',
+    hover: (_item: { cardId: string }) => {
+      if (column.cards.length === 0) setInsertionPosition(0)
+    },
+    drop: (item: { cardId: string }, monitor) => {
+      if (monitor.didDrop()) return
+      setInsertionPosition(null)
+      onMoveCard(item.cardId, column.id, column.cards.length)
+    },
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
+  }), [column.id, column.cards.length, onMoveCard])
+  useEffect(() => {
+    if (!isOver) setInsertionPosition(null)
+  }, [isOver])
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -32,11 +50,15 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard }: Col
   return (
     <Box as="section" aria-label={column.title} bg="bg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
       <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
-      <Stack gap={3}>
+      <Stack ref={(node) => { drop(node) }} gap={3}>
         {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
-        {column.cards.map((card) => (
-          <Card key={card.id} card={card} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} />
+        {column.cards.map((card, index) => (
+          <div key={card.id}>
+            {insertionPosition === index && <Box height="5rem" border="2px dashed" borderColor="border.info" borderRadius="md" />}
+            <Card card={card} position={index} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)} onHoverPosition={setInsertionPosition} onDropPosition={(cardId, position) => { setInsertionPosition(null); onMoveCard(cardId, column.id, position) }} />
+          </div>
         ))}
+        {insertionPosition === column.cards.length && <Box height="5rem" border="2px dashed" borderColor="border.info" borderRadius="md" />}
         <form onSubmit={submit}>
           <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
           <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />

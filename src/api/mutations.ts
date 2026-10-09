@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
 import { boardKey, createCard, editCard, moveCard } from './board'
+import { moveCardToPosition } from '../domain/boardMovement'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type MoveCardInput = { cardId: string; column: string; position?: number }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -90,7 +92,22 @@ export function useMoveCard() {
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
-    // The response is not put in the cache: only a successful refetch moves the rendered card.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
+    onMutate: async (input: MoveCardInput) => {
+      await queryClient.cancelQueries({ queryKey: boardKey, exact: true })
+      const previous = queryClient.getQueryData<BoardData>(boardKey)
+      if (previous) {
+        const destination = previous.columns.find((column) => column.id === input.column)
+        const position = input.position ?? destination?.cards.length
+        if (position !== undefined) {
+          const next = moveCardToPosition(previous, input.cardId, input.column, position)
+          if (next) queryClient.setQueryData(boardKey, next)
+        }
+      }
+      return { previous }
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) queryClient.setQueryData(boardKey, context.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
   })
 }
