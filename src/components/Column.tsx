@@ -65,7 +65,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
   function submit(event: FormEvent) {
     event.preventDefault()
     const trimmed = title.trim()
-    if (!trimmed || create.isPending) return
+    if (!trimmed || disabled || create.isPending) return
     create.mutate({ columnId: column.id, id: uuidv7(), title: trimmed }, {
       onSuccess: () => {
         setTitle('')
@@ -91,9 +91,9 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, disab
         <Box as="form" onSubmit={submit} mt="auto" pt={4} borderTopWidth="1px" borderColor="var(--app-border)">
           <Field.Root>
             <Field.Label htmlFor={`new-card-${column.id}`} fontSize="xs" color="fg.muted">Nouvelle carte</Field.Label>
-            <Input ref={inputRef} id={`new-card-${column.id}`} aria-label={`Titre de la nouvelle carte dans ${column.title}`} placeholder="Titre de la carte…" _placeholder={{ color: 'fg.muted' }} value={title} onChange={(event) => setTitle(event.target.value)} required bg="var(--app-surface)" size="sm" borderRadius="md" disabled={create.isPending} />
+            <Input ref={inputRef} id={`new-card-${column.id}`} aria-label={`Titre de la nouvelle carte dans ${column.title}`} placeholder="Titre de la carte…" _placeholder={{ color: 'fg.muted' }} value={title} onChange={(event) => setTitle(event.target.value)} required bg="var(--app-surface)" size="sm" borderRadius="md" disabled={disabled || create.isPending} />
           </Field.Root>
-          <Button type="submit" variant="ghost" colorPalette="blue" size="sm" width="full" mt={2} disabled={create.isPending || !title.trim()} loading={create.isPending} loadingText="Ajout en cours…"><PlusIcon aria-hidden="true" />Ajouter une carte</Button>
+          <Button type="submit" variant="ghost" colorPalette="blue" size="sm" width="full" mt={2} disabled={disabled || create.isPending || !title.trim()} loading={create.isPending} loadingText="Ajout en cours…"><PlusIcon aria-hidden="true" />Ajouter une carte</Button>
           {create.isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Ajout impossible : {create.error.message}. Réessayez.</Text>}
         </Box>
       </Stack>

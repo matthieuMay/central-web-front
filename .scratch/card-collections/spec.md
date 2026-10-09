@@ -1,29 +1,29 @@
 # Membres, commentaires et tâches à cocher
 
-State: conception SDD dans le code ; types et composants temporaires intégrés, comportements à implémenter dans un second commit.
+State: implémenté ; validations automatisées et navigateur documentées dans [validation.md](validation.md).
 
 ## Objectif et périmètre
 
-Enrichir le tiroir `EditCardDrawer` existant avec trois sections : Membres, Commentaires et Tâches à cocher. Conserver la modification du titre et de la description, la création des cartes, leur déplacement et le retour du focus. Le premier commit contient les types et trois composants montés dans le tiroir avec des props typées, un rendu temporaire et des commentaires de responsabilité/cas à vérifier. Le second commit implémentera les comportements et la persistance.
+Le tiroir `EditCardDrawer` contient trois sections : Membres, Commentaires et Tâches à cocher. Les cartes des colonnes affichent directement la checklist, les avatars à initiales des membres et le nombre de commentaires. La modification du titre et de la description, la création des cartes, leur déplacement et le retour du focus sont conservés.
 
-Arbre préparé : `BoardPage → EditCardDrawer → EditForm → CardMembers / CardComments / CardChecklist`. Les trois sections sont hors du formulaire titre/description pour permettre leurs futurs formulaires indépendants. Le catalogue est temporairement vide, les actions désactivées et leurs callbacks sans effet ; aucun nouvel appel API n'est branché dans cette étape.
+Arbre : `BoardPage → EditCardDrawer → EditForm → CardMembers / CardComments / CardChecklist`. Les trois sections sont hors du formulaire titre/description. Le catalogue utilise Query avec `GET /users` et chaque action utilise la mutation commune.
 
 - Membres : associer ou retirer une personne fournie par `GET /users`.
 - Commentaires : lire l'activité et publier un commentaire avec un auteur explicitement choisi parmi ces personnes.
 - Tâches à cocher : ajouter une tâche non cochée, la cocher et la décocher.
-- Pas de suppression/modification des commentaires, suppression/réorganisation des tâches, comptes connectés, recherche de membres ni résumé supplémentaire sur les cartes à ce stade.
+- Pas de suppression/modification des commentaires, suppression/réorganisation des tâches, comptes connectés, recherche de membres. Les cartes des colonnes affichent également les tâches cochables, les initiales des membres assignés et le nombre de commentaires, selon la demande complémentaire de l’utilisateur.
 
 ## Contrat HTTP
 
-Sources : exigences de l'utilisateur et lectures locales du 2026-10-09. `GET /users` et `GET /boards/mini-trello` ont été vérifiés sans modifier les données. Aucun PATCH n'a été exécuté.
+Sources : exigences de l'utilisateur et documentation/code du serveur relus le 2026-10-09. Les écritures de validation sont isolées dans une base SQLite temporaire ; aucune donnée utilisateur n'est modifiée.
 
 | Opération | Contrat |
 | --- | --- |
 | `GET /users` | Réponse directe `UserData[]` : `{ id: string, firstname: string, lastname: string }`. |
-| `GET /boards/mini-trello` | `BoardData` ; chaque carte observée contient `assignees`, `comments`, `checklistItems`, y compris quand ces listes sont vides. Toutes les listes observées étaient vides. |
-| `PATCH /cards/:cardId` | JSON ; chaque liste envoyée remplace entièrement la liste correspondante. Une propriété absente reste inchangée. `[]` vide explicitement une liste. |
+| `GET /boards/mini-trello` | `BoardData` ; chaque carte contient `assignees`, `comments`, `checklistItems`, y compris quand ces listes sont vides. |
+| `PATCH /cards/:cardId` | Réponse **200 JSON `CardData`**. Chaque liste envoyée remplace entièrement la liste correspondante. Une propriété absente reste inchangée. `[]` vide explicitement une liste. |
 
-L'interface utilisera `UserData.id` pour l'assignation et l'auteur. Vérifier cette correspondance dans le contrat serveur avant les premiers essais d'écriture : les GET observés ne contiennent pas de références existantes. Le corps de réponse et les statuts de succès du PATCH restent à confirmer ; ne pas supposer qu'il renvoie une carte ou un tableau, ni appeler `response.json()` sur un éventuel `204`. Le GET du tableau reste la source d'autorité après une écriture.
+L'interface utilise `UserData.id` pour l'assignation et l'auteur, validés par le serveur. `patchCardCollections` retourne `Promise<void>` après confirmation HTTP : le corps carte, redondant, est ignoré. Le GET du tableau reste la source d'autorité après chaque écriture. Les nouveaux commentaires n'ont pas de date dans le payload ; le serveur produit `createdAt`.
 
 ### Types intégrés
 
@@ -50,11 +50,17 @@ Le tiroir contient le formulaire titre/description existant et les trois section
 Les formulaires d'ajout ne doivent pas être imbriqués dans le formulaire titre/description : placer les sections comme frères de ce formulaire dans le corps du tiroir et garder des associations de boutons explicites.
 
 - Membres : liste de personnes avec cases à cocher libellées par prénom/nom ; état sélectionné issu de `assignees`. Afficher aussi les IDs assignés absents du catalogue avec un libellé de repli et permettre leur retrait.
-- Commentaires : liste dans l'ordre renvoyé, nom de l'auteur (ID en repli), texte rendu comme texte React, date lisible avec `<time dateTime={createdAt}>`. Sélecteur Auteur sans auteur présélectionné, champ Commentaire, bouton Publier. Désactiver la publication si auteur absent/indisponible ou texte vide après trim. Ne vider le brouillon qu'après confirmation du PATCH.
+- Commentaires : liste dans l'ordre renvoyé, nom de l'auteur (ID en repli), texte rendu comme texte React, date lisible avec `<time dateTime={createdAt}>`. Sélecteur Auteur sans auteur présélectionné, champ Commentaire désactivé jusqu’au choix d’un utilisateur valide, bouton Publier. Conserver l’auteur après publication jusqu’à la fermeture du tiroir. Désactiver la publication si auteur absent/indisponible ou texte vide après trim. Ne vider le brouillon qu'après confirmation du PATCH.
 - Tâches à cocher : liste avec cases à cocher natives ou Chakra, description comme libellé ; champ Nouvelle tâche et bouton Ajouter. Refuser les descriptions vides après trim. Vider le champ après confirmation du PATCH.
 - Sans utilisateurs : afficher un état vide et désactiver assignation/publication ; lecture des commentaires et checklist restent accessibles. Un échec de `/users` propose Réessayer sans bloquer titre/description ou checklist.
 - Pendant une écriture/réconciliation : désactiver toutes les écritures du tiroir, y compris titre/description, conserver la lecture et annoncer le traitement. Les champs contrôlés conservent leurs brouillons lors d'une actualisation de la même carte.
 - Erreurs affichées près de l'action avec `role="alert"` ; traitement et succès annoncés via une zone `aria-live="polite"`. Parcours complet au clavier, labels explicites, bouton Fermer et retour du focus sur le crayon de la carte. Sur écran étroit, une seule colonne et défilement du corps du tiroir.
+
+### Affichage direct sur les cartes
+
+Chaque carte affiche uniquement ses tâches non terminées avec des cases à cocher, sans formulaire d’ajout. Cocher une tâche la masque sur la carte après réconciliation ; elle reste cochée et barrée dans Modifier. La décocher dans le tiroir la fait réapparaître. Le mapping conserve les indices de la liste complète, sans filtrage avant indexation ni suppression de données. Cocher/décocher utilise la mutation commune et son verrou ; l’index et la valeur de l’occurrence au clic sont conservés. Le conteneur des contrôles intercepte les clics afin de ne pas sélectionner/désélectionner la carte ni déclencher un déplacement. Les contrôles respectent `disabled`, annoncent traitement/succès et affichent les erreurs près de la carte.
+
+Les personnes assignées sont affichées dans des avatars ronds avec les premières lettres du prénom et du nom, en majuscules. Chaque avatar porte le nom complet comme libellé accessible et titre ; une référence absente du catalogue affiche `?` avec son ID dans le libellé. Le compteur de commentaires reste visible même à zéro et gère le singulier. Avatars et textes longs reviennent à la ligne.
 
 ## Modules et responsabilités
 
@@ -68,6 +74,9 @@ Les formulaires d'ajout ne doivent pas être imbriqués dans le formulaire titre
 | `src/components/CardMembers.tsx` | Afficher membres/catalogue ; émettre une intention d'association ou retrait. Ne pas construire le payload ni appeler HTTP. |
 | `src/components/CardComments.tsx` | Afficher l'activité, gérer auteur/texte du brouillon ; émettre un ajout valide et garder le brouillon en cas d'échec. |
 | `src/components/CardChecklist.tsx` | Afficher la liste, gérer le brouillon d'ajout ; émettre ajout ou état explicite `done` d'une occurrence. |
+| `src/api/boardWrites.ts` | Verrou synchrone avant toute mutation, état de récupération conservé dans le cache Query ; protège aussi création, édition et déplacement. |
+| `src/api/cardCollectionsMutation.ts` | Options de mutation avec transport injectable pour les tests ; lecture-PATCH-réconciliation, classification des échecs et récupération explicite. |
+| `src/components/Card.tsx` | Afficher checklist, avatars et compteur ; charger le catalogue partagé seulement si la carte a des membres, émettre les changements via la mutation existante, isoler les clics des cases de la sélection de carte. |
 | `src/pages/BoardPage.tsx` | Garder la carte éditée dérivée du cache par ID ; intégrer le verrou des nouvelles écritures aux contrôles existants. |
 
 Les props sont exportées dans leurs fichiers de composants. Chaque section reçoit uniquement sa collection, ses éventuels utilisateurs, `disabled` et ses callbacks :
@@ -76,7 +85,7 @@ Les props sont exportées dans leurs fichiers de composants. Chaque section reç
 - `CardCommentsProps` : `comments`, `users`, `disabled`, `onPublish(comment)`.
 - `CardChecklistProps` : `items`, `disabled`, `onAdd(description)`, `onSetDone(index, item, done)`.
 
-Les callbacks retournent `Promise<void>` pour que chaque section puisse conserver son brouillon en cas de rejet et le vider après confirmation. Le tiroir les branchera à la mutation commune. L'intention utilisée par cette mutation reste un contrat proposé pour l'implémentation :
+Les callbacks retournent `Promise<void>` pour que chaque section puisse conserver son brouillon en cas de rejet et le vider après confirmation. Le tiroir les branchera à la mutation commune. L'intention utilisée par cette mutation :
 
 ```typescript
 type CardCollectionsAction =
@@ -118,16 +127,17 @@ L'index désigne une occurrence, jamais une description. `item` capture descript
 | PATCH confirmé, GET échoue | Message de réconciliation, pas de nouvelle publication proposée, Actualiser seul. |
 | Titre/description et déplacement | Ne changent aucune collection ; brouillons conservés pendant les refetchs de la même carte. |
 | Fermer / rouvrir / changer de carte | Les collections déjà enregistrées persistent ; les brouillons appartiennent à la carte ouverte. |
+| Collections sur les cartes | Tâches non terminées visibles et cochables, tâches terminées conservées et barrées dans Modifier ; avatars nommés, initiales et compteur exacts après mutation/reload ; un clic sur tâche ou libellé ne sélectionne pas la carte. |
 | Clavier / mobile | Labels, ordre de focus, cases Espace, soumission explicite, texte long, défilement du tiroir, aucun raccourci du tableau déclenché depuis les champs. |
 
 Tests du module de construction : conservation/immutabilité, propriétés omises vs `[]`, dates existantes/nouvelle date absente, descriptions dupliquées, indices invalides/obsolètes. Tests de mutation avec requêtes contrôlées : lecture-PATCH-réconciliation, verrou, échecs et résultat incertain. Essais navigateur ciblés : auteurs/membres, publication, checklist, recharge, clavier et régressions titre/déplacement. Ne pas écrire de tests qui se limitent à reproduire les types.
 
-Pour le commit de conception : relire les props et les commentaires, lancer lint/build et les tests de placement existants. Les cas fonctionnels ci-dessus seront vérifiés après implémentation ; les rendus temporaires ne promettent pas ces comportements.
+Résultats de validation : [validation.md](validation.md).
 
-## Suite d'implémentation
+## Tickets réalisés
 
 1. [Contrat HTTP et conservation des collections](issues/01-collections-persistence.md).
 2. [Sections du tiroir](issues/02-collections-sections.md).
 3. [Intégration et validation](issues/03-integration-validation.md).
 
-Les nouvelles sections réutiliseront Chakra, React Hook Form et TanStack Query déjà installés. Aucune dépendance, configuration ni abstraction de dépôt supplémentaire n'est nécessaire.
+Les sections réutilisent Chakra, React Hook Form et TanStack Query déjà installés. Aucune dépendance supplémentaire ni modification de l’API.

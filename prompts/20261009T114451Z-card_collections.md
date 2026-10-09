@@ -1,0 +1,1 @@
+pour une nouvele fonctionalité, des compoants ont été crée ( vides) et les contrats sont posée, je te laisse t'en impregner avec la doc et aussi en allant lire la doc de l'api. et aussi une chose a prendre en compte est que on n'a pas d'auth et donc pour les card quand on ajoute des commentaires, on dois d'abbord selectionne son user puis on tappe le commentaire

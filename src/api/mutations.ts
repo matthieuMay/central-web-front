@@ -1,10 +1,48 @@
-import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useQuery, useIsFetching, useIsMutating, type QueryClient, type UseMutationOptions } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard, moveCard } from './board'
+import { boardKey, createCard, editCard, moveCard, getBoard, patchCardCollections } from './board'
+import { boardWriteKey } from './boardKeys'
+import { idleBoardWrite, reserveBoardWrite, releaseBoardWrite, setBoardRecovery } from './boardWrites'
+import { cardCollectionsMutationOptions, recoverBoard } from './cardCollectionsMutation'
 import { placeCard, type MoveCardInput } from './placement'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
+
+export function useBoardWriteStatus() {
+  const client = useQueryClient()
+  const { data } = useQuery({ queryKey: boardWriteKey, queryFn: () => idleBoardWrite, initialData: idleBoardWrite, enabled: false })
+  const writes = useIsMutating({ predicate: (mutation) => mutation.options.scope?.id === 'board-writes' })
+  const fetching = useIsFetching({ queryKey: boardKey, exact: true })
+  const readFailed = client.getQueryState(boardKey)?.status === 'error'
+  const recovery = data.recovery ?? (readFailed ? 'Actualisation du tableau impossible. Actualisez avant toute nouvelle écriture.' : null)
+  return { ...data, recovery, busy: data.busy || writes > 0 || fetching > 0, blocked: !!recovery, refresh: () => recoverBoard(client, getBoard) }
+}
+
+function useBoardMutation<TData, TInput, TContext = unknown>(options: UseMutationOptions<TData, Error, TInput, TContext>) {
+  const client = useQueryClient()
+  const mutation = useMutation({
+    ...options,
+    retry: false,
+    onSettled: async (...args) => {
+      try { await options.onSettled?.(...args) } finally { releaseBoardWrite(client) }
+    },
+  })
+  const mutate: typeof mutation.mutate = (...args) => {
+    try { reserveBoardWrite(client) } catch { return }
+    mutation.mutate(...args)
+  }
+  const mutateAsync: typeof mutation.mutateAsync = async (...args) => {
+    reserveBoardWrite(client)
+    return mutation.mutateAsync(...args)
+  }
+  return { ...mutation, mutate, mutateAsync }
+}
+
+export function useUpdateCardCollections() {
+  const client = useQueryClient()
+  return useBoardMutation(cardCollectionsMutationOptions(client, { getBoard, patchCardCollections }))
+}
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -48,12 +86,16 @@ async function settle(queryClient: QueryClient, context: Context | undefined) {
   if (ledger.entries.some((item) => item.pending)) return
   ledgers.delete(queryClient)
   // All writes have finished: one authoritative read reconciles server ordering.
-  await queryClient.invalidateQueries({ queryKey: boardKey, exact: true })
+  try {
+    await queryClient.invalidateQueries({ queryKey: boardKey, exact: true }, { throwOnError: true })
+  } catch {
+    setBoardRecovery(queryClient, 'Actualisation impossible. Actualisez avant toute nouvelle écriture.')
+  }
 }
 
 export function useCreateCard() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useBoardMutation({
     scope: { id: 'board-writes' },
     mutationFn: createCard,
     onMutate: (input: CreateCardInput) => begin(queryClient, (board) => ({
@@ -69,7 +111,7 @@ export function useCreateCard() {
 
 export function useEditCard() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useBoardMutation({
     scope: { id: 'board-writes' },
     mutationFn: editCard,
     onMutate: (input: EditCardInput) => begin(queryClient, (board) => ({
@@ -88,7 +130,7 @@ export function useEditCard() {
 
 export function useMoveCard(onFailure: (input: MoveCardInput) => void) {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useBoardMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
     onMutate: (input: MoveCardInput) => begin(queryClient, (board) => placeCard(board, input)),

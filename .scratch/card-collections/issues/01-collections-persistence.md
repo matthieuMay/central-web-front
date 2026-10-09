@@ -1,6 +1,7 @@
 # Contrat HTTP et conservation des collections
 
-Status: ready-for-agent
+Status: ready-for-human
+Implementation: complete — revue du résultat disponible
 
 Spec: [Membres, commentaires et tâches à cocher](../spec.md)
 
@@ -18,3 +19,5 @@ La mutation lit le tableau avant de construire une seule liste complète, puis P
 - Build, lint et tests existants passent.
 
 ## Comments
+
+2026-10-09 — Contrat confirmé : PATCH 200 JSON carte complète ; références utilisateur par id. Transport, construction immuable et mutation lecture-PATCH-réconciliation implémentés, sans optimisme de collections ni réessai automatique. Le verrou est acquis avant la planification et protège aussi les mutations optimistes existantes. Tests des payloads, du transport contrôlé et des états de récupération réussis. Voir [validation](../validation.md).

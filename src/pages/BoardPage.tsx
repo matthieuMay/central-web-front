@@ -1,9 +1,10 @@
-import { useIsMutating, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge, Box, Button, Heading, HStack, IconButton, Kbd, SimpleGrid, Skeleton, Stack, Text, VisuallyHidden } from '@chakra-ui/react'
 import { ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Cross2Icon } from '@radix-ui/react-icons'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard } from '../api/board'
-import { useMoveCard } from '../api/mutations'
+import { useMoveCard, useBoardWriteStatus } from '../api/mutations'
+import { boardWriteState } from '../api/boardWrites'
 import { placeCard, type MoveCardInput } from '../api/placement'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
@@ -16,8 +17,8 @@ function isControl(target: EventTarget | null) {
 
 export function BoardPage() {
   const queryClient = useQueryClient()
-  const { data, isPending, isError, error, isFetching, refetch } = useQuery({ queryKey: boardKey, queryFn: getBoard })
-  const writes = useIsMutating({ predicate: (mutation) => mutation.options.scope?.id === 'board-writes' })
+  const writeStatus = useBoardWriteStatus()
+  const { data, isPending, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const [arrival, setArrival] = useState<MoveCardInput | null>(null)
@@ -33,7 +34,7 @@ export function BoardPage() {
     setLanding(rect ? { cardId: input.cardId, origin: { x: rect.left, y: rect.top }, returning: 'failed' } : null)
     focusAfterMove.current = input.cardId
   })
-  const busy = writes > 0 || isFetching || isError || !!editingCardId || !!arrival || !!landing?.returning
+  const busy = writeStatus.busy || writeStatus.blocked || !!editingCardId || !!arrival || !!landing?.returning
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
   const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
@@ -55,6 +56,8 @@ export function BoardPage() {
 
   const moveTo = useCallback((input: MoveCardInput, origin?: DragPosition) => {
     const current = queryClient.getQueryData<typeof data>(boardKey)
+    const write = boardWriteState(queryClient)
+    if (write.busy || write.recovery || queryClient.getQueryState(boardKey)?.status === 'error') return false
     if (!current || busy || moving.current || queryClient.isMutating({ predicate: (mutation) => mutation.options.scope?.id === 'board-writes' }) || queryClient.isFetching({ queryKey: boardKey, exact: true })) return false
     const placed = placeCard(current, input)
     if (placed === current) return false
@@ -122,7 +125,7 @@ export function BoardPage() {
   }, [selectedCardId, editingCardId, moveSelected])
 
   if (isPending) return <Stack gap={6} role="status" aria-label="Chargement du tableau"><Skeleton height={9} width="min(20rem, 100%)" /><SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={5}>{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} height="24rem" borderRadius="xl" />)}</SimpleGrid></Stack>
-  if (!data) return <Stack role="alert" gap={3} maxW="lg"><Heading size="lg">Le tableau est indisponible</Heading><Text color="fg.muted">{error?.message}</Text><Button width="fit-content" colorPalette="blue" onClick={() => void refetch()}>Réessayer</Button></Stack>
+  if (!data) return <Stack role="alert" gap={3} maxW="lg"><Heading size="lg">Le tableau est indisponible</Heading><Text color="fg.muted">{error?.message}</Text><Button width="fit-content" colorPalette="blue" onClick={() => void writeStatus.refresh()}>Réessayer</Button></Stack>
   const cardCount = data.columns.reduce((count, column) => count + column.cards.length, 0)
   const selectedIndex = data.columns[selectedColumnIndex]?.cards.findIndex((card) => card.id === selectedCardId) ?? -1
   return (
@@ -151,7 +154,7 @@ export function BoardPage() {
           </HStack>
         ) : <HStack flexWrap="wrap" gap={3} minH={9} justify="space-between"><Text color="fg.muted" fontSize="sm">Cliquez sur une carte pour la déplacer, ou glissez sa poignée.</Text><HStack color="fg.muted" fontSize="xs" gap={1}><Kbd>↑</Kbd><Kbd>↓</Kbd><Text mx={1}>Réordonner</Text><Kbd>←</Kbd><Kbd>→</Kbd><Text ml={1}>Changer de colonne</Text></HStack></HStack>}
         {move.isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Déplacement impossible : {move.error.message}. Réessayez.</Text>}
-        {isError && <Text role="alert" color="fg.error" fontSize="sm" mt={2}>Actualisation impossible : {error.message}. <Button size="xs" variant="outline" onClick={() => void refetch()}>Réessayer</Button></Text>}
+        {writeStatus.recovery && !editingCardId && <Box role="alert" mt={2}><Text color="fg.error" fontSize="sm">{writeStatus.recovery}</Text><Button size="xs" variant="outline" disabled={writeStatus.busy} onClick={() => void writeStatus.refresh()}>Actualiser</Button></Box>}
       </Box>
       <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current && !arrival && !landing?.returning) setEditingCardId(id) }} disabled={busy} onMoveCard={moveTo} onCancelDrag={cancelDrag} arrivingCardId={arrivingCardId} onArrival={arrived} landing={landing} />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />

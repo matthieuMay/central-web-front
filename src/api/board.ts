@@ -1,16 +1,25 @@
-import type { BoardData } from '../types/board'
+import type { BoardData, CardCollectionsPatch } from '../types/board'
+import type { UserData } from '../types/user'
 import type { MoveCardInput } from './placement'
 
-export const boardKey = ['board', 'mini-trello'] as const
+export { boardKey, usersKey } from './boardKeys'
 
-const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+const apiUrl = (import.meta.env?.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+class HttpError extends Error {
+  status: number
+  constructor(response: Response) {
+    super(`Request failed (${response.status} ${response.statusText})`)
+    this.status = response.status
+  }
+}
+
+async function request<T>(path: string, init?: RequestInit, readBody = true): Promise<T> {
   const response = await fetch(`${apiUrl}${path}`, init)
   if (!response.ok) {
-    throw new Error(`Request failed (${response.status} ${response.statusText})`)
+    throw new HttpError(response)
   }
-  return response.json() as Promise<T>
+  return readBody ? response.json() as Promise<T> : undefined as T
 }
 
 export function getBoard() {
@@ -39,4 +48,17 @@ export function moveCard({ cardId, column, position }: MoveCardInput) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ column, position }),
   })
+}
+
+export function getUsers() {
+  return request<UserData[]>('/users')
+}
+
+export function patchCardCollections(cardId: string, patch: CardCollectionsPatch): Promise<void> {
+  // The confirmed 200 response contains a card; the subsequent GET is authoritative.
+  return request<void>(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  }, false)
 }
