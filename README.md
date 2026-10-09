@@ -1,76 +1,241 @@
-# Mini-Trello — Front
+<div align="center">
 
-Requires Node.js `>=22.22.0`.
+# Mini-Trello
+
+**Organiser les cartes. Planifier le projet. Suivre les phases.**
+
+Une application de gestion de projet agile avec Kanban, membres, checklists,
+commentaires et calendrier Gantt.
+
+React 19 · TypeScript · Chakra UI · TanStack Query · React DnD · Motion
+
+[Installation](#installation) · [Tableau](#tableau-kanban) · [Planning](#planning-du-projet--sprint-6) · [Démo](#préparer-la-démo) · [Tests](#vérification)
+
+</div>
+
+![Planning du projet en mode sombre](docs/images/planning-dark.png)
+
+*Aperçu du Gantt avec des cartes de test et un historique de démonstration explicitement identifié.*
+
+## Ce que permet le projet
+
+| Espace | Fonctionnalités |
+| --- | --- |
+| **Tableau** | Créer et modifier des cartes, les déplacer entre colonnes et les réordonner. |
+| **Carte** | Assigner des membres, échanger des commentaires et suivre une checklist. |
+| **Planning** | Poser les cartes sur un calendrier, déplacer leurs périodes et ajuster leurs dates. |
+| **Historique** | Visualiser les statuts observés, leurs transitions et les interruptions d’observation. |
+| **Interface** | Thèmes clair et sombre, navigation au clavier et réduction des animations. |
+
+## Installation
+
+### Prérequis
+
+- **Node.js ≥ 22.22.0** et npm.
+- L’**API fonctionnelle fournie pour le projet**, lancée séparément. Elle doit prendre en charge les lectures et les écritures ; le starter limité à GET ne suffit pas.
+- Par défaut : API sur `http://localhost:3000`, frontend sur `http://localhost:5173`. Autoriser cette origine frontend dans la configuration CORS de l’API.
+
+### Lancer le frontend
+
+Depuis ce dépôt :
 
 ```bash
 npm ci
-npm run dev
+npm run dev -- --host localhost
 ```
 
-This corrected Sprint 2 snapshot starts from the optional Sprint 1 Query bonus, based on the static `end/j2-sprint1-props` checkpoint. The original `data/board.json` remains a reference; `/board` displays only API data and reports request failures.
+Ouvrir [localhost:5173](http://localhost:5173).
 
-Start the **teacher-provided functional API** from its own repository (Node.js 22+). For the default Postgres setup:
+| Page | Adresse |
+| --- | --- |
+| Accueil | [localhost:5173](http://localhost:5173) |
+| Tableau Kanban | [localhost:5173/board](http://localhost:5173/board) |
+| Planning Gantt | [localhost:5173/planning](http://localhost:5173/planning) |
+
+Pour utiliser une autre adresse d’API, créer un fichier **`.env.local`**, sans le committer :
+
+```dotenv
+VITE_API_URL=http://localhost:3000
+```
+
+Redémarrer Vite après un changement de configuration. Les cartes sont chargées depuis l’API : `data/board.json` reste un jeu de données de référence, sans remplacement automatique en cas d’échec réseau.
+
+<details>
+<summary><strong>Lancer l’API avec PostgreSQL ou SQLite</strong></summary>
+
+Exécuter ces commandes **dans le dépôt de l’API**, avec Node.js 22+ :
 
 ```bash
 cp .env.example .env
 npm ci
 docker compose -f docker-compose.yml -f docker-compose.j2.yml up -d db pgweb
-docker compose -f docker-compose.yml -f docker-compose.j2.yml ps  # wait for db: healthy
+docker compose -f docker-compose.yml -f docker-compose.j2.yml ps
+# Attendre que db soit healthy.
 npm run db:migrate
 npm run dev
 ```
 
-Alternatively set `DB_DRIVER=sqlite` in the API environment, then run `npm run db:migrate` and `npm run dev` without Docker. Consult the API README for reset and pgweb instructions. It serves `http://localhost:3000` and allows `http://localhost:5173` by default. The older API starter with only GET is insufficient for this bonus.
+Pour SQLite, définir `DB_DRIVER=sqlite` dans l’environnement de l’API, puis lancer `npm run db:migrate` et `npm run dev` sans Docker. Consulter le README de l’API pour les opérations de réinitialisation et l’accès à pgweb.
 
-```bash
-# Local frontend configuration (do not commit .env.local):
-VITE_API_URL=http://localhost:3000 npm run dev
+</details>
+
+## Tableau Kanban
+
+Les cartes parcourent les colonnes du tableau, du backlog à la fin du travail.
+
+- **Créer** une carte depuis le formulaire d’une colonne, même vide.
+- **Sélectionner** une carte en cliquant dessus, ou avec Entrée/Espace lorsqu’elle a le focus.
+- **Déplacer** sa poignée pour choisir une colonne et une position. Les colonnes vides acceptent les dépôts.
+- **Modifier** via le crayon : titre, description, membres, commentaires et checklist.
+
+| Commande | Action sur la carte sélectionnée |
+| --- | --- |
+| `←` / `→` ou boutons gauche/droite | Déplacer vers la colonne voisine. |
+| `↑` / `↓` | Réordonner dans la colonne. |
+| `Échap` | Désélectionner. |
+
+Les raccourcis respectent les champs de saisie et le tiroir d’édition. Un dépôt hors des colonnes ou sans changement de position n’envoie aucune requête.
+
+### Membres, commentaires et checklist
+
+Les initiales des membres apparaissent sur les cartes ; leurs noms sont accessibles au survol et aux technologies d’assistance. Les références inconnues restent conservées et identifiées.
+
+Les tâches inachevées sont cochables directement dans le Kanban. Une tâche terminée disparaît de cet aperçu et reste cochée dans le tiroir, où elle peut être réouverte. Les membres et les tâches se sauvegardent immédiatement.
+
+Pour publier un commentaire, sélectionner d’abord son auteur. Les commentaires existants conservent leur ordre et leur date serveur. Fermer le tiroir abandonne les textes non soumis ; enregistrer le titre et la description ferme le tiroir après confirmation.
+
+### Sauvegarde et erreurs
+
+Les déplacements apparaissent immédiatement puis sont confirmés par une nouvelle lecture serveur. Un échec annule la modification optimiste et affiche une erreur. Les écritures locales sont sérialisées et attendent la réconciliation avant d’autoriser la suivante.
+
+Pour les collections, le frontend relit la carte avant la modification et préserve les données existantes, y compris les descriptions de tâches identiques. Une réponse incertaine ou une réconciliation échouée propose **Actualiser** sans republier automatiquement la même opération.
+
+## Planning du projet — Sprint 6
+
+Le planning possède sa **page dédiée**. Une liste compacte de titres se trouve immédiatement au-dessus des dates : il est possible de glisser une carte sans traverser tout le Kanban ni faire défiler la page pendant le geste.
+
+### Planifier sans ouvrir une carte
+
+1. Glisser la poignée d’un titre sur un jour : le premier dépôt crée **sept jours calendaires**, week-end compris.
+2. Déplacer la barre **Prévu** pour conserver sa durée tout en changeant ses dates.
+3. Tirer l’une de ses deux poignées pour ajuster le début ou la fin, avec un minimum d’un jour.
+
+Un nouveau dépôt de la même carte déplace sa période existante en conservant la durée. **Retirer du planning** supprime uniquement les dates, en gardant la carte et son historique.
+
+L’alternative **Régler les dates** permet de choisir une carte et de saisir ses dates. Les flèches gauche/droite déplacent aussi la barre ou une poignée d’un jour ; **Échap** annule le geste en cours.
+
+### Lire le calendrier
+
+Le Gantt affiche quatre semaines, avec navigation par semaine et retour à **Aujourd’hui**. La fenêtre initiale commence la semaine précédente pour rendre les phases récentes visibles. Les titres et les dates restent fixes pendant le défilement ; les week-ends et le jour courant sont distingués.
+
+Chaque ligne affiche le titre, les membres et la progression de checklist lorsqu’elle contient des tâches, puis deux pistes indépendantes :
+
+| Piste | Signification |
+| --- | --- |
+| **Prévu** | Dates choisies, déplaçables et redimensionnables. |
+| **Historique** | Statuts confirmés après lecture serveur, colorés par colonne. |
+| **Hachures** | Intervalle inconnu après une interruption d’observation. |
+| **◆** | Passage constaté dans `done` ; la barre reprend en cas de réouverture. |
+| **Pointillés sur un segment** | Historique simulé de démonstration. |
+
+Le survol et le focus donnent les dates et les statuts. Les mises à jour optimistes, leurs annulations et les réordonnancements dans une même colonne ne créent pas de transition historique.
+
+**L’historique est local et partiel : il décrit les statuts observés, pas le temps de travail.** Il commence à la première lecture confirmée et ne reconstitue pas les phases réelles précédentes. Une carte déjà terminée lors de cette lecture n’a pas de date de fin réelle inventée.
+
+### Où sont sauvegardées les données ?
+
+```text
+API existante                  Navigateur · localStorage
+├── cartes et colonnes         ├── périodes prévues
+├── titres et descriptions     ├── observations de statut
+├── membres                    └── historique simulé identifié
+├── commentaires                         ↕
+└── checklists                     Export / import JSON v1
 ```
 
-Visit `/board`. The Query bonus uses `useQuery` for GET and a labeled Add card form in each column (including empty Review). Try creating in Review, editing its title and reloading to check persistence. Its first commit shows intermediate non-optimistic forms: successful POST and PATCH invalidate the exact `['board', 'mini-trello']` query key. The corrected hooks immediately update the cache in both `onMutate` handlers, roll back failed writes and refetch on settle.
+Les données du calendrier sont enregistrées automatiquement sous `mini-trello:calendar:v1:mini-trello`. **Planifier n’écrit jamais dans l’API** ; Sprint 6 ne modifie ni le backend ni `src/api/`.
 
-To test a **failure without a server write**, with a running API and `/board` loaded, run the following in the browser console before submitting either form. It blocks the next POST or PATCH *before* the request reaches the server; the optimistic change appears briefly then rolls back with a visible error. Repeat the snippet for the other form. Reload to confirm the server data was not modified.
+**Exporter JSON** transfère les périodes et l’historique. **Importer JSON** vérifie la version, le tableau, les identifiants et les dates, puis demande confirmation avant remplacement. Un fichier invalide ou un stockage inaccessible conserve la dernière sauvegarde. Une modification détectée dans un autre onglet bloque l’écrasement et demande un rechargement.
+
+## Préparer la démo
+
+Au premier chargement réussi du tableau dans un navigateur sans planning enregistré, le calendrier préremplit les **cartes déjà présentes dans l’API**. Il ne crée pas de cartes serveur.
+
+| Statut actuel | Exemple généré |
+| --- | --- |
+| Backlog | Période future, sans fausse phase de vérification. |
+| En cours | Début récent, phases backlog puis travail en cours. |
+| À vérifier | Phases backlog, travail puis vérification. |
+| Terminé | Période passée et un seul repère de fin. |
+
+Les phases simulées sont signalées en pointillés et nommées dans leurs détails. Les nouvelles observations de statut restent réelles.
+
+- **Recharger la démo** actualise les exemples après confirmation du remplacement du planning et de l’historique locaux. Pour garder ses propres dates, exporter d’abord le JSON.
+- **Retirer l’historique démo** enlève seulement les phases simulées, en conservant les dates et les observations réelles.
+- Un rechargement de page ne recrée pas automatiquement une démo déjà supprimée.
+
+## Vérification
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+La validation de Sprint 6 comprend **30 tests réussis**, le lint et le build. Les tests couvrent les dates calendaires et changements d’heure, les transitions confirmées, les échecs, les interruptions, le JSON, le stockage et la cohérence de la démo.
+
+Les tests navigateur utilisent **localhost**, un profil isolé et des réponses API simulées pour éviter toute écriture sur le serveur réel. Ils vérifient le drag natif, les poignées, le clavier, l’import/export, le rollback du Kanban, ainsi que les thèmes clair/sombre sur ordinateur et affichage étroit.
+
+Comptes rendus : [Sprint 6 — Gantt](.scratch/sprint6-gantt/validation.md) · [Collections des cartes](.scratch/card-collections/validation.md).
+
+<details>
+<summary><strong>Simuler un échec d’écriture sans modifier le serveur</strong></summary>
+
+Avec le tableau chargé, exécuter ce code dans la console du navigateur. Il bloque **la prochaine écriture** avant qu’elle atteigne le serveur ; l’erreur et le rollback peuvent alors être vérifiés. Recharger la page restaure également le comportement normal de `fetch`.
 
 ```js
 const originalFetch = window.fetch
 window.fetch = (...args) => {
-  const method = args[1]?.method
-  if (method === 'POST' || method === 'PATCH') {
+  if (['POST', 'PATCH', 'PUT'].includes(args[1]?.method)) {
     window.fetch = originalFetch
-    return new Promise((_, reject) => setTimeout(() => reject(new Error('Simulated write failure')), 600))
+    return new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Échec simulé')), 600)
+    })
   }
   return originalFetch(...args)
 }
 ```
 
-Board writes share one TanStack mutation scope and a synchronous local guard, acquired before optimistic cache changes, to prevent concurrent local writes and duplicate triggers. The cache keeps a pre-batch snapshot and replays surviving optimistic changes when one write fails, retaining successful and still-pending writes. Once all writes settle, a single board invalidation reconciles their final server order, including after failure.
+</details>
 
-## Sprint 2 correction
+## Repères dans le code
 
-Click a card to select it; click again or press Escape to deselect. Cards can also be selected with Enter/Space when focused. Move left/right and Left/Right arrows append to the adjacent column in board order, including empty columns. Up/Down arrows reorder the selected card by one position without wrapping. Arrow shortcuts leave form controls and the edit Drawer alone.
+| Dossier | Rôle |
+| --- | --- |
+| `src/pages/` | Accueil, tableau, planning et page introuvable. |
+| `src/components/` | Interface Chakra, cartes, tiroir, Gantt et animations. |
+| `src/api/` | Lectures, mutations, validation des collections et déplacements. |
+| `src/calendar/` | Dates, historique observé, JSON et persistance locale. |
+| `src/types/` | Types des cartes, colonnes, membres et collections. |
+| `tests/` | Tests du modèle et des opérations de données. |
+| `.scratch/` | Spécifications et comptes rendus de validation. |
 
-Drag the grip at a card's top right to insert it before, between or after cards, in the same column or another one. The translucent, slightly tilted preview follows the pointer; the insertion line marks the destination. Empty columns accept drops. Dropping outside a cards region animates the card from the release point back to its original position, restoring opacity and removing the tilt without a request or confetti. Dropping at the unchanged position also sends no request. Touch dragging and multi-card dragging are outside this version's scope.
+### Contrats API utilisés
 
-Moves appear immediately and use the same optimistic ledger as creation/editing. A failed save animates back and shows an error while retaining other writes. New moves wait for current board writes and reconciliation to finish. Selection/focus is preserved and saved order survives reload. Failed reconciliation offers Retry without discarding the displayed board.
+| Méthode | Route | Usage |
+| --- | --- | --- |
+| `GET` | `/boards/mini-trello` | Lire le tableau. |
+| `GET` | `/users` | Charger le catalogue des membres. |
+| `POST` | `/columns/:columnId/cards` | Créer une carte. |
+| `PATCH` | `/cards/:cardId` | Modifier le texte ou une collection de carte. |
+| `PUT` | `/cards/:cardId` | Déplacer une carte. |
 
-Indexed moves send `PUT /cards/:cardId`, `Content-Type: application/json`, with e.g. `{"column":"doing","position":1}` and receive `BoardData`. Position is zero-based **after removing the card**. Horizontal actions omit position to append.
+Une position de déplacement est calculée **après le retrait de la carte** ; son omission ajoute la carte à la fin de la colonne. Une collection fournie dans un PATCH remplace cette collection entièrement ; celles omises sont conservées.
 
-Motion animates reordering, cross-column travel and rollback; after a drag, landing starts at the release position. A localized confetti burst acknowledges forward visual arrival, including while saving is still pending. A later failure returns the card without another burst. Reduced-motion users get placement feedback without travel, tilt or flying particles.
+## Limites de cette version
 
-Cards display their unfinished checklist tasks, assigned members as initials avatars and the number of comments, including zero. Check a task directly on its card without selecting or moving the card; completed tasks disappear from column cards and remain checked and struck through in the Drawer. Uncheck one in the Drawer to show it on its card again; the same write guard and recovery flow apply. Avatar titles and accessible labels give the full names, with `?` and the user ID for unknown references.
-
-The pencil opens a Drawer for title and description plus members, comments and checklist tasks. Save validates and saves only the title/description, then closes the Drawer. Members and checklist changes save immediately. For comments, select your user first to unlock the text field, then Publish; there is no authentication or default author. Existing comments display their author and server timestamp. Close discards unsubmitted drafts only.
-
-## Verification
-
-Run `npm test` for collection conservation, controlled mutation/error/lock flows and placement boundaries/index arithmetic, `npm run build`, and `npm run lint`. Use Chrome MCP against the already running local frontend and API for focused keyboard/drag/drop, arrival and rollback checks; hot reload allows short checks during changes. A failure test can extend the console snippet above to include `PUT`, intercepting before the request reaches the server. Restore test cards to their original positions after successful checks.
-
-## Card collections
-
-`GET /users` supplies the catalog. `PATCH /cards/:cardId` returns 200 with a full card and replaces each supplied collection completely; omitted collections stay unchanged. The frontend reads the board immediately before building each collection PATCH and again after confirmation. It preserves unknown assigned users, existing comment timestamps and duplicate checklist descriptions. Tasks are targeted by index and the value captured at the click; an outdated occurrence is rejected.
-
-All local writes, including creation, title edits and moves, wait for reconciliation. A rejected collection PATCH preserves the draft. If PATCH is confirmed but refresh fails, the submitted text is cleared and **Actualiser** refreshes the display without repeating the write. Network/5xx failures have an uncertain outcome: drafts stay available, writes stay blocked until an explicit successful refresh, and the UI asks you to inspect the list before retrying. The recovery control remains on the board if the Drawer is closed. User-catalog errors offer Retry while checklist and title editing remain available.
-
-Concurrent writes from multiple browsers can still replace one another between GET and PATCH. Server versioning or atomic append operations would be needed to eliminate that limitation. No authentication, comment deletion, task deletion/reordering or new dependency is added.
-
-See [.scratch/card-collections/validation.md](.scratch/card-collections/validation.md) for the actual automated and browser checks performed on an isolated temporary API database.
+- Pas d’authentification ; le choix d’un auteur de commentaire ne constitue pas une connexion.
+- Planning propre au navigateur, sans synchronisation entre utilisateurs. Exporter avant de vider le stockage local.
+- Sous-tâches non planifiables individuellement ; pas de drag multi-cartes. Sur écran tactile, utiliser le réglage des dates comme alternative au drag HTML5.
+- Les écritures concurrentes de plusieurs navigateurs sur une même collection nécessiteraient un contrôle de version côté serveur pour éviter tout remplacement concurrent.
+- Le trackpad physique du MacBook n’a pas été testé. Les mutations navigateur ont été vérifiées avec une API simulée ; le build signale un bundle JavaScript supérieur à 500 Ko.

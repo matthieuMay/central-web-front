@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/components/ProjectGantt.css"
+        ],
+        "createdAt": "2026-10-09T13:20:28.058Z",
+        "reason": "Agent review: .gantt-drop-line is the temporary calendar drop-day indicator, rendered only while dragging with a date preview; its 2px edge identifies the selected day and is not a decorative card accent."
+      }
+    ]
+  }
+}
