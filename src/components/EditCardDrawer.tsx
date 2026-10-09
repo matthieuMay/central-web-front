@@ -7,6 +7,15 @@ import { editElementId } from './cardIds'
 
 type Fields = { title: string; description: string }
 
+// Responsibility: edit a card's title and description in an isolated form.
+// Props provide the selected card and close callback; the mutation owns
+// persistence and errors, while this form owns validation and unsaved values.
+// Actions: submit validates and saves, Cancel closes without saving, and a
+// successful save closes the drawer.
+// Needs: card activity must be readable and a comment publish action must
+// use an author chosen in the interface.
+// Correctness: blank titles are rejected, failed saves preserve input, and
+// successful saves return focus to the card's edit control.
 function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
   const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
@@ -54,6 +63,11 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   )
 }
 
+// Responsibility: manage the drawer shell for the currently edited Card.
+// Props provide the optional Card and close callback; EditForm owns the form
+// data and the mutation owns persistence.
+// Correctness: the drawer opens only for a Card, closes on dismissal, and
+// returns focus to that Card's edit control.
 export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClose: () => void }) {
   const lastEditedId = useRef<string | null>(null)
   useEffect(() => { if (card) lastEditedId.current = card.id }, [card])

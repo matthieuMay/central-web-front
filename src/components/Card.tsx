@@ -17,6 +17,13 @@ type CardProps = {
   onDrop: (item: CardDragItem, position: number) => void
 }
 
+// Responsibility: render one card, its title/description, and drag affordances.
+// Props: card data, column id, selection state, and callbacks for selection,
+// editing, drag-over placement, and drop; the page owns board data and moves.
+// Actions: card click selects it, edit delegates to the drawer, and drag/drop
+// delegates the requested position to the board owner.
+// Correctness: selection focuses the card, controls do not select it, dragging
+// shows the dragged state, and dropping reports the correct insertion position.
 export function Card({ card, columnId, selected, onSelect, onEdit, onDragOver, onDrop }: CardProps) {
   const reducedMotion = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)

@@ -14,6 +14,16 @@ type ColumnProps = {
   onMoveCard: (cardId: string, columnId: string, position: number) => void
 }
 
+// Responsibility: render one Column's ordered cards, drop placeholder, and
+// new-card form. Props provide column data, selection state, and callbacks;
+// the board/page owns card selection, editing, and movement.
+// Actions: the create mutation persists a new card, while card selection,
+// editing, and drops delegate to the parent callbacks.
+// Needs: the card workflow must support associating and removing people
+// supplied by the API, and creating checklist tasks that can be checked and
+// unchecked.
+// Correctness: cards remain in column order, the placeholder marks the target
+// slot, empty columns accept drops, and invalid empty submissions do nothing.
 export function Column({ column, selectedCardId, onSelectCard, onEditCard, onMoveCard }: ColumnProps) {
   const [title, setTitle] = useState('')
   const [dragPosition, setDragPosition] = useState<number | null>(null)

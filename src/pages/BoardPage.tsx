@@ -13,6 +13,14 @@ function isControl(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"])'))
 }
 
+// Responsibility: coordinate board loading, selection, focus, movement,
+// drag/drop persistence, and card editing. Props are supplied by the router;
+// this page owns the selected/editing ids and delegates server writes to
+// query mutations.
+// Actions: keyboard/buttons and drops request moves, card clicks select, and
+// edit actions open the drawer.
+// Correctness: loading/errors are visible, boundary moves are disabled,
+// writes are serialized, and the moved card regains focus after refresh.
 export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)

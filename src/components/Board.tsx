@@ -11,6 +11,12 @@ type BoardProps = {
   onMoveCard: (cardId: string, columnId: string, position: number) => void
 }
 
+// Responsibility: compose the board heading and all Columns.
+// Props provide the Board data plus selection, editing, and movement callbacks;
+// BoardPage owns the state and persistence.
+// Actions: it maps each Column and passes the relevant data and callbacks down.
+// Correctness: the title renders once, every column renders once, and each
+// Column receives the callbacks needed for its cards to remain interactive.
 export function Board({ board, selectedCardId, onSelectCard, onEditCard, onMoveCard }: BoardProps) {
   return (
     <LayoutGroup id="board-cards">
