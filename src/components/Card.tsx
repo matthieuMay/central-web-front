@@ -1,7 +1,10 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
+import { motion } from 'motion/react'
 import { useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
+
+const MotionBox = motion.create(Box)
 
 type CardProps = { 
   card: CardData 
@@ -28,8 +31,10 @@ export function Card({ card, selected, onSelectCard }: CardProps) {
   }
 
   return (
-    <Box 
+    <MotionBox
       as="article" 
+      layout="position"
+      layoutId={card.id}
       id={`card-${card.id}`}
       bg="white" 
       borderWidth="1px" 
@@ -38,6 +43,9 @@ export function Card({ card, selected, onSelectCard }: CardProps) {
       tabIndex={0}
       overflowWrap="anywhere"
       borderColor={selected ? 'blue.500' : 'gray.200'}
+      boxShadow={selected ? '0 0 0 1px #3b82f6, 0 4px 12px rgb(15 23 42 / 8%)' : 'none'}
+      position="relative"
+      zIndex={selected ? 1 : 0}
       _focusVisible={{ outline: '2px solid', outlineColor: 'blue.500' }}
       onClick={(event)=> {
         const target = event.target
@@ -59,6 +67,6 @@ export function Card({ card, selected, onSelectCard }: CardProps) {
       ) : (
         <button ref={editButtonRef} type="button" onClick={() => { setTitle(card.title); edit.reset(); setEditing(true) }}>Edit</button>
       )}
-    </Box>
+    </MotionBox>
   )
 }

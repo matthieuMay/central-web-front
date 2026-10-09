@@ -1,8 +1,9 @@
-import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, SimpleGrid, Stack, Text } from '@chakra-ui/react'
+import { LayoutGroup, MotionConfig } from 'motion/react'
 import type { BoardData } from '../types/board'
 import { useMoveCard } from '../api/mutations'
 import { Column } from './Column'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type BoardProps = { board: BoardData }
 export function Board({ board }: BoardProps) {
@@ -12,8 +13,13 @@ export function Board({ board }: BoardProps) {
     column.cards.some(card => card.id === selectedCardId)
   )
 
+  useEffect(() => {
+    if (selectedCardId) document.getElementById(`card-${selectedCardId}`)?.focus({ preventScroll: true })
+  }, [selectedCardId, selectedColumnIndex])
+
   function selectedCard(id: string) {
     if (move.isPending) return
+    move.reset()
     setSelectedCardId(current => current === id ? null : id)
   }
 
@@ -22,12 +28,7 @@ export function Board({ board }: BoardProps) {
     if (selectedColumnIndex === -1) return
     const destination = board.columns[selectedColumnIndex + direction]
     if (!destination) return
-    const cardId = selectedCardId
-    move.mutate({ cardId, columnId: destination.id }, {
-      onSuccess: () => {
-        requestAnimationFrame(() => document.getElementById(`card-${cardId}`)?.focus())
-      },
-    })
+    move.mutate({ cardId: selectedCardId, columnId: destination.id })
   }
   return (
     <Stack
@@ -49,21 +50,35 @@ export function Board({ board }: BoardProps) {
       }}
     >
       <Heading as="h1" size="2xl">{board.title}</Heading>
-      <div>
-        <button type="button" disabled={move.isPending || selectedColumnIndex <= 0} onClick={() => moveSelected(-1)}>
-          Déplacer à gauche
-        </button>
-        <button type="button" disabled={move.isPending || selectedColumnIndex === -1 || selectedColumnIndex >= board.columns.length - 1} onClick={() => moveSelected(1)}>
-          Déplacer à droite
-        </button>
-      </div>
-      {move.isPending && <p role="status">Déplacement en cours…</p>}
-      {move.isError && <p role="alert">Déplacement impossible : {move.error.message}</p>}
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
-        {board.columns.map((column) => (
-          <Column key={column.id} column={column} selectedCardId={selectedCardId} onSelectedCard={selectedCard} />
-        ))}
-      </SimpleGrid>
+      <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" p={4}>
+        <Flex gap={3} justify="space-between" align="center" wrap="wrap">
+          <Text role="status" fontSize="sm" color="gray.600" minH="2.5rem" flex="1" minW="12rem">
+            {move.isPending ? 'Déplacement en cours…' : selectedCardId
+              ? 'Carte sélectionnée · utilisez aussi les flèches du clavier'
+              : 'Sélectionnez une carte pour la déplacer'}
+          </Text>
+          <Flex gap={2}>
+            <Button type="button" aria-label="Déplacer à gauche" size="sm" variant="outline" colorPalette="blue" disabled={move.isPending || selectedColumnIndex <= 0} onClick={() => moveSelected(-1)}>
+              <span aria-hidden="true">←</span> Gauche
+            </Button>
+            <Button type="button" aria-label="Déplacer à droite" size="sm" variant="outline" colorPalette="blue" disabled={move.isPending || selectedColumnIndex === -1 || selectedColumnIndex >= board.columns.length - 1} onClick={() => moveSelected(1)}>
+              Droite <span aria-hidden="true">→</span>
+            </Button>
+          </Flex>
+        </Flex>
+        <Text role={move.isError ? 'alert' : undefined} minH="1.25rem" mt={2} fontSize="sm" color="red.600">
+          {move.isError && 'Déplacement non confirmé. Vérifiez le tableau puis réessayez.'}
+        </Text>
+      </Box>
+      <MotionConfig reducedMotion="user" transition={{ layout: { duration: 0.22, ease: [0.77, 0, 0.175, 1] } }}>
+        <LayoutGroup id={board.id}>
+          <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
+            {board.columns.map((column) => (
+              <Column key={column.id} column={column} selectedCardId={selectedCardId} onSelectedCard={selectedCard} />
+            ))}
+          </SimpleGrid>
+        </LayoutGroup>
+      </MotionConfig>
     </Stack>
   )
 }

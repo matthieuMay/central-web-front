@@ -4,6 +4,7 @@ import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string }
+export type MoveCardInput = { cardId: string; columnId: string }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -90,6 +91,20 @@ export function useMoveCard() {
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
+    onMutate: (input: MoveCardInput) => begin(queryClient, (board) => {
+      const source = board.columns.find((column) => column.cards.some((card) => card.id === input.cardId))
+      const card = source?.cards.find((card) => card.id === input.cardId)
+      if (!card || source?.id === input.columnId || !board.columns.some((column) => column.id === input.columnId)) return board
+      return {
+        ...board,
+        columns: board.columns.map((column) => column.id === input.columnId
+          ? { ...column, cards: [...column.cards, card] }
+          : column.id === source?.id
+            ? { ...column, cards: column.cards.filter((card) => card.id !== input.cardId) }
+            : column),
+      }
+    }),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })
 }
