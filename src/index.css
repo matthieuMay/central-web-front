@@ -2,20 +2,52 @@ body {
   margin: 0;
 }
 
+.app-shell {
+  --app-background: #f8fafc;
+  --app-surface: #ffffff;
+  --app-muted-surface: #f1f5f9;
+  --app-text: #0f172a;
+  --app-muted-text: #475569;
+  --app-border: #e2e8f0;
+  --app-link: #1d4ed8;
+  --app-nav-text: #334155;
+  --app-nav-hover: #dbeafe;
+  --app-nav-hover-text: #1e3a8a;
+  --app-focus: #1d4ed8;
+  background-color: var(--app-background);
+  color: var(--app-text);
+  color-scheme: light;
+}
+
+.app-shell[data-color-mode='dark'] {
+  --app-background: #18181b;
+  --app-surface: #27272a;
+  --app-muted-surface: #202024;
+  --app-text: #f4f4f5;
+  --app-muted-text: #a1a1aa;
+  --app-border: #3f3f46;
+  --app-link: #93c5fd;
+  --app-nav-text: #d4d4d8;
+  --app-nav-hover: #3f3f46;
+  --app-nav-hover-text: #bfdbfe;
+  --app-focus: #60a5fa;
+  color-scheme: dark;
+}
+
 .nav-link {
   border-radius: 0.375rem;
-  color: #334155;
+  color: var(--app-nav-text);
   padding: 0.5rem 0.75rem;
   text-decoration: none;
 }
 
 .nav-link:hover,
 .nav-link[aria-current='page'] {
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: var(--app-nav-hover);
+  color: var(--app-nav-hover-text);
 }
 
 .nav-link:focus-visible {
-  outline: 2px solid #1d4ed8;
+  outline: 2px solid var(--app-focus);
   outline-offset: 2px;
 }
