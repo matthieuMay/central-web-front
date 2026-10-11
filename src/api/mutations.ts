@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard } from './board'
+import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string }
+export type MoveCardInput = { cardId: string; columnId: string }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -80,6 +81,36 @@ export function useEditCard() {
           : card),
       })),
     })),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+export function useMoveCard() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: moveCard,
+    onMutate: (input: MoveCardInput) => begin(queryClient, (board) => {
+      let movedCard: BoardData['columns'][number]['cards'][number] | undefined
+      const columns = board.columns.map((column) => {
+        const card = column.cards.find(item => item.id === input.cardId)
+        if (card) movedCard = card
+        return {
+          ...column,
+          cards: column.cards.filter(item => item.id !== input.cardId),
+        }
+      })
+
+      if (!movedCard) return board
+
+      return {
+        ...board,
+        columns: columns.map((column) => column.id === input.columnId
+          ? { ...column, cards: [...column.cards, movedCard!] }
+          : column),
+      }
+    }),
     onError: (_error, _input, context) => rollback(queryClient, context),
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })

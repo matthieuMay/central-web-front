@@ -9,9 +9,13 @@ type ColumnProps = {
   column: ColumnData
   selectedCardId: string | null
   onSelectCard: (cardId: string) => void
+  onMoveCard: (direction: -1 | 1) => boolean
+  canMoveLeft: boolean
+  canMoveRight: boolean
+  isMoving: boolean
 }
 
-export function Column({ column, selectedCardId, onSelectCard }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onMoveCard, canMoveLeft, canMoveRight, isMoving }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -40,6 +44,10 @@ export function Column({ column, selectedCardId, onSelectCard }: ColumnProps) {
             card={card}
             selected={selectedCardId === card.id}
             onSelect={() => onSelectCard(card.id)}
+            onMoveCard={onMoveCard}
+            canMoveLeft={selectedCardId === card.id && canMoveLeft}
+            canMoveRight={selectedCardId === card.id && canMoveRight}
+            isMoving={isMoving}
           />
         ))}
         <form onSubmit={submit}>
