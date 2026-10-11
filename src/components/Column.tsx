@@ -31,21 +31,36 @@ type ColumnProps = {
 export function Column({ column, users, selectedCardId, onSelectCard, onEditCard, onMoveCard, onUpdateCollections, collectionsPending }: ColumnProps) {
   const [title, setTitle] = useState('')
   const [dragPosition, setDragPosition] = useState<number | null>(null)
+  const columnRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
+
+  function getDropPosition(clientY: number) {
+    const cards = columnRef.current?.querySelectorAll<HTMLElement>('.board-card')
+    if (!cards) return column.cards.length
+    const position = Array.from(cards).findIndex((card) => {
+      const bounds = card.getBoundingClientRect()
+      return clientY < bounds.top + bounds.height / 2
+    })
+    return position === -1 ? column.cards.length : position
+  }
+
   const [, drop] = useDrop<CardDragItem>(() => ({
     accept: cardDragType,
     hover: (_item, monitor) => {
-      if (monitor.isOver({ shallow: true })) setDragPosition(column.cards.length)
+      if (!monitor.isOver({ shallow: true })) return
+      const point = monitor.getClientOffset()
+      setDragPosition(point ? getDropPosition(point.y) : column.cards.length)
     },
     drop: (item, monitor) => {
       if (monitor.didDrop()) return
-      onMoveCard(item.cardId, column.id, column.cards.length)
+      const point = monitor.getClientOffset()
+      onMoveCard(item.cardId, column.id, point ? getDropPosition(point.y) : column.cards.length)
       setDragPosition(null)
       return { dropped: true }
     },
     collect: (monitor) => {
-      if (!monitor.isOver({ shallow: true })) setDragPosition(null)
+      if (!monitor.isOver()) setDragPosition(null)
       return {}
     },
   }), [column.cards.length, column.id, onMoveCard])
@@ -63,10 +78,10 @@ export function Column({ column, users, selectedCardId, onSelectCard, onEditCard
   }
 
   return (
-    <Box ref={drop} as="section" aria-label={column.title} bg="bg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
+    <Box ref={(node) => { columnRef.current = node; drop(node) }} as="section" aria-label={column.title} bg="bg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}>
       <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
       <Stack gap={3}>
-        {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
+        {column.cards.length === 0 && dragPosition !== 0 && <Text color="fg.muted">No cards yet</Text>}
         {column.cards.map((card, index) => (
           <div key={card.id}>
             {dragPosition === index && <div className="card-drop-shadow" aria-hidden="true" />}
