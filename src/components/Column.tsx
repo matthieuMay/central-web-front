@@ -1,9 +1,12 @@
-import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import { useRef, useState, type FormEvent } from 'react'
+import { Box, Button, Heading, Image, Stack, Text } from '@chakra-ui/react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useDrop } from 'react-dnd'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { v7 as uuidv7 } from 'uuid'
-import { useCreateCard } from '../api/mutations'
+import { useCreateCard, useEditCard } from '../api/mutations'
+import invaderIcon from '../public/invader.ico'
 import type { ColumnData, User } from '../types/board'
+import { AddCardPopup } from './AddCardPopup'
 import { Card } from './Card'
 
 type ColumnProps = {
@@ -66,8 +69,14 @@ function DropSlot({ columnId, position, moving, empty, onMoveCard }: {
 
 export function Column({ column, selectedCardId, onSelectCard, onEditCard, onComments, users, moving, celebrationCardId, celebrationToken, onMoveCard, onChecklistChange, checklistDisabled }: ColumnProps) {
   const [title, setTitle] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [description, setDescription] = useState('')
+  const [popupOpen, setPopupOpen] = useState(false)
+  const [operationError, setOperationError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState('')
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const prefersReducedMotion = useReducedMotion()
   const create = useCreateCard()
+  const edit = useEditCard()
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'CARD',
     canDrop: () => !moving,
@@ -79,14 +88,52 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onCom
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   }), [column.id, column.cards.length, moving, onMoveCard])
 
+  useEffect(() => {
+    if (!successMessage) return
+    const timeout = window.setTimeout(() => setSuccessMessage(''), prefersReducedMotion ? 3000 : 3350)
+    return () => window.clearTimeout(timeout)
+  }, [prefersReducedMotion, successMessage])
+
+  function openPopup() {
+    create.reset()
+    edit.reset()
+    setTitle('')
+    setDescription('')
+    setOperationError(null)
+    setPopupOpen(true)
+  }
+
+  function closePopup() {
+    setPopupOpen(false)
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = title.trim()
     if (!trimmed || create.isPending) return
-    create.mutate({ columnId: column.id, id: uuidv7(), title: trimmed }, {
+    const id = uuidv7()
+    const trimmedDescription = description.trim()
+    setOperationError(null)
+    create.mutate({ columnId: column.id, id, title: trimmed }, {
       onSuccess: () => {
-        setTitle('')
-        inputRef.current?.focus()
+        if (!trimmedDescription) {
+          setPopupOpen(false)
+          setSuccessMessage(`Card successfully created in ${column.title}`)
+          return
+        }
+        edit.mutate({ cardId: id, description: trimmedDescription }, {
+          onSuccess: () => {
+            setPopupOpen(false)
+            setSuccessMessage(`Card successfully created in ${column.title}`)
+          },
+          onError: (error) => {
+            setPopupOpen(false)
+            setOperationError(`Card added, but its description could not be saved: ${error.message}`)
+          },
+        })
+      },
+      onError: (error) => {
+        setOperationError(`Could not add card: ${error.message}`)
       },
     })
   }
@@ -116,13 +163,52 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, onCom
             <DropSlot columnId={column.id} position={index + 1} moving={moving} empty={false} onMoveCard={onMoveCard} />
           </div>
         ))}
-        <form onSubmit={submit}>
-          <label htmlFor={`new-card-${column.id}`}>New card title in {column.title}</label>
-          <input ref={inputRef} id={`new-card-${column.id}`} value={title} onChange={(event) => setTitle(event.target.value)} required />
-          <button type="submit" disabled={create.isPending || !title.trim()}>Add card</button>
-          {create.isPending && <p role="status">Adding card…</p>}
-          {create.isError && <p role="alert">Could not add card: {create.error.message}</p>}
-        </form>
+        <Button
+          ref={triggerRef}
+          type="button"
+          bg="blue.100"
+          color="blue.800"
+          _hover={{ bg: 'blue.200' }}
+          _dark={{ bg: 'blue.800', color: 'blue.100', _hover: { bg: 'blue.700' } }}
+          alignSelf="flex-end"
+          width="fit-content"
+          onClick={openPopup}
+          aria-haspopup="dialog"
+        >
+          <Text as="span" fontSize="lg" lineHeight="1" aria-hidden>+</Text>
+          <Text as="span">Add a card</Text>
+        </Button>
+        {operationError && <Text role="alert" color="red.700">{operationError}</Text>}
+        <AddCardPopup
+          open={popupOpen}
+          columnTitle={column.title}
+          title={title}
+          description={description}
+          pending={create.isPending || edit.isPending}
+          error={operationError}
+          triggerRef={triggerRef}
+          onTitleChange={setTitle}
+          onDescriptionChange={setDescription}
+          onSubmit={submit}
+          onClose={closePopup}
+        />
+        <AnimatePresence>
+          {successMessage && (
+            <motion.div
+              role="status"
+              initial={{ x: 'calc(100% + 1rem)', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 'calc(100% + 1rem)', opacity: 0 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.35, ease: 'easeOut' }}
+              style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 1600 }}
+            >
+              <Box display="flex" alignItems="center" gap={3} bg="blue.subtle" color="blue.fg" px={4} py={3} borderRadius="md" boxShadow="md">
+                <Image src={invaderIcon} alt="" aria-hidden width="2rem" height="2rem" objectFit="contain" />
+                <Text>{successMessage}</Text>
+              </Box>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Stack>
     </Box>
   )

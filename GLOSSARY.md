@@ -45,3 +45,15 @@ _Avoid_: Details panel, card modal
 **Comments drawer**:
 The left-side panel for viewing every comment on a card, adding a comment, and deleting a comment.
 _Avoid_: Comment modal, comments panel
+
+**Add-card trigger**:
+The plus-and-label control at the bottom of a column that opens the card-creation popup.
+_Avoid_: New card form, add button
+
+**Card-creation popup**:
+The modal form used to create a card with a title and optional description.
+_Avoid_: Add-card modal, card form
+
+**Partial card creation**:
+A card exists because creation succeeded, but its requested description was not saved.
+_Avoid_: Failed card creation
