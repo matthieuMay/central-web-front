@@ -42,10 +42,6 @@ export function Card({ card, columnId, selected, onSelect, onEdit, onDragOver, o
       onDrop(item, point.y < bounds.top + bounds.height / 2 ? 0 : 1)
       return { dropped: true }
     },
-    collect: (monitor) => {
-      if (!monitor.isOver()) onDragOver(null)
-      return {}
-    },
   }), [card.id, onDragOver, onDrop])
   useEffect(() => {
     drag(drop(cardRef))
