@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type Mou
 import type { CardData, UserData } from '../types/board'
 import type { UpdateCardCollectionsInput } from '../api/mutations'
 import { cardElementId, editElementId } from './cardIds'
+import Confetti from './Confetti'
 
 export const cardDragType = 'board-card'
 export type CardDragItem = { cardId: string; columnId: string }
@@ -15,6 +16,7 @@ type CardProps = {
   users: UserData[]
   onSelect: () => void
   onEdit: () => void
+  celebrationKey: number
   onDragOver: (position: number | null) => void
   onDrop: (item: CardDragItem, position: number) => void
   onUpdateCollections: (input: UpdateCardCollectionsInput) => Promise<unknown>
@@ -28,7 +30,7 @@ type CardProps = {
 // delegates the requested position to the board owner.
 // Correctness: selection focuses the card, controls do not select it, dragging
 // shows the dragged state, and dropping reports the correct insertion position.
-export function Card({ card, columnId, selected, users, onSelect, onEdit, onDragOver, onDrop, onUpdateCollections, collectionsPending }: CardProps) {
+export function Card({ card, columnId, selected, users, onSelect, onEdit, celebrationKey, onDragOver, onDrop, onUpdateCollections, collectionsPending }: CardProps) {
   const reducedMotion = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)
   const [commentsOpen, setCommentsOpen] = useState(false)
@@ -116,7 +118,7 @@ export function Card({ card, columnId, selected, users, onSelect, onEdit, onDrag
   }
 
   return (
-    <motion.div layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }}>
+    <motion.div style={{ position: 'relative' }} layout={!reducedMotion} layoutId={reducedMotion ? undefined : `card-${card.id}`} transition={{ layout: { type: 'spring', stiffness: 280, damping: 32 } }}>
       <Box
         as="article" id={cardElementId(card.id)} tabIndex={-1} onClick={select}
         ref={cardRef} opacity={isDragging ? 0.35 : 1}
@@ -124,6 +126,7 @@ export function Card({ card, columnId, selected, users, onSelect, onEdit, onDrag
         bg={selected ? 'bg.info' : 'bg'} borderColor={selected ? 'border.info' : 'border'}
         borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere"
       >
+        <Confetti particleCount={celebrationKey} />
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         {!selected && <Text mt={2} fontSize="sm" color="fg.muted">{card.assignees.length} member{card.assignees.length === 1 ? '' : 's'}</Text>}

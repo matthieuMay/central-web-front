@@ -26,6 +26,7 @@ export function BoardPage() {
   const { data, isPending, isError, error } = useQuery({ queryKey: boardKey, queryFn: getBoard })
   const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  const [celebration, setCelebration] = useState<{ cardId: string; key: number } | null>(null)
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const move = useMoveCard()
   const collections = useUpdateCardCollections()
@@ -37,6 +38,12 @@ export function BoardPage() {
     : -1
   const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
+
+  const celebrateIfCompleted = useCallback((cardId: string, sourceColumnId: string, destinationColumnId: string) => {
+    const doneColumn = data?.columns.at(-1)
+    if (doneColumn?.id !== destinationColumnId || sourceColumnId === destinationColumnId) return
+    setCelebration(current => ({ cardId, key: (current?.key ?? 0) + 1 }))
+  }, [data])
 
   useLayoutEffect(() => {
     const pending = focusAfterMove.current
@@ -61,14 +68,17 @@ export function BoardPage() {
       : undefined
     if (!destinationColumn || (destinationPosition !== undefined && (destinationPosition < 0 || destinationPosition >= data.columns[selectedColumnIndex].cards.length))) return false
     moving.current = true
+    setCelebration(null)
     move.reset()
     focusAfterMove.current = { id: selectedCardId, destination: destinationColumn.id }
+    const sourceColumnId = data.columns[selectedColumnIndex].id
     move.mutate({ cardId: selectedCardId, column: destinationColumn.id, position: destinationPosition }, {
+      onSuccess: () => celebrateIfCompleted(selectedCardId, sourceColumnId, destinationColumn.id),
       onError: () => { focusAfterMove.current = null },
       onSettled: () => { moving.current = false },
     })
     return true
-  }, [data, selectedCardId, selectedColumnIndex, selectedCardIndex, editingCardId, move])
+  }, [data, selectedCardId, selectedColumnIndex, selectedCardIndex, editingCardId, move, celebrateIfCompleted])
 
   const moveDroppedCard = useCallback((cardId: string, columnId: string, position: number) => {
     if (moving.current || move.isPending) return
@@ -78,14 +88,18 @@ export function BoardPage() {
       ? position - 1
       : position
     moving.current = true
+    setCelebration(null)
     move.reset()
     focusAfterMove.current = { id: cardId, destination: columnId }
     move.mutate({ cardId, column: columnId, position: adjustedPosition }, {
-      onSuccess: () => setSelectedCardId(cardId),
+      onSuccess: () => {
+        setSelectedCardId(cardId)
+        if (sourceColumn) celebrateIfCompleted(cardId, sourceColumn.id, columnId)
+      },
       onError: () => { focusAfterMove.current = null },
       onSettled: () => { moving.current = false },
     })
-  }, [data, move])
+  }, [data, move, celebrateIfCompleted])
 
   useEffect(() => {
     if (!selectedCardId) return
@@ -121,6 +135,7 @@ export function BoardPage() {
       </Box>
       <DndProvider backend={HTML5Backend}>
         <Board board={data} users={users.data ?? []} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} onMoveCard={moveDroppedCard}
+          celebrationCardId={celebration?.cardId ?? null} celebrationKey={celebration?.key ?? 0}
           onUpdateCollections={(input) => collections.mutateAsync(input)} collectionsPending={collections.isPending} />
       </DndProvider>
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />

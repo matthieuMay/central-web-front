@@ -14,6 +14,9 @@ type ColumnProps = {
   onSelectCard: (id: string) => void
   onEditCard: (id: string) => void
   onMoveCard: (cardId: string, columnId: string, position: number) => void
+  isLastColumn: boolean
+  celebrationCardId: string | null
+  celebrationKey: number
   onUpdateCollections: (input: UpdateCardCollectionsInput) => Promise<unknown>
   collectionsPending: boolean
 }
@@ -28,7 +31,7 @@ type ColumnProps = {
 // unchecked.
 // Correctness: cards remain in column order, the placeholder marks the target
 // slot, empty columns accept drops, and invalid empty submissions do nothing.
-export function Column({ column, users, selectedCardId, onSelectCard, onEditCard, onMoveCard, onUpdateCollections, collectionsPending }: ColumnProps) {
+export function Column({ column, users, selectedCardId, onSelectCard, onEditCard, onMoveCard, isLastColumn, celebrationCardId, celebrationKey, onUpdateCollections, collectionsPending }: ColumnProps) {
   const [title, setTitle] = useState('')
   const [dragPosition, setDragPosition] = useState<number | null>(null)
   const columnRef = useRef<HTMLDivElement>(null)
@@ -86,6 +89,8 @@ export function Column({ column, users, selectedCardId, onSelectCard, onEditCard
           <div key={card.id}>
             {dragPosition === index && <div className="card-drop-shadow" aria-hidden="true" />}
             <Card card={card} columnId={column.id} users={users} selected={card.id === selectedCardId} onSelect={() => onSelectCard(card.id)} onEdit={() => onEditCard(card.id)}
+              celebrationKey={isLastColumn && celebrationCardId === card.id ? celebrationKey : 0}
+              celebrationKey={celebrationCardId === card.id ? celebrationKey : 0}
               onUpdateCollections={onUpdateCollections} collectionsPending={collectionsPending}
               onDragOver={(offset) => setDragPosition(offset === null ? null : index + offset)}
               onDrop={(item, offset) => onMoveCard(item.cardId, column.id, index + offset)} />
