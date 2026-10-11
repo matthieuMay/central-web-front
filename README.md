@@ -29,6 +29,13 @@ VITE_API_URL=http://localhost:3000 npm run dev
 
 Visit `/board`. The final snapshot uses `useQuery` for GET, and a labeled Add card form in each column (including empty Review) and Save/Cancel on each card. Try creating in Review, editing its title and reloading to check persistence. The first bonus commit shows the intermediate non-optimistic forms: successful POST and PATCH each invalidate the exact `['board', 'mini-trello']` query key, so the form waits for the refetch. This final snapshot immediately updates the cache in both `onMutate` handlers, rolls back failed writes and refetches on settle.
 
+To move a selected card with the keyboard, focus it by clicking the card, then
+use the left/right arrows to move it to the end of the adjacent column, or the
+up/down arrows to swap it with the neighboring card in its current column.
+Moves at the edge of a column or board are no-ops. The frontend persists moves
+with `PUT /cards/:cardId` using `{ column, position }` and rolls back the
+optimistic update when the request fails.
+
 To test a **failure without a server write**, with a running API and `/board` loaded, run the following in the browser console before submitting either form. It blocks the next POST or PATCH *before* the request reaches the server; the optimistic change appears briefly then rolls back with a visible error. Repeat the snippet for the other form. Reload to confirm the server data was not modified.
 
 ```js
@@ -43,4 +50,4 @@ window.fetch = (...args) => {
 }
 ```
 
-Board writes share one TanStack mutation scope to serialize network requests. The cache keeps a pre-batch snapshot and replays surviving optimistic changes when one write fails, retaining successful and still-pending writes. Once all writes settle, a single board invalidation reconciles their final server order, including after failure. `PUT /cards/:cardId` is reserved for Sprint 2 and is not called here.
+Board writes share one TanStack mutation scope to serialize network requests. The cache keeps a pre-batch snapshot and replays surviving optimistic changes when one write fails, retaining successful and still-pending writes. Once all writes settle, a single board invalidation reconciles their final server order, including after failure.

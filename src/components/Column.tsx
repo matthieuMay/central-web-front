@@ -4,14 +4,16 @@ import { v7 as uuidv7 } from 'uuid'
 import { useCreateCard } from '../api/mutations'
 import type { ColumnData } from '../types/board'
 import { Card } from './Card'
+import type { MoveDirection } from './Board'
 
 type ColumnProps = {
   column: ColumnData
   selectedCardId: string | null
   onSelectCard: (cardId: string) => void
+  onMoveCard: (direction: MoveDirection) => void
 }
 
-export function Column({ column, selectedCardId, onSelectCard }: ColumnProps) {
+export function Column({ column, selectedCardId, onSelectCard, onMoveCard }: ColumnProps) {
   const [title, setTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateCard()
@@ -39,6 +41,7 @@ export function Column({ column, selectedCardId, onSelectCard }: ColumnProps) {
             card={card}
             selected={card.id === selectedCardId}
             onSelect={() => onSelectCard(card.id)}
+            onMove={onMoveCard}
           />
         ))}
         <form onSubmit={submit}>

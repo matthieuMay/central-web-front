@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard } from './board'
+import { boardKey, createCard, editCard, moveCard } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string }
+export type MoveCardInput = { cardId: string; columnId: string; position: number }
 
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
@@ -80,6 +81,43 @@ export function useEditCard() {
           : card),
       })),
     })),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
+  })
+}
+
+function moveCardInBoard(board: BoardData, input: MoveCardInput): BoardData {
+  let movedCard = board.columns
+    .flatMap((column) => column.cards)
+    .find((card) => card.id === input.cardId)
+
+  if (!movedCard) return board
+
+  const columnsWithoutCard = board.columns.map((column) => ({
+    ...column,
+    cards: column.cards.filter((card) => card.id !== input.cardId),
+  }))
+  const destination = columnsWithoutCard.find((column) => column.id === input.columnId)
+  if (!destination) return board
+
+  const destinationIndex = Math.max(0, Math.min(input.position, destination.cards.length))
+  const destinationCards = [...destination.cards]
+  destinationCards.splice(destinationIndex, 0, movedCard)
+
+  return {
+    ...board,
+    columns: columnsWithoutCard.map((column) => column.id === input.columnId
+      ? { ...column, cards: destinationCards }
+      : column),
+  }
+}
+
+export function useMoveCard() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'board-writes' },
+    mutationFn: moveCard,
+    onMutate: (input: MoveCardInput) => begin(queryClient, (board) => moveCardInBoard(board, input)),
     onError: (_error, _input, context) => rollback(queryClient, context),
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })

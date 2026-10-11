@@ -32,11 +32,10 @@ export function editCard({ cardId, title }: { cardId: string; title: string }) {
   })
 }
 
-export function moveCard({ cardId, title }: { cardId: string; title: string }) {
+export function moveCard({ cardId, columnId, position }: { cardId: string; columnId: string; position: number }) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ column: columnId, position }),
   })
 }
-

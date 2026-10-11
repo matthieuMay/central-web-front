@@ -1,22 +1,29 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
-import { useRef, useState, type FormEvent } from 'react'
+import { motion } from 'motion/react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
-import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { boardKey, moveCard } from '../api/board'
+import type { MoveDirection } from './Board'
 
 type CardProps = {
   card: CardData
   selected: boolean
   onSelect: () => void
+  onMove: (direction: MoveDirection) => void
 }
 
-export function Card({ card, selected, onSelect }: CardProps) {
+export function Card({ card, selected, onSelect, onMove }: CardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
+  const cardRef = useRef<HTMLElement>(null)
   const editButtonRef = useRef<HTMLButtonElement>(null)
   const edit = useEditCard()
 
+  useEffect(() => {
+    if (!selected || editing) return
+    const frame = requestAnimationFrame(() => cardRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [selected, editing])
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -34,23 +41,25 @@ export function Card({ card, selected, onSelect }: CardProps) {
     onSelect()
   }
 
-  function handleKeyDown(event : React.KeyboardEvent){
-    const queryClient = useQueryClient()
-    if (selected && event.key === 'd' ){
-      console.log('Bonjour')
-      return useMutation({
-        scope: {id: 'board-writes'},
-        mutationFn : moveCard,
-        onSuccess: () => queryClient.invalidateQueries({queryKey: boardKey, exact: true})
-      })
+  function handleKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (!selected || event.currentTarget !== event.target) return
+    const directions: Record<string, MoveDirection> = {
+      ArrowLeft: 'left',
+      ArrowRight: 'right',
+      ArrowUp: 'up',
+      ArrowDown: 'down',
     }
-    else if (selected && event.key === 'q'){
-      console.log('Bonsoir')
-    }
+    const direction = directions[event.key]
+    if (!direction) return
+    event.preventDefault()
+    onMove(direction)
   }
+
   return (
-    <Box
+    <motion.div layout transition={{ type: 'spring', stiffness: 450, damping: 35 }}>
+      <Box
       as="article"
+      ref={cardRef}
       bg="white"
       borderWidth="1px"
       borderRadius="md"
@@ -61,7 +70,7 @@ export function Card({ card, selected, onSelect }: CardProps) {
       aria-pressed={selected}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-    >
+      >
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="gray.600" mt={2} fontSize="sm">{card.description}</Text>}
       {editing ? (
@@ -87,6 +96,7 @@ export function Card({ card, selected, onSelect }: CardProps) {
           Edit
         </button>
       )}
-    </Box>
+      </Box>
+    </motion.div>
   )
 }
