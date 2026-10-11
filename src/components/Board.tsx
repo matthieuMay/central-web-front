@@ -1,4 +1,5 @@
 import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
+import { LayoutGroup } from 'motion/react'
 import { useState } from 'react'
 import { useMoveCard } from '../api/mutations'
 import type { BoardData } from '../types/board'
@@ -44,17 +45,19 @@ export function Board({ board }: BoardProps) {
     <Stack gap={6}>
       <Heading as="h1" size="2xl">{board.title}</Heading>
       {move.isError && <p role="alert">Could not move card: {move.error.message}</p>}
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
-        {board.columns.map((column) => (
-          <Column
-            key={column.id}
-            column={column}
-            selectedCardId={selectedCardId}
-            onSelectCard={setSelectedCardId}
-            onMoveCard={moveSelectedCard}
-          />
-        ))}
-      </SimpleGrid>
+      <LayoutGroup>
+        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
+          {board.columns.map((column) => (
+            <Column
+              key={column.id}
+              column={column}
+              selectedCardId={selectedCardId}
+              onSelectCard={setSelectedCardId}
+              onMoveCard={moveSelectedCard}
+            />
+          ))}
+        </SimpleGrid>
+      </LayoutGroup>
     </Stack>
   )
 }

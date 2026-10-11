@@ -56,7 +56,11 @@ export function Card({ card, selected, onSelect, onMove }: CardProps) {
   }
 
   return (
-    <motion.div layout transition={{ type: 'spring', stiffness: 450, damping: 35 }}>
+    <motion.div
+      layout
+      layoutId={`card-${card.id}`}
+      transition={{ layout: { type: 'spring', stiffness: 350, damping: 30 } }}
+    >
       <Box
       as="article"
       ref={cardRef}

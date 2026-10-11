@@ -34,7 +34,8 @@ use the left/right arrows to move it to the end of the adjacent column, or the
 up/down arrows to swap it with the neighboring card in its current column.
 Moves at the edge of a column or board are no-ops. The frontend persists moves
 with `PUT /cards/:cardId` using `{ column, position }` and rolls back the
-optimistic update when the request fails.
+optimistic update when the request fails. Card moves use a shared layout
+transition so the card animates into its new column.
 
 To test a **failure without a server write**, with a running API and `/board` loaded, run the following in the browser console before submitting either form. It blocks the next POST or PATCH *before* the request reaches the server; the optimistic change appears briefly then rolls back with a visible error. Repeat the snippet for the other form. Reload to confirm the server data was not modified.
 
