@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { BoardData } from '../types/board'
 import { boardKey, createCard, editCard, moveCard } from './board'
+import { moveCardInBoard, type CardMove } from './boardMoves'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
 export type EditCardInput = { cardId: string; title: string; description?: string | null }
@@ -37,6 +38,16 @@ function rollback(queryClient: QueryClient, context: Context | undefined) {
   const base = ledger.base ?? context.previous
   queryClient.setQueryData<BoardData>(boardKey,
     base && ledger.entries.reduce((board, entry) => entry.change(board), base))
+}
+
+// The server answered with the full board. Writes that finished earlier are already
+// part of it (writes run one at a time), so only the ones still waiting are replayed.
+function commit(queryClient: QueryClient, context: Context | undefined, board: BoardData) {
+  const ledger = ledgers.get(queryClient)
+  if (!ledger || !context) return
+  ledger.base = board
+  ledger.entries = ledger.entries.filter((entry) => entry.pending && entry.token !== context.token)
+  queryClient.setQueryData<BoardData>(boardKey, ledger.entries.reduce((current, entry) => entry.change(current), board))
 }
 
 async function settle(queryClient: QueryClient, context: Context | undefined) {
@@ -90,7 +101,10 @@ export function useMoveCard() {
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: moveCard,
-    // The response is not put in the cache: only a successful refetch moves the rendered card.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKey, exact: true }),
+    // The card moves on screen right away; a failed request puts it back.
+    onMutate: (input: CardMove) => begin(queryClient, (board) => moveCardInBoard(board, input)),
+    onSuccess: (board, _input, context) => commit(queryClient, context, board),
+    onError: (_error, _input, context) => rollback(queryClient, context),
+    onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })
 }

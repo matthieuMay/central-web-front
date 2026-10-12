@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Box, Button, HStack, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard } from '../api/board'
+import { positionAfterRemoval } from '../api/boardMoves'
 import { useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
@@ -17,17 +18,16 @@ export function BoardPage() {
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const move = useMoveCard()
   const moving = useRef(false)
-  const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
+  const focusAfterMove = useRef<string | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
   const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
 
+  // A card that changes column is rendered as a new element, which loses focus.
+  // While a move is in progress, focus the card again after each board change
+  // (the immediate move, then a possible rollback).
   useLayoutEffect(() => {
-    const pending = focusAfterMove.current
-    if (pending && data?.columns.some((column) => column.id === pending.destination && column.cards.some((card) => card.id === pending.id))) {
-      document.getElementById(cardElementId(pending.id))?.focus({ preventScroll: true })
-      focusAfterMove.current = null
-    }
+    if (focusAfterMove.current) document.getElementById(cardElementId(focusAfterMove.current))?.focus({ preventScroll: true })
   }, [data])
 
   function selectCard(id: string) {
@@ -41,12 +41,15 @@ export function BoardPage() {
     if (!data || !selectedCardId || selectedColumnIndex < 0 || editingCardId || moving.current || move.isPending) return false
     const destination = data.columns[selectedColumnIndex + direction]
     if (!destination) return false
+    const position = positionAfterRemoval(data, selectedCardId, destination.id, destination.cards.length)
     moving.current = true
     move.reset()
-    focusAfterMove.current = { id: selectedCardId, destination: destination.id }
-    move.mutate({ cardId: selectedCardId, column: destination.id }, {
-      onError: () => { focusAfterMove.current = null },
-      onSettled: () => { moving.current = false },
+    focusAfterMove.current = selectedCardId
+    move.mutate({ cardId: selectedCardId, column: destination.id, position }, {
+      onSettled: () => {
+        moving.current = false
+        focusAfterMove.current = null
+      },
     })
     return true
   }, [data, selectedCardId, selectedColumnIndex, editingCardId, move])
