@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
 import type { CardData } from '../types/board'
 import { editElementId } from './cardIds'
+import { CardDetails } from './CardDetails'
 
 type Fields = { title: string; description: string }
 
@@ -64,6 +65,7 @@ export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClo
         <Drawer.Positioner>
           <Drawer.Content>
             {card && <EditForm key={card.id} card={card} onClose={onClose} />}
+            {card && <CardDetails card={card} />}
           </Drawer.Content>
         </Drawer.Positioner>
       </Portal>
