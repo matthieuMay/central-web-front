@@ -6,6 +6,7 @@ import { positionAfterRemoval } from '../api/boardMoves'
 import { useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
+import type { DraggedCard, DropTarget } from '../components/Column'
 import { EditCardDrawer } from '../components/EditCardDrawer'
 
 function isControl(target: EventTarget | null) {
@@ -19,6 +20,9 @@ export function BoardPage() {
   const move = useMoveCard()
   const moving = useRef(false)
   const focusAfterMove = useRef<string | null>(null)
+  const dragActive = useRef(false)
+  const [dragged, setDragged] = useState<DraggedCard | null>(null)
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
   const selectedColumn = data?.columns[selectedColumnIndex]
   const selectedCardIndex = selectedColumn?.cards.findIndex((card) => card.id === selectedCardId) ?? -1
@@ -40,34 +44,103 @@ export function BoardPage() {
     document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
   }
 
-  const moveSelected = useCallback((direction: -1 | 1) => {
-    if (!data || !selectedCardId || selectedColumnIndex < 0 || editingCardId || moving.current || move.isPending) return false
-    const destination = data.columns[selectedColumnIndex + direction]
-    if (!destination) return false
-    const position = positionAfterRemoval(data, selectedCardId, destination.id, destination.cards.length)
+  // Sends one move. Returns false when a move cannot start now.
+  const startMove = useCallback((cardId: string, column: string, position: number) => {
+    if (editingCardId || moving.current || move.isPending) return false
     moving.current = true
     move.reset()
-    focusAfterMove.current = selectedCardId
-    move.mutate({ cardId: selectedCardId, column: destination.id, position }, {
+    focusAfterMove.current = cardId
+    move.mutate({ cardId, column, position }, {
       onSettled: () => {
         moving.current = false
         focusAfterMove.current = null
       },
     })
     return true
-  }, [data, selectedCardId, selectedColumnIndex, editingCardId, move])
+  }, [editingCardId, move])
+
+  // Left/right: to the end of the neighbouring column.
+  const moveToColumn = useCallback((direction: -1 | 1) => {
+    const destination = data?.columns[selectedColumnIndex + direction]
+    if (!data || !selectedCardId || selectedColumnIndex < 0 || !destination) return false
+    return startMove(selectedCardId, destination.id, positionAfterRemoval(data, selectedCardId, destination.id, destination.cards.length))
+  }, [data, selectedCardId, selectedColumnIndex, startMove])
+
+  // Up/down: one place in the same column. Removing the card does not move the
+  // cards above it and shifts the ones below up by one, so the API position is
+  // simply the current index - 1 (up) or + 1 (down).
+  const moveInColumn = useCallback((direction: -1 | 1) => {
+    if (!selectedCardId || !selectedColumn || !selectedColumn.cards[selectedCardIndex + direction]) return false
+    return startMove(selectedCardId, selectedColumn.id, selectedCardIndex + direction)
+  }, [selectedCardId, selectedColumn, selectedCardIndex, startMove])
 
   useEffect(() => {
     if (!selectedCardId) return
     function onKeyDown(event: KeyboardEvent) {
       if (editingCardId || isControl(event.target)) return
       if (event.key === 'Escape') { setSelectedCardId(null); return }
-      const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : null
-      if (direction && moveSelected(direction)) event.preventDefault()
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (moveToColumn(event.key === 'ArrowLeft' ? -1 : 1)) event.preventDefault()
+      }
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        // With a selected card, Up/Down only reorder it: never scroll the page, even at an edge.
+        event.preventDefault()
+        moveInColumn(event.key === 'ArrowUp' ? -1 : 1)
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedCardId, editingCardId, moveSelected])
+  }, [selectedCardId, editingCardId, moveToColumn, moveInColumn])
+
+  const busy = move.isPending || !!editingCardId
+  const isLastInColumn = selectedCardIndex === (selectedColumn?.cards.length ?? 0) - 1
+
+  function startDrag(cardId: string, height: number) {
+    // Wait one tick: changing the page while the browser is still starting the drag
+    // would fade the drag image and can shift the board under the pointer.
+    dragActive.current = true
+    setTimeout(() => {
+      if (!dragActive.current) return // the drag already ended
+      move.reset()
+      setSelectedCardId(cardId)
+      setDragged({ cardId, height })
+      document.getElementById(cardElementId(cardId))?.focus({ preventScroll: true })
+    })
+  }
+
+  // Called again and again while a card is dragged over a column, with the index
+  // under the pointer. Returns true when the card may be dropped in that column.
+  function showDropTarget(columnId: string, index: number) {
+    const column = data?.columns.find((item) => item.id === columnId)
+    const currentIndex = column?.cards.findIndex((card) => card.id === dragged?.cardId) ?? -1
+    // For now a card can only be reordered inside its own column.
+    if (currentIndex === -1) return false
+    // Just above or just below the card itself: dropping there would change nothing, so no placeholder.
+    const changesOrder = index !== currentIndex && index !== currentIndex + 1
+    const next = changesOrder ? { columnId, index } : null
+    // Only update when the target really changed, to avoid a re-render on every dragover.
+    const samePlace = next?.columnId === dropTarget?.columnId && next?.index === dropTarget?.index
+    if (!samePlace) setDropTarget(next)
+    return true
+  }
+
+  function clearDropTarget(columnId: string) {
+    if (dropTarget?.columnId === columnId) setDropTarget(null)
+  }
+
+  function dropCard() {
+    if (data && dragged && dropTarget) {
+      startMove(dragged.cardId, dropTarget.columnId, positionAfterRemoval(data, dragged.cardId, dropTarget.columnId, dropTarget.index))
+    }
+    endDrag()
+  }
+
+  // Runs after every drag: after a drop, a cancel (Escape) or a drop outside any column.
+  function endDrag() {
+    dragActive.current = false
+    setDragged(null)
+    setDropTarget(null)
+  }
 
   if (isPending) return <p role="status">Loading board…</p>
   if (isError) return <p role="alert">Could not load board: {error.message}</p>
@@ -77,14 +150,18 @@ export function BoardPage() {
         {selectedCard && (
           <HStack flexWrap="wrap" gap={3}>
             <Text>Selected: {selectedCard.title}</Text>
-            <Button size="sm" disabled={selectedColumnIndex === 0 || move.isPending || !!editingCardId} onClick={() => moveSelected(-1)}>Move left</Button>
-            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || move.isPending || !!editingCardId} onClick={() => moveSelected(1)}>Move right</Button>
+            <Button size="sm" disabled={selectedColumnIndex === 0 || busy} onClick={() => moveToColumn(-1)}>Move left</Button>
+            <Button size="sm" disabled={selectedColumnIndex === data.columns.length - 1 || busy} onClick={() => moveToColumn(1)}>Move right</Button>
+            <Button size="sm" disabled={selectedCardIndex === 0 || busy} onClick={() => moveInColumn(-1)}>Move up</Button>
+            <Button size="sm" disabled={isLastInColumn || busy} onClick={() => moveInColumn(1)}>Move down</Button>
             {move.isPending && <Text role="status">Moving card…</Text>}
           </HStack>
         )}
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
       </Box>
-      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} />
+      <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }}
+        drag={{ canDrag: !busy, dragged, dropTarget, onStart: startDrag, onOver: showDropTarget, onLeave: clearDropTarget, onDrop: dropCard, onEnd: endDrag }}
+      />
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>
   )
