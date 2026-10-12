@@ -1,4 +1,4 @@
-import type { BoardData, CardData, ChecklistItem, CommentData, UserData } from '../types/board'
+import type { BoardData, CardData, CardLabel, ChecklistItem, CommentData, UserData } from '../types/board'
 import fixture from '../../data/board.json'
 import usersFixture from '../../data/users.json'
 
@@ -52,33 +52,37 @@ export function getUsers() {
   return request<UserData[]>('/users')
 }
 
-export function createCard({ columnId, id, title }: { columnId: string; id: string; title: string }) {
+export function createCard({ columnId, id, title, label }: { columnId: string; id: string; title: string; label?: CardLabel }) {
   if (useMockData) {
     const column = mockBoard.columns.find((item) => item.id === columnId)
     if (!column) return Promise.reject(new Error('Column not found'))
-    column.cards.push({ id, title, assignees: [], comments: [], checklistItems: [] })
+    column.cards.push({ id, title, ...(label ? { label } : {}), assignees: [], comments: [], checklistItems: [] })
     return Promise.resolve(mockResponse())
   }
   return request(`/columns/${encodeURIComponent(columnId)}/cards`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, title }),
+    body: JSON.stringify({ id, title, ...(label ? { label } : {}) }),
   })
 }
 
-export function editCard({ cardId, title, description }: { cardId: string; title: string; description?: string | null }) {
+export function editCard({ cardId, title, description, label }: { cardId: string; title: string; description?: string | null; label?: CardLabel | null }) {
   if (useMockData) {
     const card = mockBoard.columns.flatMap((column) => column.cards).find((item) => item.id === cardId)
     if (!card) return Promise.reject(new Error('Card not found'))
     card.title = title
     if (description !== undefined) card.description = description ?? undefined
+    if (label !== undefined) {
+      if (label === null) delete card.label
+      else card.label = label
+    }
     return Promise.resolve(mockResponse())
   }
 
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}) }),
+    body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}), ...(label !== undefined ? { label } : {}) }),
   })
 }
 

@@ -4,10 +4,11 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { boardKey, getBoard, getUsers } from '../api/board'
-import { useMoveCard, useUpdateCardCollections } from '../api/mutations'
+import { useEditCard, useMoveCard, useUpdateCardCollections } from '../api/mutations'
 import { Board } from '../components/Board'
-import { cardElementId } from '../components/cardIds'
+import { cardElementId } from '../types/cardIds'
 import { EditCardDrawer } from '../components/EditCardDrawer'
+import type { CardLabel } from '../types/board'
 const usersKey = ['users'] as const
 
 function isControl(target: EventTarget | null) {
@@ -27,8 +28,10 @@ export function BoardPage() {
   const users = useQuery({ queryKey: usersKey, queryFn: getUsers })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [celebration, setCelebration] = useState<{ cardId: string; key: number } | null>(null)
+  const [visibleLabels, setVisibleLabels] = useState<Set<CardLabel>>(() => new Set(['urgent', 'documentation', 'bug', 'feature']))
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
   const move = useMoveCard()
+  const edit = useEditCard()
   const collections = useUpdateCardCollections()
   const moving = useRef(false)
   const focusAfterMove = useRef<{ id: string; destination: string } | null>(null)
@@ -101,6 +104,29 @@ export function BoardPage() {
     })
   }, [data, move, celebrateIfCompleted])
 
+  const changeCardLabel = useCallback((cardId: string, label: CardLabel) => {
+    const card = data?.columns.flatMap((column) => column.cards).find((item) => item.id === cardId)
+    if (card) edit.mutate({ cardId, title: card.title, label })
+  }, [data, edit])
+
+  const sortColumn = useCallback(async (columnId: string) => {
+    if (!data || moving.current || move.isPending) return
+    const column = data.columns.find((item) => item.id === columnId)
+    if (!column) return
+    const priority: Record<CardLabel, number> = { urgent: 0, bug: 1, feature: 2, documentation: 3 }
+    const sortedCards = [...column.cards].sort((left, right) => (left.label ? priority[left.label] : 4) - (right.label ? priority[right.label] : 4))
+    moving.current = true
+    setCelebration(null)
+    move.reset()
+    try {
+      for (const [position, card] of sortedCards.entries()) {
+        await move.mutateAsync({ cardId: card.id, column: column.id, position })
+      }
+    } finally {
+      moving.current = false
+    }
+  }, [data, move])
+
   useEffect(() => {
     if (!selectedCardId) return
     function onKeyDown(event: KeyboardEvent) {
@@ -136,7 +162,9 @@ export function BoardPage() {
       <DndProvider backend={HTML5Backend}>
         <Board board={data} users={users.data ?? []} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }} onMoveCard={moveDroppedCard}
           celebrationCardId={celebration?.cardId ?? null} celebrationKey={celebration?.key ?? 0}
-          onUpdateCollections={(input) => collections.mutateAsync(input)} collectionsPending={collections.isPending} />
+          onUpdateCollections={(input) => collections.mutateAsync(input)} collectionsPending={collections.isPending}
+          visibleLabels={visibleLabels} onToggleLabel={(_label, labels) => setVisibleLabels(labels)}
+          onSortColumn={sortColumn} onChangeLabel={changeCardLabel} />
       </DndProvider>
       <EditCardDrawer card={editingCard ?? null} onClose={() => setEditingCardId(null)} />
     </>

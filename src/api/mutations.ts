@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData } from '../types/board'
+import type { BoardData, CardLabel } from '../types/board'
 import { boardKey, createCard, editCard, moveCard, patchCardCollections, type CardCollectionsPatch } from './board'
 
-export type CreateCardInput = { columnId: string; id: string; title: string }
-export type EditCardInput = { cardId: string; title: string; description?: string | null }
+export type CreateCardInput = { columnId: string; id: string; title: string; label?: CardLabel }
+export type EditCardInput = { cardId: string; title: string; description?: string | null; label?: CardLabel | null }
 export type UpdateCardCollectionsInput = { cardId: string } & CardCollectionsPatch
 
 type Change = (board: BoardData) => BoardData
@@ -59,7 +59,7 @@ export function useCreateCard() {
     onMutate: (input: CreateCardInput) => begin(queryClient, (board) => ({
       ...board,
       columns: board.columns.map((column) => column.id === input.columnId
-        ? { ...column, cards: [...column.cards, { id: input.id, title: input.title, assignees: [], comments: [], checklistItems: [] }] }
+        ? { ...column, cards: [...column.cards, { id: input.id, title: input.title, ...(input.label ? { label: input.label } : {}), assignees: [], comments: [], checklistItems: [] }] }
         : column),
     })),
     onError: (_error, _input, context) => rollback(queryClient, context),
@@ -77,7 +77,7 @@ export function useEditCard() {
       columns: board.columns.map((column) => ({
         ...column,
         cards: column.cards.map((card) => card.id === input.cardId
-          ? { ...card, title: input.title, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }) }
+          ? { ...card, title: input.title, ...(input.description === undefined ? {} : input.description === null ? { description: undefined } : { description: input.description }), ...(input.label === undefined ? {} : input.label === null ? { label: undefined } : { label: input.label }) }
           : card),
       })),
     })),

@@ -15,6 +15,8 @@ export type ChecklistItem = {
   done: boolean
 }
 
+export type CardLabel = 'urgent' | 'documentation' | 'bug' | 'feature'
+
 export type CardCollections = {
   assignees: string[]
   comments: CommentData[]
@@ -25,6 +27,7 @@ export type CardData = {
   id: string
   title: string
   description?: string
+  label?: CardLabel
 } & CardCollections
 
 export type ColumnData = {

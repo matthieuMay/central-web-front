@@ -2,10 +2,10 @@ import { Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
-import type { CardData } from '../types/board'
-import { editElementId } from './cardIds'
+import type { CardData, CardLabel } from '../types/board'
+import { editElementId } from '../types/cardIds'
 
-type Fields = { title: string; description: string }
+type Fields = { title: string; description: string; label: CardLabel | '' }
 
 // Responsibility: edit a card's title and description in an isolated form.
 // Props provide the selected card and close callback; the mutation owns
@@ -18,7 +18,7 @@ type Fields = { title: string; description: string }
 // successful saves return focus to the card's edit control.
 function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   const edit = useEditCard()
-  const [initial] = useState(() => ({ title: card.title, description: card.description ?? '' }))
+  const [initial] = useState(() => ({ title: card.title, description: card.description ?? '', label: (card.label ?? '') as CardLabel | '' }))
   const { register, handleSubmit, reset, trigger, formState: { errors, isValid } } = useForm<Fields>({
     mode: 'onChange',
     defaultValues: initial,
@@ -33,7 +33,7 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
 
   async function submit(values: Fields) {
     try {
-      await edit.mutateAsync({ cardId: card.id, title: values.title.trim(), description: values.description || null })
+      await edit.mutateAsync({ cardId: card.id, title: values.title.trim(), description: values.description || null, label: values.label || null })
       onClose()
     } catch {
       // Keep the form and its values in place so the user can retry.
@@ -52,6 +52,16 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
         <Field.Root>
           <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
           <Textarea id="edit-description" rows={5} {...register('description')} />
+        </Field.Root>
+        <Field.Root mt={4}>
+          <Field.Label htmlFor="edit-label">Label</Field.Label>
+          <select id="edit-label" {...register('label')}>
+            <option value="">No label</option>
+            <option value="urgent">Urgent</option>
+            <option value="documentation">Documentation</option>
+            <option value="bug">Bug</option>
+            <option value="feature">Feature</option>
+          </select>
         </Field.Root>
         {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
       </Drawer.Body>

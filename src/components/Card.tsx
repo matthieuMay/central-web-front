@@ -2,10 +2,11 @@ import { Box, Button, Heading, IconButton, Input, Stack, Text, Textarea } from '
 import { motion, useReducedMotion } from 'motion/react'
 import { useDrag, useDrop } from 'react-dnd'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent } from 'react'
-import type { CardData, UserData } from '../types/board'
+import type { CardData, CardLabel, UserData } from '../types/board'
 import type { UpdateCardCollectionsInput } from '../api/mutations'
-import { cardElementId, editElementId } from './cardIds'
+import { cardElementId, editElementId } from '../types/cardIds'
 import Confetti from './Confetti'
+import { cardLabels } from '../types/cardLabels'
 
 export const cardDragType = 'board-card'
 export type CardDragItem = { cardId: string; columnId: string }
@@ -17,6 +18,8 @@ type CardProps = {
   onSelect: () => void
   onEdit: () => void
   celebrationKey: number
+  showLabel: boolean
+  onChangeLabel: (cardId: string, label: CardLabel) => void
   onDragOver: (position: number | null) => void
   onDrop: (item: CardDragItem, position: number) => void
   onUpdateCollections: (input: UpdateCardCollectionsInput) => Promise<unknown>
@@ -30,7 +33,7 @@ type CardProps = {
 // delegates the requested position to the board owner.
 // Correctness: selection focuses the card, controls do not select it, dragging
 // shows the dragged state, and dropping reports the correct insertion position.
-export function Card({ card, columnId, selected, users, onSelect, onEdit, celebrationKey, onDragOver, onDrop, onUpdateCollections, collectionsPending }: CardProps) {
+export function Card({ card, columnId, selected, users, onSelect, onEdit, celebrationKey, showLabel, onChangeLabel, onDragOver, onDrop, onUpdateCollections, collectionsPending }: CardProps) {
   const reducedMotion = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)
   const [commentsOpen, setCommentsOpen] = useState(false)
@@ -39,6 +42,7 @@ export function Card({ card, columnId, selected, users, onSelect, onEdit, celebr
   const [commentAuthor, setCommentAuthor] = useState('')
   const [commentText, setCommentText] = useState('')
   const [taskDescription, setTaskDescription] = useState('')
+  const [labelPickerOpen, setLabelPickerOpen] = useState(false)
   const [{ isDragging }, drag] = useDrag(() => ({
     type: cardDragType,
     item: { cardId: card.id, columnId },
@@ -127,6 +131,14 @@ export function Card({ card, columnId, selected, users, onSelect, onEdit, celebr
         borderWidth={selected ? '2px' : '1px'} borderRadius="md" p={4} overflowWrap="anywhere"
       >
         <Confetti particleCount={celebrationKey} />
+        {showLabel && card.label && (
+          <span className="card-label-control" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="card-label-dot" style={{ backgroundColor: cardLabels.find((label) => label.id === card.label)?.color }} title={`Change label from ${cardLabels.find((label) => label.id === card.label)?.name}`} aria-label={`Change label from ${cardLabels.find((label) => label.id === card.label)?.name}`} onClick={(event) => { event.stopPropagation(); setLabelPickerOpen((open) => !open) }} />
+            {labelPickerOpen && <span className="card-label-picker">
+              {cardLabels.map((label) => <button key={label.id} type="button" className="card-label-dot" style={{ backgroundColor: label.color }} aria-label={`Set ${label.name} label`} onClick={(event) => { event.stopPropagation(); onChangeLabel(card.id, label.id); setLabelPickerOpen(false) }} />)}
+            </span>}
+          </span>
+        )}
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
         {!selected && <Text mt={2} fontSize="sm" color="fg.muted">{card.assignees.length} member{card.assignees.length === 1 ? '' : 's'}</Text>}
