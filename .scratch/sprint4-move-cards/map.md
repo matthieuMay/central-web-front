@@ -71,7 +71,12 @@ Agreed with the user on 2026-10-12.
 
 ## Fog
 
-- Exact style of the placeholder (dashed border, colour token): choose during implementation, check in both themes.
+Tickets 02–07 were marked resolved on 2026-10-12. These points are still open:
+
+- **Browser checks not run by an agent** (no Chrome on the agent's machine, see ticket 07): spec checks 1–12, especially placeholder jitter during card animations, the not-allowed cursor on far columns, Escape to cancel a drag, confetti origin and timing, the reduced-motion notice, and dark mode readability of the faded card, placeholder and notice.
+- **Placeholder style chosen, light/dark check pending:** 2px dashed `blue.fg` border on `blue.subtle` (`src/components/Column.tsx`).
+- **Edit drawer error colour:** the save error in `src/components/EditCardDrawer.tsx` still uses `red.700` only, hard to read in dark mode (Sprint 2 code; the move error was fixed).
+- **API error messages hidden:** the request helper in `src/api/board.ts` shows only the HTTP status, not the JSON `{ "error": "<message>" }` body (e.g. `Position out of range`).
 
 ## Tickets
 

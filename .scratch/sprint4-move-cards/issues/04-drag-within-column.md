@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 (Move left/right sends `position` and updates the screen immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Starting a drag selects the card and fades it out.
 - [ ] Hovering between two cards shows the placeholder there; it follows the pointer (inserted before the first card whose vertical middle is below the pointer, otherwise at the end).
@@ -15,3 +15,7 @@
 - [ ] Dragging is ignored while a move is pending.
 - [ ] Placeholder and faded card are readable in light and dark mode.
 - [ ] `npm run lint` and `npm run build` pass.
+
+## Answer
+
+Resolved on 2026-10-12 at the user's request. Implemented in `d2266ac` (native drag and drop in `src/components/Card.tsx` and `src/components/Column.tsx`). Placeholder style: 2px dashed `blue.fg` border on `blue.subtle`, the height of the dragged card. Open browser checks (jitter during animations, Escape cancel, dark mode) are listed in the map's Fog.

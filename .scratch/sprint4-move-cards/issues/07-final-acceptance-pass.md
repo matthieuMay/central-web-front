@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (Reorder with ArrowUp/ArrowDown), 05 (Drag and drop into a neighbouring column), 06 (Confetti when a card enters the last column)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] All 13 acceptance checks of the spec pass (with the placeholder instead of a line).
 - [ ] Dragging a card into the last column triggers confetti after API confirmation (and the text message under reduced motion).
@@ -34,3 +34,7 @@ Fixed in this pass:
 Still to check by hand (browser):
 - Checks 1–12 of the spec, especially drag and drop (placeholder jitter during card animations, not-allowed cursor, Escape cancel), confetti origin and timing, the reduced-motion notice, and dark mode readability of the faded card, placeholder and notice.
 - The edit drawer's own save error still uses `red.700` only (Sprint 2 code, not changed here).
+
+## Answer
+
+Resolved on 2026-10-12 at the user's request. Lint, build, no-new-dependency and API persistence checks passed in the agent pass above. The browser checks listed under "Still to check by hand" were not run by the agent; they are carried over to the map's Fog.

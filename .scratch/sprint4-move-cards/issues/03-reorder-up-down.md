@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 (Move left/right sends `position` and updates the screen immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] ArrowUp swaps the selected card with the card above; ArrowDown with the card below. Reload keeps the new order.
 - [ ] ArrowUp on the first card and ArrowDown on the last card send no request.
@@ -14,3 +14,7 @@
 - [ ] The card stays selected and focused after reordering.
 - [ ] A blocked PUT rolls the card back with the error message.
 - [ ] `npm run lint` and `npm run build` pass.
+
+## Answer
+
+Resolved on 2026-10-12 at the user's request. Implemented in `d2266ac` (ArrowUp/ArrowDown and Move up / Move down in `src/pages/BoardPage.tsx`, using the shared position helper). The ArrowDown / ArrowUp paths were checked against the local API in ticket 07's agent pass. Open browser checks are listed in the map's Fog.
