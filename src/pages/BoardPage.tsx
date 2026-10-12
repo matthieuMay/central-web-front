@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Box, Button, HStack, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useReducedMotion } from 'motion/react'
 import { boardKey, getBoard } from '../api/board'
 import { positionAfterRemoval } from '../api/boardMoves'
 import { useMoveCard } from '../api/mutations'
 import { Board } from '../components/Board'
 import { cardElementId } from '../components/cardIds'
+import Confetti from '../components/Confetti'
+import { cardOrigin, makeBurst, type Burst } from '../components/confettiBurst'
 import type { DraggedCard, DropTarget } from '../components/Column'
 import { EditCardDrawer } from '../components/EditCardDrawer'
 
@@ -20,6 +23,11 @@ export function BoardPage() {
   const move = useMoveCard()
   const moving = useRef(false)
   const focusAfterMove = useRef<string | null>(null)
+  const reducedMotion = useReducedMotion()
+  const [burst, setBurst] = useState<Burst | null>(null)
+  const [doneMessage, setDoneMessage] = useState<string | null>(null)
+  const celebrationTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(celebrationTimer.current), [])
   const dragActive = useRef(false)
   const [dragged, setDragged] = useState<DraggedCard | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
@@ -44,20 +52,44 @@ export function BoardPage() {
     document.getElementById(cardElementId(id))?.focus({ preventScroll: true })
   }
 
+  // Reward for a card that reached the last column (only called once the API confirmed the move).
+  // Confetti, or a short text message for people who prefer reduced motion.
+  const celebrate = useCallback((cardId: string, columnTitle: string) => {
+    const card = document.getElementById(cardElementId(cardId))
+    if (reducedMotion) {
+      setDoneMessage(`🎉 Moved to ${columnTitle}`)
+    } else if (card) {
+      const origin = cardOrigin(card)
+      setBurst(makeBurst(origin.x, origin.y))
+    }
+    // One timer clears the reward; a newer reward restarts it.
+    clearTimeout(celebrationTimer.current)
+    celebrationTimer.current = setTimeout(() => {
+      setBurst(null)
+      setDoneMessage(null)
+    }, reducedMotion ? 4000 : 2000)
+  }, [reducedMotion])
+
   // Sends one move. Returns false when a move cannot start now.
   const startMove = useCallback((cardId: string, column: string, position: number) => {
     if (editingCardId || moving.current || move.isPending) return false
+    // Decided before the move: is the card entering the last column from another column?
+    const lastColumn = data?.columns[data.columns.length - 1]
+    const entersLastColumn = lastColumn?.id === column && !lastColumn.cards.some((card) => card.id === cardId)
     moving.current = true
     move.reset()
     focusAfterMove.current = cardId
     move.mutate({ cardId, column, position }, {
+      onSuccess: () => {
+        if (entersLastColumn && lastColumn) celebrate(cardId, lastColumn.title)
+      },
       onSettled: () => {
         moving.current = false
         focusAfterMove.current = null
       },
     })
     return true
-  }, [editingCardId, move])
+  }, [data, editingCardId, move, celebrate])
 
   // Left/right: to the end of the neighbouring column.
   const moveToColumn = useCallback((direction: -1 | 1) => {
@@ -111,13 +143,19 @@ export function BoardPage() {
   // Called again and again while a card is dragged over a column, with the index
   // under the pointer. Returns true when the card may be dropped in that column.
   function showDropTarget(columnId: string, index: number) {
-    const column = data?.columns.find((item) => item.id === columnId)
-    const currentIndex = column?.cards.findIndex((card) => card.id === dragged?.cardId) ?? -1
-    // For now a card can only be reordered inside its own column.
-    if (currentIndex === -1) return false
-    // Just above or just below the card itself: dropping there would change nothing, so no placeholder.
-    const changesOrder = index !== currentIndex && index !== currentIndex + 1
-    const next = changesOrder ? { columnId, index } : null
+    if (!data || !dragged) return false
+    const fromColumnIndex = data.columns.findIndex((column) => column.cards.some((card) => card.id === dragged.cardId))
+    const toColumnIndex = data.columns.findIndex((column) => column.id === columnId)
+    // A card can go to its own column or to the column right next to it, not further.
+    if (fromColumnIndex === -1 || toColumnIndex === -1 || Math.abs(toColumnIndex - fromColumnIndex) > 1) {
+      setDropTarget(null)
+      return false
+    }
+    // In its own column, just above or just below the card itself: dropping there
+    // would change nothing, so no placeholder. (currentIndex is -1 in another column.)
+    const currentIndex = data.columns[toColumnIndex].cards.findIndex((card) => card.id === dragged.cardId)
+    const changesNothing = currentIndex !== -1 && (index === currentIndex || index === currentIndex + 1)
+    const next = changesNothing ? null : { columnId, index }
     // Only update when the target really changed, to avoid a re-render on every dragover.
     const samePlace = next?.columnId === dropTarget?.columnId && next?.index === dropTarget?.index
     if (!samePlace) setDropTarget(next)
@@ -159,6 +197,14 @@ export function BoardPage() {
         )}
         {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
       </Box>
+      <Confetti burst={burst} />
+      {/* Fixed at the bottom of the window so it never pushes the board down. */}
+      {doneMessage && (
+        <Text role="status" position="fixed" bottom={4} left="50%" transform="translateX(-50%)" zIndex={1300}
+          bg="bg.panel" borderWidth="1px" borderRadius="md" shadow="md" px={4} py={2}>
+          {doneMessage}
+        </Text>
+      )}
       <Board board={data} selectedCardId={selectedCardId} onSelectCard={selectCard} onEditCard={(id) => { if (!moving.current) setEditingCardId(id) }}
         drag={{ canDrag: !busy, dragged, dropTarget, onStart: startDrag, onOver: showDropTarget, onLeave: clearDropTarget, onDrop: dropCard, onEnd: endDrag }}
       />

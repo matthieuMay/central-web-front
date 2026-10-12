@@ -66,11 +66,11 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, drag 
 
   function dragOver(event: DragEvent<HTMLElement>) {
     if (!drag.dragged) return
-    // Calling preventDefault is how a drop target tells the browser "you may drop here".
-    if (drag.onOver(column.id, indexUnderPointer(event.currentTarget, event.clientY))) {
-      event.preventDefault()
-      event.dataTransfer.dropEffect = 'move'
-    }
+    // preventDefault lets us choose the cursor: "move" where the card may be dropped,
+    // "none" (not-allowed cursor, and no drop event) everywhere else.
+    event.preventDefault()
+    const allowed = drag.onOver(column.id, indexUnderPointer(event.currentTarget, event.clientY))
+    event.dataTransfer.dropEffect = allowed ? 'move' : 'none'
   }
 
   function dragLeave(event: DragEvent<HTMLElement>) {
@@ -94,7 +94,7 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, drag 
     >
       <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
       <Stack gap={3}>
-        {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
+        {column.cards.length === 0 && placeholderIndex === null && <Text color="fg.muted">No cards yet</Text>}
         {column.cards.map((card, index) => (
           <Fragment key={card.id}>
             {placeholderIndex === index && placeholder}

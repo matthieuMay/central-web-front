@@ -1,63 +1,24 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react'
+import type { Burst } from './confettiBurst'
 
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  rotate: number;
-  color: string;
-}
-
-export default function Confetti({particleCount = 0}: {particleCount?:number}) {
-  const [particles, setParticles] = useState<Particle[]>([]);
-
-  React.useEffect(() => {
-    if (particleCount <= 0) return;
-    const colors = ['#ff0055', '#0099ff', '#00ff66', '#ffaa00'];
-    
-    // Génère 40 confettis avec des trajectoires aléatoires
-    const newParticles = Array.from({ length: 40 }).map((_, i) => ({
-      id: Date.now() + i,
-      x: (Math.random() - 0.5) * 300, // Dispersion horizontale
-      y: -(Math.random() * 200 + 100), // Propulsion vers le haut
-      rotate: Math.random() * 360,
-      color: colors[Math.floor(Math.random() * colors.length)]
-    }));
-
-    setParticles(newParticles);
-
-    // Nettoie les particules après l'animation
-    const timeoutId = setTimeout(() => setParticles([]), 2000);
-    return () => clearTimeout(timeoutId);
-  },[particleCount]);
+// Shows one burst of confetti on top of the page. It never blocks clicks and never
+// moves the layout. People who ask for reduced motion get nothing here.
+export default function Confetti({ burst }: { burst: Burst | null }) {
+  const reducedMotion = useReducedMotion()
+  if (!burst || reducedMotion) return null
 
   return (
-        <AnimatePresence>
-          {particles.map((p) => (
-            <motion.div
-              key={p.id}
-              initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
-              animate={{ 
-                x: p.x, 
-                y: p.y, 
-                rotate: p.rotate,
-                opacity: 0,
-                scale: 0.5
-              }}
-              transition={{ 
-                duration: 1.5, 
-                ease: "easeOut" 
-              }}
-              style={{
-                position: 'absolute',
-                width: '10px',
-                height: '10px',
-                backgroundColor: p.color,
-                borderRadius: Math.random() > 0.5 ? '50%' : '0px' // Forme mixte (cercles / carrés)
-              }}
-            />
-          ))}
-        </AnimatePresence>
-  );
+    // zIndex 1300: above the board, below Chakra's drawer (1400).
+    <div aria-hidden="true" style={{ position: 'fixed', left: burst.x, top: burst.y, pointerEvents: 'none', zIndex: 1300 }}>
+      {burst.particles.map((p) => (
+        <motion.div
+          key={`${burst.id}-${p.id}`}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
+          animate={{ x: p.x, y: p.y, rotate: p.rotate, opacity: 0, scale: 0.5 }}
+          transition={{ duration: 1.5, ease: 'easeOut' }}
+          style={{ position: 'absolute', width: '10px', height: '10px', backgroundColor: p.color, borderRadius: p.isCircle ? '50%' : '0px' }}
+        />
+      ))}
+    </div>
+  )
 }
