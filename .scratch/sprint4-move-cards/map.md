@@ -37,7 +37,7 @@ Agreed with the user on 2026-10-12.
 
 13. **Move up / Move down buttons** next to Move left / Move right, disabled at the edges.
 14. **Drag source:** the whole card, except its ✎ button. A click without dragging still selects.
-15. **Drop indicator:** a coloured line between cards (across the whole drop area for an empty column), and the dragged card faded out. Readable in light and dark mode.
+15. **Drop indicator:** a placeholder the size of the dragged card, shown where the card will be inserted (also in an empty column), and the dragged card faded out. Readable in light and dark mode. Replaces the earlier "coloured line" idea (user request, 2026-10-12).
 16. **Confetti location:** bursts from the card's new position in the last column.
 17. **Touch screens:** dragging is not supported on touch. Touch users use the Move buttons.
 
@@ -48,4 +48,8 @@ Agreed with the user on 2026-10-12.
 ## Fog
 
 - **API edge cases (decision 19, still to do):** before coding, check with curl how `PUT /cards/:cardId` handles a missing `position`, a `position` larger than the column length, and a negative `position`. Record the result here.
-- Exact colour token for the drop indicator: choose during implementation, check in both themes.
+- Exact style of the placeholder (dashed border, colour token): choose during implementation, check in both themes.
+
+## Tickets
+
+`issues/01` → `02` → (`03`, `04` → `05`, `06`) → `07`. See `issues/` for blocking edges.

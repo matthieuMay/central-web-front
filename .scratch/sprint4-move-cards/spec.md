@@ -57,7 +57,7 @@ The selection bar shows **Move left**, **Move right**, **Move up**, **Move down*
 - While dragging, the dragged card is faded out.
 - Drop targets: the card's own column and its direct neighbours. Other columns do not accept the drop (no indicator, `not-allowed` cursor).
 - The drop index is computed from the pointer position: before the first card whose vertical middle is below the pointer, otherwise at the end.
-- A coloured line shows where the card will land. In an empty column the whole card area is highlighted. Both must be readable in light and dark mode.
+- A placeholder the size of the dragged card appears where the card will be inserted, including in an empty column. Only one placeholder is visible at a time. It must be readable in light and dark mode.
 - An empty column accepts a drop (`position` = 0).
 - Dropping outside a valid target, or pressing Escape during the drag, cancels with no request.
 - Touch dragging is not supported; touch users use the buttons.
@@ -105,6 +105,6 @@ Check with curl how the API handles a missing `position`, a `position` larger th
 8. Move a card into the last column (by key, button and drag): confetti appears once the API answers. Reorder inside the last column: no confetti.
 9. With reduced motion emulated: no confetti, the text message appears instead.
 10. Block the PUT (README fetch snippet adapted to `PUT`): the card moves, then returns with an error; no confetti.
-11. Dark mode: the drop indicator and selected card stay readable.
+11. Dark mode: the drag placeholder and selected card stay readable.
 12. The edit drawer still opens, saves and cancels; Add card still works.
 13. `npm run lint` and `npm run build` pass.
