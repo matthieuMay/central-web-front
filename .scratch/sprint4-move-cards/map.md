@@ -45,9 +45,32 @@ Agreed with the user on 2026-10-12.
 
 18. Spec and short ADR live in `.scratch/sprint4-move-cards/`. No README section.
 
+### API behaviour (decision 19, checked with curl on 2026-10-12, ticket 01)
+
+`PUT /cards/:cardId` against the local API at `http://localhost:3000`:
+
+| Request | Result |
+| --- | --- |
+| No `position` | 200, card appended at the end of the target column |
+| Same column, `[1,2,3]`, card-1 → `position` 2 | 200, `[2,3,1]`: index is counted **after removing** the card |
+| Same column, `position` 3 (= length before removal) | 400 `Position out of range` |
+| Other column, `position` = target length (end) | 200, appended |
+| Empty column, `position` 0 | 200 |
+| Middle of other column, `position` 1 | 200, inserted between the two cards |
+| `position` 99 or −1 | 400 `Position out of range` |
+| `position` 1.5, `"1"` or `null` | 400 `Position must be an integer` |
+| Unknown column | 404 `Column not found` |
+| Unknown card | 404 `Card not found` |
+
+- Success returns the full `BoardData` (`id`, `title`, `columns`), and a fresh GET shows the same order, so it persists.
+- Failed requests change nothing on the server.
+- Valid range is `0 ≤ position ≤ length of the target column without the moved card`. The front end must compute it this way, or the API will reject the move with a 400 and the card will roll back.
+- The API does not clamp or round invalid positions; it rejects them.
+- A no-op move (same column, same index) is accepted (200), but the spec still says not to send it.
+- Error bodies are JSON `{ "error": "<message>" }`. The current request helper only shows the HTTP status, not this message.
+
 ## Fog
 
-- **API edge cases (decision 19, still to do):** before coding, check with curl how `PUT /cards/:cardId` handles a missing `position`, a `position` larger than the column length, and a negative `position`. Record the result here.
 - Exact style of the placeholder (dashed border, colour token): choose during implementation, check in both themes.
 
 ## Tickets
