@@ -1,4 +1,4 @@
-import { Button, Drawer, Field, Input, Portal, Text, Textarea } from '@chakra-ui/react'
+import { Button, Drawer, Field, Input, Portal, Separator, Text, Textarea } from '@chakra-ui/react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useEditCard } from '../api/mutations'
@@ -33,25 +33,32 @@ function EditForm({ card, onClose }: { card: CardData; onClose: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate>
+    <>
       <Drawer.Header><Drawer.Title>Edit card</Drawer.Title></Drawer.Header>
       <Drawer.Body>
-        <Field.Root invalid={!!errors.title} mb={4}>
-          <Field.Label htmlFor="edit-title">Title</Field.Label>
-          <Input id="edit-title" data-autofocus aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Title is required' })} />
-          {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
-        </Field.Root>
-        <Field.Root>
-          <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
-          <Textarea id="edit-description" rows={5} {...register('description')} />
-        </Field.Root>
-        {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
+        {/* The form wraps only title and description, so the sections below can
+            have their own forms without nesting. Save is linked to it by form="edit-card-form". */}
+        <form id="edit-card-form" onSubmit={handleSubmit(submit)} noValidate>
+          <Field.Root invalid={!!errors.title} mb={4}>
+            <Field.Label htmlFor="edit-title">Title</Field.Label>
+            <Input id="edit-title" data-autofocus aria-invalid={!!errors.title} {...register('title', { validate: (value) => !!value.trim() || 'Title is required' })} />
+            {errors.title && <Field.ErrorText role="alert">{errors.title.message}</Field.ErrorText>}
+          </Field.Root>
+          <Field.Root>
+            <Field.Label htmlFor="edit-description">Description (optional)</Field.Label>
+            <Textarea id="edit-description" rows={5} {...register('description')} />
+          </Field.Root>
+          {edit.isError && <Text role="alert" color="red.700" mt={3}>Could not save card: {edit.error.message}. Check your connection and try Save again.</Text>}
+        </form>
+        <Separator my={6} />
+        <Text fontSize="sm" color="fg.muted" mb={4}>Members, checklist and comments are saved immediately, not with the Save button.</Text>
+        <CardDetails card={card} />
       </Drawer.Body>
       <Drawer.Footer>
         <Button type="button" variant="outline" disabled={edit.isPending} onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={!isValid || edit.isPending}>Save</Button>
+        <Button type="submit" form="edit-card-form" disabled={!isValid || edit.isPending}>Save</Button>
       </Drawer.Footer>
-    </form>
+    </>
   )
 }
 
@@ -65,7 +72,6 @@ export function EditCardDrawer({ card, onClose }: { card: CardData | null; onClo
         <Drawer.Positioner>
           <Drawer.Content>
             {card && <EditForm key={card.id} card={card} onClose={onClose} />}
-            {card && <CardDetails card={card} />}
           </Drawer.Content>
         </Drawer.Positioner>
       </Portal>

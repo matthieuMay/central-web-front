@@ -1,4 +1,4 @@
-import type { BoardData } from '../types/board'
+import type { BoardData, CardComment, ChecklistItem, User } from '../types/board'
 import type { CardMove } from './boardMoves'
 
 export const boardKey = ['board', 'mini-trello'] as const
@@ -30,6 +30,24 @@ export function editCard({ cardId, title, description }: { cardId: string; title
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, ...(description !== undefined ? { description } : {}) }),
+  })
+}
+
+export function getUsers() {
+  return request<User[]>('/users')
+}
+
+// One list of a Card at a time. The API replaces the list it receives and leaves the others unchanged.
+export type CardListChange =
+  | { assignees: string[] }
+  | { comments: CardComment[] }
+  | { checklistItems: ChecklistItem[] }
+
+export function patchCardList({ cardId, change }: { cardId: string; change: CardListChange }) {
+  return request(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(change),
   })
 }
 
