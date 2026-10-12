@@ -195,7 +195,7 @@ export function BoardPage() {
             {move.isPending && <Text role="status">Moving card…</Text>}
           </HStack>
         )}
-        {move.isError && <Text role="alert" color="red.700">Could not move card: {move.error.message}. Try again.</Text>}
+        {move.isError && <Text role="alert" color={{ base: 'red.700', _dark: 'red.300' }}>Could not move card: {move.error.message}. Try again.</Text>}
       </Box>
       <Confetti burst={burst} />
       {/* Fixed at the bottom of the window so it never pushes the board down. */}
