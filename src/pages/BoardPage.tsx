@@ -20,14 +20,17 @@ export function BoardPage() {
   const moving = useRef(false)
   const focusAfterMove = useRef<string | null>(null)
   const selectedColumnIndex = data?.columns.findIndex((column) => column.cards.some((card) => card.id === selectedCardId)) ?? -1
-  const selectedCard = data?.columns[selectedColumnIndex]?.cards.find((card) => card.id === selectedCardId)
+  const selectedColumn = data?.columns[selectedColumnIndex]
+  const selectedCardIndex = selectedColumn?.cards.findIndex((card) => card.id === selectedCardId) ?? -1
+  const selectedCard = selectedColumn?.cards[selectedCardIndex]
   const editingCard = data?.columns.flatMap((column) => column.cards).find((card) => card.id === editingCardId)
 
   // A card that changes column is rendered as a new element, which loses focus.
   // While a move is in progress, focus the card again after each board change
-  // (the immediate move, then a possible rollback).
+  // (the immediate move, then a possible rollback), unless the user is typing in a field.
   useLayoutEffect(() => {
-    if (focusAfterMove.current) document.getElementById(cardElementId(focusAfterMove.current))?.focus({ preventScroll: true })
+    const typing = document.activeElement?.closest('input, textarea, select')
+    if (focusAfterMove.current && !typing) document.getElementById(cardElementId(focusAfterMove.current))?.focus({ preventScroll: true })
   }, [data])
 
   function selectCard(id: string) {

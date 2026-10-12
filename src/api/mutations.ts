@@ -12,8 +12,14 @@ type Ledger = { base: BoardData | undefined; entries: Entry[] }
 type Context = { previous: BoardData | undefined; token: symbol }
 
 // Replaying from the pre-batch snapshot keeps later optimistic writes when an
-// earlier request fails. Successful writes remain until the whole batch refetches.
+// earlier request fails. Successful writes remain until the whole batch refetches,
+// except moves: their response is the full board and becomes the new snapshot.
 const ledgers = new WeakMap<QueryClient, Ledger>()
+
+// Applies the writes still in the ledger on top of a board.
+function replay(entries: Entry[], board: BoardData) {
+  return entries.reduce((current, entry) => entry.change(current), board)
+}
 
 async function begin(queryClient: QueryClient, change: Change): Promise<Context> {
   await queryClient.cancelQueries({ queryKey: boardKey, exact: true })
@@ -36,8 +42,7 @@ function rollback(queryClient: QueryClient, context: Context | undefined) {
   ledger.entries = ledger.entries.filter((entry) => entry.token !== context.token)
   // With no other writes this is exactly the snapshot taken in onMutate.
   const base = ledger.base ?? context.previous
-  queryClient.setQueryData<BoardData>(boardKey,
-    base && ledger.entries.reduce((board, entry) => entry.change(board), base))
+  queryClient.setQueryData<BoardData>(boardKey, base && replay(ledger.entries, base))
 }
 
 // The server answered with the full board. Writes that finished earlier are already
@@ -47,7 +52,7 @@ function commit(queryClient: QueryClient, context: Context | undefined, board: B
   if (!ledger || !context) return
   ledger.base = board
   ledger.entries = ledger.entries.filter((entry) => entry.pending && entry.token !== context.token)
-  queryClient.setQueryData<BoardData>(boardKey, ledger.entries.reduce((current, entry) => entry.change(current), board))
+  queryClient.setQueryData<BoardData>(boardKey, replay(ledger.entries, board))
 }
 
 async function settle(queryClient: QueryClient, context: Context | undefined) {
