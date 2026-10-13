@@ -2,6 +2,9 @@ export type CardData = {
   id: string
   title: string
   description?: string
+  assignees: string[]
+  comments: { user: string; comment: string; createdAt: string }[]
+  checklistItems: { description: string; done: boolean }[]
 }
 
 export type ColumnData = {
