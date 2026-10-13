@@ -1,13 +1,14 @@
 import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
 import { useEffect, useLayoutEffect, useRef, useState, type DragEvent } from 'react'
-import type { BoardData } from '../types/board'
+import type { BoardData, UserData } from '../types/board'
 import { Column } from './Column'
 import { getDropMovement, getKeyboardMovement, type CardDirection, type CardMovement, type DropAnchor } from '../board-movement'
 
-type BoardProps = { board: BoardData; blocked: boolean; onMoveCard: (intent: CardMovement) => Promise<void> }
+type BoardProps = { board: BoardData; blocked: boolean; onMoveCard: (intent: CardMovement) => Promise<void>;
+  users: UserData[]; onOpenCard: (cardId: string) => void }
 export type DropTarget = { intent: CardMovement; anchor?: DropAnchor }
 
-export function Board({ board, blocked, onMoveCard }: BoardProps) {
+export function Board({ board, blocked, onMoveCard, users, onOpenCard }: BoardProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const focusRequest = useRef<{ cardId: string; original: Element } | null>(null)
@@ -103,7 +104,7 @@ export function Board({ board, blocked, onMoveCard }: BoardProps) {
         {board.columns.map((column) => (
           <Column key={column.id} column={column} selectedCardId={selectedCardId}
             onSelectCard={selectCard} onDeselectCard={() => { clearDrag(); setSelectedCardId(null) }} onMoveCard={moveSelectedCard}
-            blocked={blocked} dropTarget={blocked ? null : dropTarget}
+            blocked={blocked} dropTarget={blocked ? null : dropTarget} users={users} onOpenCard={onOpenCard}
             onDragStart={startDrag} onDragOver={dragOver} onDrop={drop}
             onDragLeave={() => setDropTarget(current => current?.intent.columnId === column.id ? null : current)} />
         ))}

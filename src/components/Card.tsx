@@ -1,5 +1,6 @@
-import { Box, Heading, Text } from '@chakra-ui/react'
-import type { CardData } from '../types/board'
+import { Box, Button, Heading, Text } from '@chakra-ui/react'
+import type { CardData, UserData } from '../types/board'
+import { userName } from '../card-editing'
 import type { CardDirection } from '../board-movement'
 import type { DragEvent } from 'react'
 
@@ -15,9 +16,11 @@ type CardProps = {
   onMove: (direction: CardDirection) => Promise<void>
   blocked: boolean
   onDragStart: (event: DragEvent) => void
+  users: UserData[]
+  onOpen: () => void
 }
 
-export function Card({ card, selected, onSelect, onDeselect, onMove, blocked, onDragStart }: CardProps) {
+export function Card({ card, selected, onSelect, onDeselect, onMove, blocked, onDragStart, users, onOpen }: CardProps) {
   return (
     <Box as="article" tabIndex={0} data-card-id={card.id} draggable={!blocked}
       onDragStart={event => {
@@ -50,6 +53,11 @@ export function Card({ card, selected, onSelect, onDeselect, onMove, blocked, on
       <Heading as="h3" size="sm">{card.title}</Heading>
       {selected && <Text color="blue.fg" fontSize="sm">Sélectionnée</Text>}
       {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+      {card.assignees.length > 0 && <Text mt={2} fontSize="sm" overflowWrap="anywhere">Membres : {card.assignees.map(id => userName(users, id)).join(', ')}</Text>}
+      <Text color="fg.muted" fontSize="sm" mt={2}>
+        {card.comments.length} commentaire{card.comments.length !== 1 ? 's' : ''} · {card.checklistItems.filter(item => item.done).length}/{card.checklistItems.length} tâches terminées
+      </Text>
+      <Button mt={3} size="sm" variant="outline" onClick={onOpen} aria-label={`Ouvrir les détails de ${card.title}`}>Détails de la carte</Button>
     </Box>
   )
 }

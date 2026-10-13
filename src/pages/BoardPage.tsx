@@ -1,104 +1,23 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button, Stack, Text } from '@chakra-ui/react'
-import { useIsMutating, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { boardKey, getBoard, moveCardApi, movementKey, MovementRefused } from '../api/board'
+import { useQuery } from '@tanstack/react-query'
+import { getUsers, usersKey } from '../api/board'
 import { Board } from '../components/Board'
-import { isValidMovement, type CardMovement } from '../board-movement'
 import Confetti, { type ConfettiHandle } from '../components/Confetti'
-
-// The immediate guard also covers two events before React renders pending state.
-const movingClients = new WeakSet<QueryClient>()
-// Reliability belongs to the cached board, including across route changes.
-const unsynchronizedClients = new WeakSet<QueryClient>()
-const boardQuery = {
-  queryKey: boardKey,
-  queryFn: ({ signal }: { signal: AbortSignal }) => getBoard(signal),
-  retry: false,
-  staleTime: Infinity,
-}
+import { CardDetails } from '../components/CardDetails'
+import { useBoardController } from '../hooks/useBoardController'
+import type { CardMovement } from '../board-movement'
 
 export function BoardPage() {
-  const client = useQueryClient()
-  const moving = useIsMutating({ mutationKey: movementKey }) > 0
-  const [feedback, setFeedback] = useState('')
-  const [error, setError] = useState('')
-  const [readBlocked, setReadBlocked] = useState(() => client.getQueryState(boardKey)?.status === 'error')
-  const mounted = useRef(false)
+  const state = useBoardController()
   const confetti = useRef<ConfettiHandle>(null)
-  useEffect(() => {
-    mounted.current = true
-    return () => { mounted.current = false }
-  }, [])
-
-  const query = useQuery({
-    ...boardQuery,
-    enabled: !moving && !readBlocked && !unsynchronizedClients.has(client),
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  })
-
-  const mutation = useMutation({
-    mutationKey: movementKey,
-    retry: false,
-    mutationFn: async (intent: CardMovement) => {
-      await client.cancelQueries({ queryKey: boardKey })
-      try {
-        const board = await moveCardApi(intent)
-        await client.cancelQueries({ queryKey: boardKey })
-        client.setQueryData(boardKey, board)
-        return { resynchronized: false, board }
-      } catch (cause) {
-        if (cause instanceof MovementRefused) throw cause
-        if (mounted.current) setFeedback('Résultat du déplacement incertain. Relecture du tableau en cours…')
-        // An unreadable/lost response may hide a committed write: never repeat PUT.
-        await client.cancelQueries({ queryKey: boardKey })
-        await client.invalidateQueries({ queryKey: boardKey, refetchType: 'none' })
-        try {
-          await client.fetchQuery(boardQuery)
-        } catch (readError) {
-          unsynchronizedClients.add(client)
-          throw readError
-        }
-        return { resynchronized: true }
-      }
-    },
-  })
-
+  const [openCardId, setOpenCardId] = useState<string | null>(null)
+  const users = useQuery({ queryKey: usersKey, queryFn: ({ signal }) => getUsers(signal), retry: false,
+    staleTime: Infinity, refetchOnWindowFocus: false })
+  const card = state.query.data?.columns.flatMap(column => column.cards).find(card => card.id === openCardId)
   async function moveCard(intent: CardMovement) {
-    if (movingClients.has(client) || unsynchronizedClients.has(client) || moving || query.isError || query.isFetching || !query.data) return
-    if (!isValidMovement(query.data, intent)) return
-    const target = query.data.columns.find(column => column.id === intent.columnId)
-    const source = query.data.columns.find(column => column.cards.some(card => card.id === intent.cardId))
-    if (!target || !source) return
-    movingClients.add(client)
-    setError('')
-    setFeedback('Enregistrement du déplacement en cours…')
-    try {
-      const result = await mutation.mutateAsync(intent)
-      if (mounted.current) setFeedback(result.resynchronized
-        ? 'Tableau resynchronisé. Le résultat du déplacement était incertain.'
-        : intent.position === undefined ? `Déplacement enregistré dans « ${target.title} ».`
-        : `Déplacement enregistré au rang ${intent.position + 1} dans « ${target.title} ».`)
-      if (mounted.current && !result.resynchronized && result.board) {
-        const lastColumn = result.board.columns.at(-1)
-        if (lastColumn && source.id !== lastColumn.id && lastColumn.cards.some(card => card.id === intent.cardId)) {
-          confetti.current?.celebrate()
-        }
-      }
-    } catch (cause) {
-      if (mounted.current) {
-        setFeedback('')
-        if (!(cause instanceof MovementRefused)) setReadBlocked(true)
-        setError(cause instanceof MovementRefused ? cause.message
-          : 'Impossible de resynchroniser le tableau. Le dernier état affiché n’est pas actualisé ; déplacements bloqués.')
-      }
-    } finally {
-      movingClients.delete(client)
-    }
+    if ((await state.move(intent))?.celebrate) confetti.current?.celebrate()
   }
-
-  const unavailable = query.isError
   return (
     <Stack gap={4}>
       <Confetti ref={confetti} />
@@ -106,22 +25,21 @@ export function BoardPage() {
         Sélectionnez une carte par clic, Entrée ou Espace. Utilisez ← et → pour la déplacer vers une colonne voisine, ↑ et ↓ pour la réordonner ; Échap pour désélectionner.
         {' '}À la souris, déposez avant ou après une carte, ou en fin de colonne. Seules la colonne actuelle et ses voisines acceptent le dépôt.
       </Text>
-      <Text role="status" aria-live="polite">
-        {query.isFetching ? 'Chargement du tableau…' : feedback}
-      </Text>
-      {(unavailable || error) && <Text role="alert" color="fg">
-        {error || (query.data ? 'Le tableau affiché n’est pas actualisé. Déplacements bloqués.' : 'Impossible de charger le tableau.')}
-      </Text>}
-      {unavailable && <Button alignSelf="start" disabled={moving || query.isFetching} onClick={async () => {
-        setError('')
-        setFeedback('')
-        const result = await query.refetch()
-        if (!result.isError) {
-          unsynchronizedClients.delete(client)
-          setReadBlocked(false)
-        }
-      }}>Réessayer la lecture</Button>}
-      {query.data && <Board board={query.data} blocked={moving || unavailable || query.isFetching} onMoveCard={moveCard} />}
+      <Text role="status">{state.query.isFetching ? 'Chargement du tableau…' : !state.notice?.error ? state.notice?.message : ''}</Text>
+      {state.notice?.error && <Text role="alert">{state.notice.message}</Text>}
+      {state.unavailable && <Stack gap={2}>
+        <Text role="alert">{state.query.data ? 'Tableau non actualisé. Modifications bloquées.' : 'Impossible de charger le tableau.'}</Text>
+        <Button alignSelf="start" disabled={state.pending || state.query.isFetching} onClick={() => void state.retry()}>Réessayer la lecture</Button>
+      </Stack>}
+      {state.query.data && <Board board={state.query.data} blocked={state.blocked} onMoveCard={moveCard}
+        users={users.data ?? []} onOpenCard={setOpenCardId} />}
+      {card && <CardDetails key={card.id} card={card} users={users.data ?? []}
+        usersLoading={users.isPending || users.isFetching} usersError={users.isError}
+        usersUnavailable={users.isPending || users.isFetching || users.isError}
+        onRetryUsers={() => void users.refetch()} blocked={state.blocked}
+        boardUnavailable={state.unavailable} retrying={state.pending || state.query.isFetching}
+        onRetryBoard={() => void state.retry()} onEdit={edit => state.edit(card.id, edit)}
+        notice={state.notice?.cardId === card.id ? state.notice : undefined} onClose={() => setOpenCardId(null)} />}
     </Stack>
   )
 }

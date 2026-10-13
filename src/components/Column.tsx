@@ -1,5 +1,5 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import type { ColumnData } from '../types/board'
+import type { ColumnData, UserData } from '../types/board'
 import { Card } from './Card'
 import type { CardDirection } from '../board-movement'
 import type { DragEvent } from 'react'
@@ -17,6 +17,8 @@ type ColumnProps = {
   onDragOver: (event: DragEvent, columnId: string) => void
   onDrop: (event: DragEvent, columnId: string) => void
   onDragLeave: () => void
+  users: UserData[]
+  onOpenCard: (cardId: string) => void
 }
 
 function DropMarker({ edge }: { edge: 'top' | 'bottom' }) {
@@ -26,7 +28,7 @@ function DropMarker({ edge }: { edge: 'top' | 'bottom' }) {
 }
 
 export function Column({ column, selectedCardId, onSelectCard, onDeselectCard, onMoveCard,
-  blocked, dropTarget, onDragStart, onDragOver, onDrop, onDragLeave }: ColumnProps) {
+  blocked, dropTarget, onDragStart, onDragOver, onDrop, onDragLeave, users, onOpenCard }: ColumnProps) {
   const target = dropTarget?.intent.columnId === column.id ? dropTarget : null
   return (
     <Box as="section" aria-label={column.title} bg="bg.muted" borderWidth="1px" borderColor="fg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}
@@ -41,6 +43,7 @@ export function Column({ column, selectedCardId, onSelectCard, onDeselectCard, o
           <Box key={card.id} position="relative">
           {target?.anchor?.cardId === card.id && <DropMarker edge={target.anchor.side === 'before' ? 'top' : 'bottom'} />}
           <Card card={card} selected={selectedCardId === card.id} blocked={blocked} onDragStart={event => onDragStart(event, card.id)}
+            users={users} onOpen={() => onOpenCard(card.id)}
             onSelect={() => onSelectCard(card.id)} onDeselect={onDeselectCard}
             onMove={direction => onMoveCard(card.id, direction)} />
           </Box>

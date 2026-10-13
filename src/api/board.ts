@@ -1,12 +1,13 @@
-import type { BoardData, CardData, ColumnData } from '../types/board'
+import type { BoardData, CardData, CardCollectionsPatch, ColumnData, UserData } from '../types/board'
 import type { CardMovement } from '../board-movement'
 
 // Reused from Sprint 2: the query identity and configurable API origin.
 export const boardKey = ['board', 'mini-trello'] as const
-export const movementKey = ['board', 'move'] as const
+export const boardWriteKey = ['board', 'write'] as const
+export const usersKey = ['users'] as const
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
-export class MovementRefused extends Error {}
+export class WriteRefused extends Error {}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -37,18 +38,46 @@ function isBoard(value: unknown): value is BoardData {
   return new Set(columns).size === columns.length && new Set(cards).size === cards.length
 }
 
-async function requestBoard(path: string, init: RequestInit): Promise<BoardData> {
+async function requestJson(path: string, init: RequestInit): Promise<unknown> {
   const response = await fetch(`${apiUrl}${path}`, init)
   const body: unknown = await response.json()
   if (!response.ok) {
     // Only documented refusals with a readable error prove no write occurred.
-    if (init.method === 'PUT' && [400, 404].includes(response.status) &&
+    if (['PUT', 'PATCH'].includes(init.method ?? '') && [400, 404].includes(response.status) &&
       isObject(body) && typeof body.error === 'string') {
-      throw new MovementRefused(`Déplacement refusé (${response.status}) : ${body.error}`)
+      throw new WriteRefused(`Modification refusée (${response.status}) : ${body.error}`)
     }
     throw new Error(`L'API a retourné une erreur (${response.status}).`)
   }
+  return body
+}
+
+async function requestBoard(path: string, init: RequestInit): Promise<BoardData> {
+  const body = await requestJson(path, init)
   if (!isBoard(body)) throw new Error('La réponse du tableau est incohérente.')
+  return body
+}
+
+export async function getUsers(signal?: AbortSignal): Promise<UserData[]> {
+  const body = await requestJson('/users', { signal })
+  if (!Array.isArray(body) || !body.every((user): user is UserData => isObject(user) &&
+    typeof user.id === 'string' && user.id.length > 0 && typeof user.firstname === 'string' && typeof user.lastname === 'string') ||
+    new Set(body.map(user => user.id)).size !== body.length) throw new Error('La réponse des utilisateurs est incohérente.')
+  return body
+}
+
+export async function patchCardApi(cardId: string, patch: CardCollectionsPatch): Promise<CardData> {
+  const body = await requestJson(`/cards/${encodeURIComponent(cardId)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  })
+  if (!isCard(body) || body.id !== cardId) throw new Error('La réponse de la carte est incohérente.')
+  if ((patch.assignees && JSON.stringify(body.assignees) !== JSON.stringify(patch.assignees)) ||
+    (patch.checklistItems && JSON.stringify(body.checklistItems) !== JSON.stringify(patch.checklistItems)) ||
+    (patch.comments && (body.comments.length !== patch.comments.length || patch.comments.some((comment, index) =>
+      body.comments[index].user !== comment.user || body.comments[index].comment !== comment.comment ||
+      (comment.createdAt !== undefined && body.comments[index].createdAt !== comment.createdAt))))) {
+    throw new Error('La réponse ne confirme pas les collections demandées.')
+  }
   return body
 }
 
