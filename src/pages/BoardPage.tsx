@@ -4,6 +4,7 @@ import { useIsMutating, useMutation, useQuery, useQueryClient, type QueryClient 
 import { boardKey, getBoard, moveCardApi, movementKey, MovementRefused } from '../api/board'
 import { Board } from '../components/Board'
 import { isValidMovement, type CardMovement } from '../board-movement'
+import Confetti, { type ConfettiHandle } from '../components/Confetti'
 
 // The immediate guard also covers two events before React renders pending state.
 const movingClients = new WeakSet<QueryClient>()
@@ -23,6 +24,7 @@ export function BoardPage() {
   const [error, setError] = useState('')
   const [readBlocked, setReadBlocked] = useState(() => client.getQueryState(boardKey)?.status === 'error')
   const mounted = useRef(false)
+  const confetti = useRef<ConfettiHandle>(null)
   useEffect(() => {
     mounted.current = true
     return () => { mounted.current = false }
@@ -45,7 +47,7 @@ export function BoardPage() {
         const board = await moveCardApi(intent)
         await client.cancelQueries({ queryKey: boardKey })
         client.setQueryData(boardKey, board)
-        return { resynchronized: false }
+        return { resynchronized: false, board }
       } catch (cause) {
         if (cause instanceof MovementRefused) throw cause
         if (mounted.current) setFeedback('Résultat du déplacement incertain. Relecture du tableau en cours…')
@@ -67,7 +69,8 @@ export function BoardPage() {
     if (movingClients.has(client) || unsynchronizedClients.has(client) || moving || query.isError || query.isFetching || !query.data) return
     if (!isValidMovement(query.data, intent)) return
     const target = query.data.columns.find(column => column.id === intent.columnId)
-    if (!target) return
+    const source = query.data.columns.find(column => column.cards.some(card => card.id === intent.cardId))
+    if (!target || !source) return
     movingClients.add(client)
     setError('')
     setFeedback('Enregistrement du déplacement en cours…')
@@ -77,6 +80,12 @@ export function BoardPage() {
         ? 'Tableau resynchronisé. Le résultat du déplacement était incertain.'
         : intent.position === undefined ? `Déplacement enregistré dans « ${target.title} ».`
         : `Déplacement enregistré au rang ${intent.position + 1} dans « ${target.title} ».`)
+      if (mounted.current && !result.resynchronized && result.board) {
+        const lastColumn = result.board.columns.at(-1)
+        if (lastColumn && source.id !== lastColumn.id && lastColumn.cards.some(card => card.id === intent.cardId)) {
+          confetti.current?.celebrate()
+        }
+      }
     } catch (cause) {
       if (mounted.current) {
         setFeedback('')
@@ -92,6 +101,7 @@ export function BoardPage() {
   const unavailable = query.isError
   return (
     <Stack gap={4}>
+      <Confetti ref={confetti} />
       <Text id="board-instructions" color="fg.muted">
         Sélectionnez une carte par clic, Entrée ou Espace. Utilisez ← et → pour la déplacer vers une colonne voisine, ↑ et ↓ pour la réordonner ; Échap pour désélectionner.
         {' '}À la souris, déposez avant ou après une carte, ou en fin de colonne. Seules la colonne actuelle et ses voisines acceptent le dépôt.
