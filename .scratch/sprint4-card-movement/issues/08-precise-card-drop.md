@@ -37,3 +37,5 @@ Contrôler les deux thèmes et largeurs 375/800/1440 px, absence de débordement
 Enregistrement autorisé ; implémentation non commencée. Aucun merge/cherry-pick automatique ni dépendance supplémentaire sans justification.
 
 Validation utilisateur enregistrée le 20261012T142619Z : numérotation, critères d'acceptation et dépendances approuvés. Exécution séquentielle 06 → 07 → 08 → 09. Cette validation autorise l'enregistrement uniquement ; aucune implémentation, aucun démarrage API, aucune migration ni réinitialisation de base. Avant les tests d'intégration, présenter les opérations exactes de démarrage et leurs effets éventuels sur PostgreSQL.
+
+2026-10-13 : tickets 06/07 validés par l'utilisateur ; implémentation du seul ticket 08 autorisée et réalisée. [Drags natifs, traces HTTP, persistance, revues et limites](../validation-08.md). Ordre initial relevé au début des tests restauré. Lint/build/diff check réussis avec avertissements préexistants. Aucun changement backend, migration/reset, commit/push ou traitement du ticket 09. Statut canonique conservé ; avancement consigné ici sans inventer de statut de clôture.

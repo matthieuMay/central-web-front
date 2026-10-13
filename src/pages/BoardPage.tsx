@@ -3,7 +3,7 @@ import { Button, Stack, Text } from '@chakra-ui/react'
 import { useIsMutating, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { boardKey, getBoard, moveCardApi, movementKey, MovementRefused } from '../api/board'
 import { Board } from '../components/Board'
-import { getKeyboardMovement, type CardDirection, type CardMovement } from '../board-movement'
+import { isValidMovement, type CardMovement } from '../board-movement'
 
 // The immediate guard also covers two events before React renders pending state.
 const movingClients = new WeakSet<QueryClient>()
@@ -63,10 +63,9 @@ export function BoardPage() {
     },
   })
 
-  async function moveCard(cardId: string, direction: CardDirection) {
+  async function moveCard(intent: CardMovement) {
     if (movingClients.has(client) || unsynchronizedClients.has(client) || moving || query.isError || query.isFetching || !query.data) return
-    const intent = getKeyboardMovement(query.data, cardId, direction)
-    if (!intent) return
+    if (!isValidMovement(query.data, intent)) return
     const target = query.data.columns.find(column => column.id === intent.columnId)
     if (!target) return
     movingClients.add(client)
@@ -77,7 +76,7 @@ export function BoardPage() {
       if (mounted.current) setFeedback(result.resynchronized
         ? 'Tableau resynchronisé. Le résultat du déplacement était incertain.'
         : intent.position === undefined ? `Déplacement enregistré dans « ${target.title} ».`
-        : `Carte réordonnée au rang ${intent.position + 1} dans « ${target.title} ».`)
+        : `Déplacement enregistré au rang ${intent.position + 1} dans « ${target.title} ».`)
     } catch (cause) {
       if (mounted.current) {
         setFeedback('')
@@ -95,6 +94,7 @@ export function BoardPage() {
     <Stack gap={4}>
       <Text id="board-instructions" color="fg.muted">
         Sélectionnez une carte par clic, Entrée ou Espace. Utilisez ← et → pour la déplacer vers une colonne voisine, ↑ et ↓ pour la réordonner ; Échap pour désélectionner.
+        {' '}À la souris, déposez avant ou après une carte, ou en fin de colonne. Seules la colonne actuelle et ses voisines acceptent le dépôt.
       </Text>
       <Text role="status" aria-live="polite">
         {query.isFetching ? 'Chargement du tableau…' : feedback}
