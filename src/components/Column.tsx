@@ -92,8 +92,10 @@ export function Column({ column, selectedCardId, onSelectCard, onEditCard, drag 
       as="section" aria-label={column.title} bg="bg.muted" borderRadius="lg" p={4} minW={0} minH={{ base: 'auto', xl: 'calc(100dvh - 12rem)' }}
       onDragOver={dragOver} onDragLeave={dragLeave} onDrop={drop}
     >
-    {/* Sprint 6: show the number of Cards next to the title, for example "Doing · 3". */}
-      <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
+      {/* Sprint 6: show the number of Cards next to the title, for example "Doing · 3". */}
+      <Heading as="h2" size="md" mb={4}>
+        {column.title} <Text as="span" color="fg.muted">· {column.cards.length}</Text>
+      </Heading>
       <Stack gap={3}>
         {column.cards.length === 0 && placeholderIndex === null && <Text color="fg.muted">No cards yet</Text>}
         {column.cards.map((card, index) => (

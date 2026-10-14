@@ -1,4 +1,4 @@
-import { Text } from '@chakra-ui/react'
+import { HStack, Text } from '@chakra-ui/react'
 
 // Sprint 6 — Badges shown at the bottom of a Card.
 // Responsibility: DISPLAY ONLY. Show three small counters so the progress of a Card
@@ -14,10 +14,20 @@ type CardBadgesProps = {
 }
 
 export function CardBadges({ assigneeCount, checklistDone, checklistTotal, commentCount }: CardBadgesProps) {
-  // TODO Sprint 6: replace this temporary line with the three badges.
+  // Nothing to show: no empty line under the Card.
+  if (assigneeCount === 0 && checklistTotal === 0 && commentCount === 0) return null
+
+  const checklistComplete = checklistDone === checklistTotal
+
   return (
-    <Text fontSize="xs" color="fg.muted" mt={2}>
-      badges: {assigneeCount} / {checklistDone}-{checklistTotal} / {commentCount} — to implement
-    </Text>
+    <HStack gap={3} mt={2} fontSize="xs" color="fg.muted">
+      {assigneeCount > 0 && <Text aria-label={`${assigneeCount} members`}>👤 {assigneeCount}</Text>}
+      {checklistTotal > 0 && (
+        <Text aria-label={`${checklistDone} of ${checklistTotal} tasks done`} color={checklistComplete ? 'green.fg' : 'fg.muted'}>
+          ☑ {checklistDone}/{checklistTotal}
+        </Text>
+      )}
+      {commentCount > 0 && <Text aria-label={`${commentCount} comments`}>💬 {commentCount}</Text>}
+    </HStack>
   )
 }

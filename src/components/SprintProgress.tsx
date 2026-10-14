@@ -1,4 +1,4 @@
-import { Text } from '@chakra-ui/react'
+import { Box, Stack, Text } from '@chakra-ui/react'
 import type { BoardData } from '../types/board'
 
 // Sprint 6 — Progress summary of the sprint, shown under the board title.
@@ -14,6 +14,21 @@ type SprintProgressProps = {
 }
 
 export function SprintProgress({ board }: SprintProgressProps) {
-  // TODO Sprint 6: replace this temporary line with the summary and the bar.
-  return <Text color="fg.muted">Sprint progress: {board.columns.length} columns — to implement</Text>
+  // flatMap puts the Cards of every column in one single list.
+  const total = board.columns.flatMap((column) => column.cards).length
+  const lastColumn = board.columns[board.columns.length - 1]
+  const done = lastColumn ? lastColumn.cards.length : 0
+
+  if (total === 0) return <Text color="fg.muted">No cards in this sprint yet</Text>
+
+  const percent = Math.round((done / total) * 100)
+
+  return (
+    <Stack gap={2}>
+      <Text>{total} cards · {done} done · {percent} %</Text>
+      <Box role="progressbar" aria-label="Sprint progress" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} h={2} bg="bg.muted" borderRadius="full" overflow="hidden">
+        <Box h="full" w={`${percent}%`} bg="green.solid" />
+      </Box>
+    </Stack>
+  )
 }
