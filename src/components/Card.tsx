@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useRef, type DragEvent, type MouseEvent, type PointerEvent } from 'react'
 import type { CardData } from '../types/board'
 import { cardElementId, editElementId } from './cardIds'
+import { CardBadges } from './CardBadges'
 
 type CardProps = {
   card: CardData
@@ -51,6 +52,12 @@ export function Card({ card, selected, onSelect, onEdit, canDrag, dragging, onDr
       >
         <Heading as="h3" size="sm">{card.title}</Heading>
         {card.description && <Text color="fg.muted" mt={2} fontSize="sm">{card.description}</Text>}
+                <CardBadges
+          assigneeCount={card.assignees?.length ?? 0}
+          checklistDone={card.checklistItems?.filter((item) => item.done).length ?? 0}
+          checklistTotal={card.checklistItems?.length ?? 0}
+          commentCount={card.comments?.length ?? 0}
+        />
         <IconButton id={editElementId(card.id)} type="button" aria-label={`Edit ${card.title}`} size="xs" variant="outline" mt={2} onClick={onEdit}>✎</IconButton>
       </Box>
     </motion.div>
