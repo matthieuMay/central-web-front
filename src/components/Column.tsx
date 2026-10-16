@@ -1,6 +1,7 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
 import type { ColumnData, UserData } from '../types/board'
 import { Card } from './Card'
+import { ColumnCounter } from './ColumnCounter'
 
 type MoveDirection = 'up' | 'down' | 'left' | 'right'
 type DropMarker = { columnId: string; cardId: string | null; after: boolean } | null
@@ -9,9 +10,11 @@ type ColumnProps = {
   column: ColumnData
   users: UserData[]
   usersLoading: boolean
+  limit: number | null
   columnIndex: number
   columnCount: number
   selectedCardId: string | null
+  refusedCardId: string | null
   draggingCardId: string | null
   dropMarker: DropMarker
   movePending: boolean
@@ -27,7 +30,7 @@ type ColumnProps = {
 }
 
 export function Column({
-  column, users, usersLoading, columnIndex, columnCount, selectedCardId, draggingCardId, dropMarker,
+  column, users, usersLoading, limit, columnIndex, columnCount, selectedCardId, refusedCardId, draggingCardId, dropMarker,
   movePending, isDropTarget, onSelectCard, onMoveCard, onDragStart, onDragEnd,
   onDragOverCard, onDropOnCard, onDragOverColumn, onDropInColumn,
 }: ColumnProps) {
@@ -51,7 +54,10 @@ export function Column({
         onDropInColumn(column.id)
       }}
     >
-      <Heading as="h2" size="md" mb={4}>{column.title}</Heading>
+      <Stack direction="row" align="center" justify="space-between" mb={4}>
+        <Heading as="h2" size="md">{column.title}</Heading>
+        <ColumnCounter count={column.cards.length} limit={limit} />
+      </Stack>
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="var(--app-muted)">No cards yet</Text>}
         {column.cards.map((card, cardIndex) => (
@@ -60,6 +66,7 @@ export function Column({
             card={card}
             users={users}
             usersLoading={usersLoading}
+            refused={refusedCardId === card.id}
             selected={selectedCardId === card.id}
             dragging={draggingCardId === card.id}
             dropPosition={dropMarker?.columnId === column.id && dropMarker.cardId === card.id

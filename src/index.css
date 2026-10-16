@@ -11,6 +11,9 @@
   --app-nav-active-bg: #dbeafe;
   --app-nav-active-text: #1e3a8a;
   --app-focus: #1d4ed8;
+  --app-danger-bg: #fee2e2;
+  --app-danger-text: #991b1b;
+  --app-danger-border: #ef4444;
 }
 
 :root[data-theme='dark'] {
@@ -26,6 +29,9 @@
   --app-nav-active-bg: #394332;
   --app-nav-active-text: #d5e7a6;
   --app-focus: #c6dd92;
+  --app-danger-bg: #442626;
+  --app-danger-text: #fecaca;
+  --app-danger-border: #f87171;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -140,4 +146,24 @@ section[data-drop-target='true'] {
 .card-move-controls button:focus-visible {
   outline: 2px solid var(--app-focus);
   outline-offset: 2px;
+}
+
+.column-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  background: var(--app-surface);
+  color: var(--app-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.column-counter.is-full {
+  border-color: var(--app-danger-border);
+  background: var(--app-danger-bg);
+  color: var(--app-danger-text);
 }

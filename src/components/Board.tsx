@@ -1,13 +1,16 @@
 import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMoveCard } from '../api/mutations'
 import type { BoardData, UserData } from '../types/board'
 import { Column } from './Column'
 import Confetti from './Confetti'
+import { canAcceptCard, getColumnLimit } from './columnLimit'
+import { useRefusedCard } from './useRefusedCard'
 
 type BoardProps = { board: BoardData; users: UserData[]; usersLoading: boolean }
 type DropMarker = { columnId: string; cardId: string | null; after: boolean }
 type MoveMutation = ReturnType<typeof useMoveCard>['mutate']
+type RequestMove = (cardId: string, columnId: string, position: number, allowNonAdjacent?: boolean) => void
 
 function submitMove(
   board: BoardData,
@@ -43,8 +46,7 @@ function moveInDirection(
   board: BoardData,
   cardId: string,
   direction: 'up' | 'down' | 'left' | 'right',
-  mutate: MoveMutation,
-  onFinalArrival: () => void,
+  requestMove: RequestMove,
 ) {
   const sourceIndex = board.columns.findIndex((column) =>
     column.cards.some((card) => card.id === cardId))
@@ -54,7 +56,7 @@ function moveInDirection(
   if (direction === 'left' || direction === 'right') {
     const destination = board.columns[sourceIndex + (direction === 'left' ? -1 : 1)]
     if (destination) {
-      submitMove(board, cardId, destination.id, destination.cards.length, mutate, onFinalArrival)
+      requestMove(cardId, destination.id, destination.cards.length)
     }
     return
   }
@@ -62,7 +64,7 @@ function moveInDirection(
   const cardIndex = source.cards.findIndex((card) => card.id === cardId)
   const position = cardIndex + (direction === 'up' ? -1 : 1)
   if (position >= 0 && position < source.cards.length) {
-    submitMove(board, cardId, source.id, position, mutate, onFinalArrival)
+    requestMove(cardId, source.id, position)
   }
 }
 
@@ -71,11 +73,32 @@ export function Board({ board, users, usersLoading }: BoardProps) {
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const [dropMarker, setDropMarker] = useState<DropMarker | null>(null)
   const [celebrationCount, setCelebrationCount] = useState(0)
+  const [refusalMessage, setRefusalMessage] = useState<string | null>(null)
   const { mutate, isPending, isError, error } = useMoveCard()
+  const { refusedCardId, refuse } = useRefusedCard()
 
-  function celebrateFinalArrival() {
+  const celebrateFinalArrival = useCallback(() => {
     setCelebrationCount((current) => current + 1)
-  }
+  }, [])
+
+  const requestMove = useCallback((cardId: string, columnId: string, position: number, allowNonAdjacent = false) => {
+    const sourceIndex = board.columns.findIndex((column) =>
+      column.cards.some((card) => card.id === cardId))
+    const destinationIndex = board.columns.findIndex((column) => column.id === columnId)
+    const destination = board.columns[destinationIndex]
+    if (sourceIndex < 0 || !destination || (!allowNonAdjacent && Math.abs(sourceIndex - destinationIndex) > 1)) return
+
+    if (!canAcceptCard(board, columnId, cardId)) {
+      const limit = getColumnLimit(board, columnId)
+      const count = destination.cards.length - (sourceIndex === destinationIndex ? 1 : 0)
+      setRefusalMessage(`${destination.title} is full (${count}/${limit}).`)
+      refuse(cardId)
+      return
+    }
+
+    setRefusalMessage(null)
+    submitMove(board, cardId, columnId, position, mutate, celebrateFinalArrival, allowNonAdjacent)
+  }, [board, celebrateFinalArrival, mutate, refuse])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -94,12 +117,12 @@ export function Board({ board, users, usersLoading }: BoardProps) {
         if (!board.columns[position]) return
       } else if (position < 0 || position >= source.cards.length) return
       event.preventDefault()
-      moveInDirection(board, selectedCardId, direction, mutate, celebrateFinalArrival)
+      moveInDirection(board, selectedCardId, direction, requestMove)
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [board, isPending, mutate, selectedCardId])
+  }, [board, isPending, requestMove, selectedCardId])
 
   function canDropIn(columnId: string) {
     if (!draggingCardId || isPending) return false
@@ -122,7 +145,7 @@ export function Board({ board, users, usersLoading }: BoardProps) {
     const cards = destination.cards.filter((card) => card.id !== draggingCardId)
     const targetIndex = cards.findIndex((card) => card.id === targetCardId)
     const position = targetIndex < 0 ? cards.length : targetIndex + (after ? 1 : 0)
-    submitMove(board, draggingCardId, columnId, position, mutate, celebrateFinalArrival, true)
+    requestMove(draggingCardId, columnId, position, true)
     setDropMarker(null)
   }
 
@@ -131,7 +154,7 @@ export function Board({ board, users, usersLoading }: BoardProps) {
     const destination = board.columns.find((column) => column.id === columnId)
     if (!destination) return
     const position = destination.cards.filter((card) => card.id !== draggingCardId).length
-    submitMove(board, draggingCardId, columnId, position, mutate, celebrateFinalArrival, true)
+    requestMove(draggingCardId, columnId, position, true)
     setDropMarker(null)
   }
 
@@ -140,6 +163,7 @@ export function Board({ board, users, usersLoading }: BoardProps) {
       <Heading as="h1" size="2xl">{board.title}</Heading>
       {isPending && <p role="status" aria-live="polite">Moving card…</p>}
       {isError && <p role="alert">Could not move card: {error.message}</p>}
+      {refusalMessage && <p role="status" aria-live="polite">{refusalMessage}</p>}
       <Confetti particleCount={celebrationCount} />
       <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
         {board.columns.map((column, columnIndex) => (
@@ -148,9 +172,11 @@ export function Board({ board, users, usersLoading }: BoardProps) {
             column={column}
             users={users}
             usersLoading={usersLoading}
+            limit={getColumnLimit(board, column.id)}
             columnIndex={columnIndex}
             columnCount={board.columns.length}
             selectedCardId={selectedCardId}
+            refusedCardId={refusedCardId}
             draggingCardId={draggingCardId}
             dropMarker={dropMarker}
             movePending={isPending}
@@ -165,12 +191,12 @@ export function Board({ board, users, usersLoading }: BoardProps) {
               if (direction === 'left' || direction === 'right') {
                 const destination = board.columns[sourceIndex + (direction === 'left' ? -1 : 1)]
                 if (destination) {
-                  submitMove(board, cardId, destination.id, destination.cards.length, mutate, celebrateFinalArrival)
+                  requestMove(cardId, destination.id, destination.cards.length)
                 }
               } else {
                 const cardIndex = source.cards.findIndex((card) => card.id === cardId)
                 const position = cardIndex + (direction === 'up' ? -1 : 1)
-                submitMove(board, cardId, source.id, position, mutate, celebrateFinalArrival)
+                requestMove(cardId, source.id, position)
               }
             }}
             onDragStart={(cardId) => {

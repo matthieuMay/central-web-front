@@ -4,12 +4,14 @@ import type { CardData, UserData } from '../types/board'
 import { AssigneesSection } from './AssigneesSection'
 import { ChecklistSection } from './ChecklistSection'
 import { CommentsSection } from './CommentsSection'
+import { RefusalShake } from './RefusalShake'
 
 type MoveDirection = 'up' | 'down' | 'left' | 'right'
 type CardProps = {
   card: CardData
   users: UserData[]
   usersLoading: boolean
+  refused: boolean
   selected: boolean
   dragging: boolean
   dropPosition: 'before' | 'after' | null
@@ -27,18 +29,19 @@ type CardProps = {
 }
 
 export function Card({
-  card, users, usersLoading, selected, dragging, dropPosition, movePending, canMoveUp, canMoveDown,
+  card, users, usersLoading, refused, selected, dragging, dropPosition, movePending, canMoveUp, canMoveDown,
   canMoveLeft, canMoveRight, onSelect, onMove, onDragStart, onDragEnd, onDragOver, onDrop,
 }: CardProps) {
   const edit = useEditCard()
 
   return (
+    <RefusalShake refused={refused}>
     <Box
       as="article"
       className="board-card"
       bg="var(--app-surface)"
       borderWidth="1px"
-      borderColor={selected ? 'var(--app-focus)' : 'var(--app-border)'}
+      borderColor={refused ? 'red.500' : selected ? 'var(--app-focus)' : 'var(--app-border)'}
       borderRadius="md"
       p={4}
       overflowWrap="anywhere"
@@ -131,5 +134,6 @@ export function Card({
         </div>
       )}
     </Box>
+    </RefusalShake>
   )
 }
