@@ -15,3 +15,9 @@ export type BoardData = {
   title: string
   columns: ColumnData[]
 }
+
+export type CardProps = {
+  card: CardData;
+  selected: boolean;
+  onSelect: () => void;
+};
