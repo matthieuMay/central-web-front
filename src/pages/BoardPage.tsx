@@ -1,4 +1,5 @@
 import { Heading, Text, Stack } from '@chakra-ui/react'
+import '../../data/board.json'
 
 export function BoardPage() {
   return (
