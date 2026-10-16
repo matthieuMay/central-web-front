@@ -1,5 +1,5 @@
 import { Box, Heading, Stack, Text } from '@chakra-ui/react'
-import type { ColumnData } from '../types/board'
+import type { ColumnData, UserData } from '../types/board'
 import { Card } from './Card'
 
 type MoveDirection = 'up' | 'down' | 'left' | 'right'
@@ -7,6 +7,8 @@ type DropMarker = { columnId: string; cardId: string | null; after: boolean } | 
 
 type ColumnProps = {
   column: ColumnData
+  users: UserData[]
+  usersLoading: boolean
   columnIndex: number
   columnCount: number
   selectedCardId: string | null
@@ -25,7 +27,7 @@ type ColumnProps = {
 }
 
 export function Column({
-  column, columnIndex, columnCount, selectedCardId, draggingCardId, dropMarker,
+  column, users, usersLoading, columnIndex, columnCount, selectedCardId, draggingCardId, dropMarker,
   movePending, isDropTarget, onSelectCard, onMoveCard, onDragStart, onDragEnd,
   onDragOverCard, onDropOnCard, onDragOverColumn, onDropInColumn,
 }: ColumnProps) {
@@ -56,6 +58,8 @@ export function Column({
           <Card
             key={card.id}
             card={card}
+            users={users}
+            usersLoading={usersLoading}
             selected={selectedCardId === card.id}
             dragging={draggingCardId === card.id}
             dropPosition={dropMarker?.columnId === column.id && dropMarker.cardId === card.id

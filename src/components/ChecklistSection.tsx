@@ -1,4 +1,13 @@
 import type { CardData } from '../types/board'
+import { Box, Stack, Text } from '@chakra-ui/react'
+import { useState, type FormEvent } from 'react'
+
+type ChecklistSectionProps = {
+	card: CardData
+	disabled?: boolean
+	onAdd: (description: string) => Promise<void>
+	onToggle: (index: number) => Promise<void>
+}
 
 /*
  * ChecklistSection
@@ -31,3 +40,57 @@ import type { CardData } from '../types/board'
  *   5. If the API refuses the change, the UI does not show it as saved.
  *   6. After a page reload, items and their done state come from the API.
  */
+
+export function ChecklistSection({ card, disabled = false, onAdd, onToggle }: ChecklistSectionProps) {
+	const [description, setDescription] = useState('')
+
+	async function submit(event: FormEvent<HTMLFormElement>) {
+		event.preventDefault()
+		const trimmed = description.trim()
+		if (!trimmed || disabled) return
+		try {
+			await onAdd(trimmed)
+			setDescription('')
+		} catch {
+			// Keep the draft so the user can retry after a failed request.
+		}
+	}
+
+	return (
+		<Box as="section" aria-label={`Checklist for ${card.title}`} mt={3}>
+			<Text fontWeight="semibold" fontSize="sm" mb={2}>Checklist</Text>
+			{card.checklistItems.length === 0 ? (
+				<Text color="var(--app-muted)" fontSize="sm" mb={2}>No checklist items</Text>
+			) : (
+				<Stack gap={2} mb={3}>
+					{card.checklistItems.map((item, index) => (
+						<label key={`${index}-${item.description}`}>
+							<input
+								type="checkbox"
+								checked={item.done}
+								disabled={disabled}
+								onChange={() => { void onToggle(index).catch(() => {}) }}
+							/>{' '}
+							<Text as="span" textDecoration={item.done ? 'line-through' : undefined}>
+								{item.description}
+							</Text>
+						</label>
+					))}
+				</Stack>
+			)}
+			<form onSubmit={submit}>
+				<Stack gap={2}>
+					<label htmlFor={`checklist-${card.id}`}>Add checklist item</label>
+					<input
+						id={`checklist-${card.id}`}
+						value={description}
+						onChange={(event) => setDescription(event.target.value)}
+						required
+						disabled={disabled}
+					/>
+					<button type="submit" disabled={disabled || !description.trim()}>Add item</button>
+				</Stack>
+			</form>
+		</Box>
+	)
+}

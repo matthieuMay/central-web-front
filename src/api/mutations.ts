@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import type { BoardData } from '../types/board'
-import { boardKey, createCard, editCard, moveCard, type MoveCardInput } from './board'
+import type { BoardData, CommentData } from '../types/board'
+import { boardKey, createCard, editCard, moveCard, type EditCardInput, type MoveCardInput } from './board'
 
 export type CreateCardInput = { columnId: string; id: string; title: string }
-export type EditCardInput = { cardId: string; title: string }
 type Change = (board: BoardData) => BoardData
 type Entry = { token: symbol; change: Change; pending: boolean }
 type Ledger = { base: BoardData | undefined; entries: Entry[] }
@@ -12,6 +11,28 @@ type Context = { previous: BoardData | undefined; token: symbol }
 // Replaying from the pre-batch snapshot keeps later optimistic writes when an
 // earlier request fails. Successful writes remain until the whole batch refetches.
 const ledgers = new WeakMap<QueryClient, Ledger>()
+
+function optimisticallyEdit(board: BoardData, input: EditCardInput): BoardData {
+  return {
+    ...board,
+    columns: board.columns.map((column) => ({
+      ...column,
+      cards: column.cards.map((card) => {
+        if (card.id !== input.cardId) return card
+        return {
+          ...card,
+          ...(input.title === undefined ? {} : { title: input.title }),
+          ...(input.description === undefined ? {} : { description: input.description ?? undefined }),
+          ...(input.assignees === undefined ? {} : { assignees: input.assignees }),
+          ...(input.comments === undefined || !input.comments.every((comment) => comment.createdAt)
+            ? {}
+            : { comments: input.comments as CommentData[] }),
+          ...(input.checklistItems === undefined ? {} : { checklistItems: input.checklistItems }),
+        }
+      }),
+    })),
+  }
+}
 
 async function begin(queryClient: QueryClient, change: Change): Promise<Context> {
   await queryClient.cancelQueries({ queryKey: boardKey, exact: true })
@@ -94,15 +115,7 @@ export function useEditCard() {
   return useMutation({
     scope: { id: 'board-writes' },
     mutationFn: editCard,
-    onMutate: (input: EditCardInput) => begin(queryClient, (board) => ({
-      ...board,
-      columns: board.columns.map((column) => ({
-        ...column,
-        cards: column.cards.map((card) => card.id === input.cardId
-          ? { ...card, title: input.title }
-          : card),
-      })),
-    })),
+    onMutate: (input: EditCardInput) => begin(queryClient, (board) => optimisticallyEdit(board, input)),
     onError: (_error, _input, context) => rollback(queryClient, context),
     onSettled: (_data, _error, _input, context) => settle(queryClient, context),
   })

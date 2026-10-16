@@ -1,9 +1,15 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
-import type { CardData } from '../types/board'
+import { useEditCard } from '../api/mutations'
+import type { CardData, UserData } from '../types/board'
+import { AssigneesSection } from './AssigneesSection'
+import { ChecklistSection } from './ChecklistSection'
+import { CommentsSection } from './CommentsSection'
 
 type MoveDirection = 'up' | 'down' | 'left' | 'right'
 type CardProps = {
   card: CardData
+  users: UserData[]
+  usersLoading: boolean
   selected: boolean
   dragging: boolean
   dropPosition: 'before' | 'after' | null
@@ -21,9 +27,11 @@ type CardProps = {
 }
 
 export function Card({
-  card, selected, dragging, dropPosition, movePending, canMoveUp, canMoveDown,
+  card, users, usersLoading, selected, dragging, dropPosition, movePending, canMoveUp, canMoveDown,
   canMoveLeft, canMoveRight, onSelect, onMove, onDragStart, onDragEnd, onDragOver, onDrop,
 }: CardProps) {
+  const edit = useEditCard()
+
   return (
     <Box
       as="article"
@@ -41,7 +49,8 @@ export function Card({
       data-drop-position={dropPosition ?? undefined}
       aria-label={card.title}
       onClick={(event) => {
-        if (event.target instanceof HTMLElement && event.target.closest('button')) return
+        if (event.target instanceof HTMLElement &&
+          event.target.closest('button, input, select, textarea, form, label, a')) return
         onSelect()
       }}
       onKeyDown={(event) => {
@@ -77,6 +86,42 @@ export function Card({
     >
       <Heading as="h3" size="sm">{card.title}</Heading>
       {card.description && <Text color="var(--app-muted)" mt={2} fontSize="sm">{card.description}</Text>}
+      {edit.isPending && <Text role="status" fontSize="sm">Saving card changes…</Text>}
+      {edit.isError && <Text role="alert" color="red.600" fontSize="sm">Could not save card changes: {edit.error.message}</Text>}
+      <AssigneesSection
+        card={card}
+        users={users}
+        disabled={usersLoading || edit.isPending}
+        onChange={(assignees) => edit.mutate({ cardId: card.id, assignees })}
+      />
+      <CommentsSection
+        card={card}
+        users={users}
+        disabled={usersLoading || edit.isPending}
+        onAdd={async (userId, comment) => {
+          await edit.mutateAsync({
+            cardId: card.id,
+            comments: [...card.comments, { user: userId, comment }],
+          })
+        }}
+      />
+      <ChecklistSection
+        card={card}
+        disabled={edit.isPending}
+        onAdd={async (description) => {
+          await edit.mutateAsync({
+            cardId: card.id,
+            checklistItems: [...card.checklistItems, { description, done: false }],
+          })
+        }}
+        onToggle={async (index) => {
+          await edit.mutateAsync({
+            cardId: card.id,
+            checklistItems: card.checklistItems.map((item, itemIndex) =>
+              itemIndex === index ? { ...item, done: !item.done } : item),
+          })
+        }}
+      />
       {selected && (
         <div className="card-move-controls" role="group" aria-label={`Move ${card.title}`}>
           <button type="button" aria-label={`Move ${card.title} to previous column`} disabled={!canMoveLeft || movePending} onClick={() => onMove('left')}>←</button>

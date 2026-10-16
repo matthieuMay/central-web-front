@@ -1,11 +1,11 @@
 import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { useMoveCard } from '../api/mutations'
-import type { BoardData } from '../types/board'
+import type { BoardData, UserData } from '../types/board'
 import { Column } from './Column'
 import Confetti from './Confetti'
 
-type BoardProps = { board: BoardData }
+type BoardProps = { board: BoardData; users: UserData[]; usersLoading: boolean }
 type DropMarker = { columnId: string; cardId: string | null; after: boolean }
 type MoveMutation = ReturnType<typeof useMoveCard>['mutate']
 
@@ -66,7 +66,7 @@ function moveInDirection(
   }
 }
 
-export function Board({ board }: BoardProps) {
+export function Board({ board, users, usersLoading }: BoardProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const [dropMarker, setDropMarker] = useState<DropMarker | null>(null)
@@ -146,6 +146,8 @@ export function Board({ board }: BoardProps) {
           <Column
             key={column.id}
             column={column}
+            users={users}
+            usersLoading={usersLoading}
             columnIndex={columnIndex}
             columnCount={board.columns.length}
             selectedCardId={selectedCardId}

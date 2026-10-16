@@ -1,6 +1,7 @@
-import type { BoardData } from '../types/board'
+import type { BoardData, ChecklistItemData, CommentData, UserData } from '../types/board'
 
 export const boardKey = ['board', 'mini-trello'] as const
+export const usersKey = ['users'] as const
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
@@ -16,6 +17,10 @@ export function getBoard() {
   return request<BoardData>('/boards/mini-trello')
 }
 
+export function getUsers() {
+  return request<UserData[]>('/users')
+}
+
 export function createCard({ columnId, id, title }: { columnId: string; id: string; title: string }) {
   return request(`/columns/${encodeURIComponent(columnId)}/cards`, {
     method: 'POST',
@@ -24,11 +29,21 @@ export function createCard({ columnId, id, title }: { columnId: string; id: stri
   })
 }
 
-export function editCard({ cardId, title }: { cardId: string; title: string }) {
+export type CommentPatch = Omit<CommentData, 'createdAt'> & { createdAt?: string }
+export type EditCardInput = {
+  cardId: string
+  title?: string
+  description?: string | null
+  assignees?: string[]
+  comments?: CommentPatch[]
+  checklistItems?: ChecklistItemData[]
+}
+
+export function editCard({ cardId, ...changes }: EditCardInput) {
   return request(`/cards/${encodeURIComponent(cardId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify(changes),
   })
 }
 
