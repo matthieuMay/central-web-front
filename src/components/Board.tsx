@@ -1,21 +1,33 @@
 import { useState } from 'react'
-import { Heading, SimpleGrid, Stack } from '@chakra-ui/react'
+import { Flex, Heading, SimpleGrid, Stack, Text } from '@chakra-ui/react'
 import type { BoardData } from '../types/board'
 import type { CardDragPayload, DropPoint } from '../lib/dnd'
+import { cardMatchesQuery, normalizeQuery } from '../lib/search'
 import { useMoveCard, useUpdateCard, useUsers } from '../lib/queries'
 import { CardDetails } from './CardDetails'
 import { Column } from './Column'
 import type { CardPatch } from './Card'
 import Confetti from './Confetti'
+import { SearchBar } from './SearchBar'
 
 type BoardProps = { board: BoardData }
 
 export function Board({ board }: BoardProps) {
   const [confetti, setConfetti] = useState<{ id: number; x: number; y: number } | null>(null)
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
   const moveCard = useMoveCard()
   const updateCard = useUpdateCard()
   const { data: users } = useUsers()
+
+  const normalizedQuery = normalizeQuery(query)
+  const matchCount = normalizedQuery
+    ? board.columns.reduce(
+        (total, column) =>
+          total + column.cards.filter((card) => cardMatchesQuery(card, normalizedQuery)).length,
+        0,
+      )
+    : 0
 
   const lastColumnId = board.columns[board.columns.length - 1]?.id
   const selectedCard = selectedCardId
@@ -58,14 +70,25 @@ export function Board({ board }: BoardProps) {
 
   return (
     <Stack gap={6}>
-      <Heading as="h1" size="2xl">
-        {board.title}
-      </Heading>
+      <Flex align={{ base: 'stretch', md: 'center' }} justify="space-between" gap={4} wrap="wrap">
+        <Heading as="h1" size="2xl">
+          {board.title}
+        </Heading>
+        <SearchBar value={query} onChange={setQuery} />
+      </Flex>
+      {normalizedQuery && (
+        <Text color="fg.muted" fontSize="sm">
+          {matchCount === 0
+            ? `No cards match “${query.trim()}”.`
+            : `${matchCount} card${matchCount === 1 ? '' : 's'} match “${query.trim()}”.`}
+        </Text>
+      )}
       <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4} alignItems="stretch">
         {board.columns.map((column) => (
           <Column
             key={column.id}
             column={column}
+            query={query}
             onMoveCard={handleMoveCard}
             onUpdateCard={handleUpdateCard}
             onOpenDetails={setSelectedCardId}

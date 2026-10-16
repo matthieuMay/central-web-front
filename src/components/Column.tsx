@@ -3,17 +3,23 @@ import { Box, Heading, Stack, Text } from '@chakra-ui/react'
 import type { ColumnData } from '../types/board'
 import type { CardDragPayload, DropPoint } from '../lib/dnd'
 import { getCardDragData } from '../lib/dnd'
+import { cardMatchesQuery, normalizeQuery } from '../lib/search'
 import { Card, type CardPatch } from './Card'
 
 type ColumnProps = {
   column: ColumnData
+  query: string
   onMoveCard: (payload: CardDragPayload, toColumnId: string, toIndex: number, dropPoint: DropPoint) => void
   onUpdateCard: (columnId: string, cardId: string, patch: CardPatch) => void
   onOpenDetails: (cardId: string) => void
 }
 
-export function Column({ column, onMoveCard, onUpdateCard, onOpenDetails }: ColumnProps) {
+export function Column({ column, query, onMoveCard, onUpdateCard, onOpenDetails }: ColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false)
+  const normalizedQuery = normalizeQuery(query)
+  const visibleCards = normalizedQuery
+    ? column.cards.filter((card) => cardMatchesQuery(card, normalizedQuery))
+    : column.cards
 
   return (
     <Box
@@ -55,12 +61,15 @@ export function Column({ column, onMoveCard, onUpdateCard, onOpenDetails }: Colu
       </Heading>
       <Stack gap={3}>
         {column.cards.length === 0 && <Text color="fg.muted">No cards yet</Text>}
-        {column.cards.map((card, index) => (
+        {column.cards.length > 0 && visibleCards.length === 0 && (
+          <Text color="fg.muted">No matching cards</Text>
+        )}
+        {visibleCards.map((card) => (
           <Card
             key={card.id}
             card={card}
             columnId={column.id}
-            index={index}
+            index={column.cards.indexOf(card)}
             onMoveCard={onMoveCard}
             onUpdateCard={onUpdateCard}
             onOpenDetails={onOpenDetails}
